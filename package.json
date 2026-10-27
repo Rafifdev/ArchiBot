@@ -1,0 +1,12 @@
+{
+  "name": "discord-server-generator-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env bot.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.18.0"
+  }
+}
