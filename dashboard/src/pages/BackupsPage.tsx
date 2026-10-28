@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdIconButton, MdLoading, MdIcon } from '../components/atoms';
 import {
+  MdButton,
+  MdTextField,
+  MdIconButton,
+  MdLoading,
+  MdIcon,
   MdDialog,
   ConfirmDialog,
   PageHeader,
@@ -9,13 +13,15 @@ import {
   SurfaceCard,
   SwitchRow,
   EmptyState,
-} from '../components/molecules';
+} from '../components/ui';
 import { BackupItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 export const BackupsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
   const [actionNotice, setActionNotice] = useState('');
 
   // Take Snapshot Modal
@@ -36,13 +42,16 @@ export const BackupsPage: React.FC = () => {
   const [deleteBackup, setDeleteBackup] = useState<BackupItem | null>(null);
 
   const fetchBackups = () => {
-    fetch(`/api/guilds/${guildId}/backups`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/backups`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.backups) setBackups(data.backups);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   useEffect(() => {
@@ -162,7 +171,7 @@ export const BackupsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && backups.length === 0) return <MdLoading />;
 
   return (
     <div className="flex flex-col gap-6">

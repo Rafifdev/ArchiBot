@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdSelect, MdIconButton, MdLoading, MdIcon, StatusBadge } from '../components/atoms';
-import { MdDialog, ConfirmDialog, PageHeader, SurfaceCard, SwitchRow } from '../components/molecules';
+import {
+  MdButton,
+  MdTextField,
+  MdSelect,
+  MdIconButton,
+  MdLoading,
+  MdIcon,
+  Badge,
+  StatusBadge,
+  MdDialog,
+  ConfirmDialog,
+  PageHeader,
+  SurfaceCard,
+  SwitchRow,
+} from '../components/ui';
 import { ChannelItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 export const ChannelsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
   const [search, setSearch] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -30,13 +45,16 @@ export const ChannelsPage: React.FC = () => {
   const [deleteName, setDeleteName] = useState('');
 
   const fetchChannels = () => {
-    fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.channels) setChannels(data.channels);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   useEffect(() => {
@@ -151,7 +169,7 @@ export const ChannelsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && channels.length === 0) return <MdLoading />;
 
   const filtered = channels.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
   const categories = filtered.filter((c) => c.typeName === 'category');

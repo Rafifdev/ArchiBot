@@ -11,8 +11,8 @@ import { VoicePage } from './pages/VoicePage';
 import { EmbedsPage } from './pages/EmbedsPage';
 import { BackupsPage } from './pages/BackupsPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { DashboardTemplate } from './components/templates';
-import { MdLoading } from './components/atoms';
+import { DashboardLayout } from './components/layout';
+import { MdLoading } from './components/ui';
 import { UserProfile } from './types/api';
 
 export const AppContent: React.FC = () => {
@@ -59,7 +59,7 @@ export const AppContent: React.FC = () => {
         element={
           user ? (
             <div className="min-h-screen bg-discord-canvas">
-              <DashboardTemplate user={user} onLogout={handleLogout} />
+              <DashboardLayout user={user} onLogout={handleLogout} />
             </div>
           ) : (
             <Navigate to="/login" replace />
@@ -71,7 +71,7 @@ export const AppContent: React.FC = () => {
 
       <Route
         path="/guilds/:guildId"
-        element={user ? <DashboardTemplate user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
+        element={user ? <DashboardLayout user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
       >
         <Route index element={<OverviewPage />} />
         <Route path="channels" element={<ChannelsPage />} />
@@ -91,7 +91,12 @@ export const AppContent: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AppContent />
     </BrowserRouter>
   );

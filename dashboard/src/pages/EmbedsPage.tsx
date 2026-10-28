@@ -1,14 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdSelect, MdIconButton, MdLoading, MdIcon } from '../components/atoms';
-import { PageHeader, NoticeBanner, SurfaceCard, SwitchRow, ColorPickerField } from '../components/molecules';
-import { DiscordEmbedPreview, EmbedData } from '../components/organisms';
+import {
+  MdButton,
+  MdTextField,
+  MdSelect,
+  MdIconButton,
+  MdLoading,
+  MdIcon,
+  PageHeader,
+  NoticeBanner,
+  SurfaceCard,
+  SwitchRow,
+  ColorPickerField,
+} from '../components/ui';
+import { DiscordEmbedPreview, EmbedData } from '../components/features';
 import { ChannelItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 export const EmbedsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
   const [sending, setSending] = useState(false);
   const [successNotice, setSuccessNotice] = useState('');
 
@@ -34,7 +47,8 @@ export const EmbedsPage: React.FC = () => {
   });
 
   useEffect(() => {
-    fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.channels) {
@@ -45,6 +59,8 @@ export const EmbedsPage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   }, [guildId]);
 
   const handleAddField = () => {
@@ -146,7 +162,7 @@ export const EmbedsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && channels.length === 0) return <MdLoading />;
 
   const channelOptions = channels.map((c) => ({ value: c.id, label: `#${c.name}` }));
 

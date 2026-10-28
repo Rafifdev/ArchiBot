@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdIconButton, MdLoading, MdSelect, MdIcon, StatusBadge } from '../components/atoms';
 import {
+  MdButton,
+  MdTextField,
+  MdIconButton,
+  MdLoading,
+  MdSelect,
+  MdIcon,
+  Badge,
+  StatusBadge,
   MdDialog,
   ConfirmDialog,
   PageHeader,
   SurfaceCard,
   SwitchRow,
   ColorPickerField,
-} from '../components/molecules';
+} from '../components/ui';
 import { RoleItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 const PERMISSION_GROUPS = [
   {
@@ -60,6 +68,7 @@ const PERMISSION_GROUPS = [
 export const RolesPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [roles, setRoles] = useState<RoleItem[]>([]);
+  const { registerServerFetch } = useServerSwitch();
   const [autoRoles, setAutoRoles] = useState<{ memberRoleId: string | null; verifiedRoleId: string | null }>({
     memberRoleId: null,
     verifiedRoleId: null,
@@ -84,7 +93,8 @@ export const RolesPage: React.FC = () => {
   const [deleteRole, setDeleteRole] = useState<RoleItem | null>(null);
 
   const fetchRoles = () => {
-    fetch(`/api/guilds/${guildId}/roles`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/roles`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.roles) setRoles(data.roles);
@@ -92,6 +102,8 @@ export const RolesPage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   useEffect(() => {
@@ -194,7 +206,7 @@ export const RolesPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && roles.length === 0) return <MdLoading />;
 
   const roleOptions = [{ value: '', label: 'None' }, ...roles.map((r) => ({ value: r.id, label: r.name }))];
 

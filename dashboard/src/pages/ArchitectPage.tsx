@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdSelect, MdLoading, MdIcon } from '../components/atoms';
-import { MdTabs, ConfirmDialog, PageHeader, NoticeBanner, SurfaceCard, SwitchRow } from '../components/molecules';
+import {
+  MdButton,
+  MdTextField,
+  MdSelect,
+  MdLoading,
+  MdIcon,
+  MdTabs,
+  ConfirmDialog,
+  PageHeader,
+  NoticeBanner,
+  SurfaceCard,
+  SwitchRow,
+} from '../components/ui';
 import { ChannelItem, RoleItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 export const ArchitectPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
@@ -13,6 +25,7 @@ export const ArchitectPage: React.FC = () => {
   const [channels, setChannels] = useState<ChannelItem[]>([]);
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
   const [executing, setExecuting] = useState(false);
   const [resultNotice, setResultNotice] = useState('');
 
@@ -42,7 +55,8 @@ export const ArchitectPage: React.FC = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    Promise.all([
+    setLoading(true);
+    const p = Promise.all([
       fetch(`/api/guilds/${guildId}/architect`, { credentials: 'include' }).then((r) => r.json()),
       fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' }).then((r) => r.json()),
       fetch(`/api/guilds/${guildId}/roles`, { credentials: 'include' }).then((r) => r.json()),
@@ -59,6 +73,8 @@ export const ArchitectPage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   }, [guildId]);
 
   const handleBuildTemplate = async (templateKey: string) => {
@@ -173,7 +189,7 @@ export const ArchitectPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && templates.length === 0 && legoModules.length === 0) return <MdLoading />;
 
   const channelOptions = channels.map((c) => ({ value: c.id, label: `#${c.name}` }));
   const roleOptions = [{ value: '', label: 'Auto (Verified Role)' }, ...roles.map((r) => ({ value: r.id, label: r.name }))];

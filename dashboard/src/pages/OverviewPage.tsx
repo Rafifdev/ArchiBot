@@ -1,29 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DiscordMark, MdLoading, SectionHeader } from '../components/atoms';
-import { QuickActionCard, ModuleCard } from '../components/molecules';
+import { DiscordMark, MdLoading, SectionHeader, QuickActionCard, ModuleCard } from '../components/ui';
+import { useServerSwitch } from '../components/layout';
 
 export const OverviewPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
 
   const fetchOverview = () => {
-    fetch(`/api/guilds/${guildId}/overview`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/overview`, { credentials: 'include' })
       .then((r) => r.json())
       .then((res) => {
         if (res.guild) setData(res.guild);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   useEffect(() => {
     fetchOverview();
   }, [guildId]);
 
-  if (loading) return <MdLoading />;
+  if (loading && !data) return <MdLoading />;
   if (!data) return <div className="text-xs text-discord-muted">Failed to load server data.</div>;
 
   const quickActions = [
@@ -146,10 +150,10 @@ export const OverviewPage: React.FC = () => {
             <img
               src={data.icon}
               alt={data.name}
-              className="w-16 h-16 rounded-2xl object-cover shadow-md shrink-0"
+              className="w-16 h-16 rounded-xl object-cover shadow-md shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-2xl bg-discord-blurple flex items-center justify-center text-discord-white shadow-md shrink-0">
+            <div className="w-16 h-16 rounded-xl bg-discord-blurple flex items-center justify-center text-discord-white shadow-md shrink-0">
               <DiscordMark className="w-9 h-9" />
             </div>
           )}

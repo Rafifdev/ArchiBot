@@ -1,13 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdSelect, MdIconButton, MdLoading, MdIcon, StatusBadge } from '../components/atoms';
-import { MdDialog, MdTabs, PageHeader, SurfaceCard, EmptyState } from '../components/molecules';
+import {
+  MdButton,
+  MdTextField,
+  MdSelect,
+  MdIconButton,
+  MdLoading,
+  MdIcon,
+  Badge,
+  StatusBadge,
+  MdDialog,
+  MdTabs,
+  PageHeader,
+  SurfaceCard,
+  EmptyState,
+} from '../components/ui';
 import { MemberItem, RoleItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 export const MembersPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [tabIndex, setTabIndex] = useState(0);
   const [members, setMembers] = useState<MemberItem[]>([]);
+  const { registerServerFetch } = useServerSwitch();
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [bans, setBans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,13 +52,16 @@ export const MembersPage: React.FC = () => {
     if (search) params.set('q', search);
     if (selectedRoleFilter) params.set('roleId', selectedRoleFilter);
 
-    fetch(`/api/guilds/${guildId}/members?${params.toString()}`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/members?${params.toString()}`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.members) setMembers(data.members);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   const fetchRoles = () => {
@@ -207,7 +225,7 @@ export const MembersPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && members.length === 0) return <MdLoading />;
 
   return (
     <div className="flex flex-col gap-6">

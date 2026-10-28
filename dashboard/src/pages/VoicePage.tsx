@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdSelect, MdIconButton, MdLoading, MdIcon, StatusBadge } from '../components/atoms';
-import { MdDialog, PageHeader, SurfaceCard, EmptyState } from '../components/molecules';
+import {
+  MdButton,
+  MdTextField,
+  MdSelect,
+  MdIconButton,
+  MdLoading,
+  MdIcon,
+  Badge,
+  StatusBadge,
+  MdDialog,
+  PageHeader,
+  SurfaceCard,
+  EmptyState,
+} from '../components/ui';
 import { TempVoiceRoom } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 export const VoicePage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [hubs, setHubs] = useState<any[]>([]);
   const [tempRooms, setTempRooms] = useState<TempVoiceRoom[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
 
   const [createHubOpen, setCreateHubOpen] = useState(false);
   const [hubName, setHubName] = useState('➕ Create Voice');
@@ -19,7 +33,8 @@ export const VoicePage: React.FC = () => {
   const [editLimit, setEditLimit] = useState(0);
 
   const fetchVoiceData = () => {
-    fetch(`/api/guilds/${guildId}/voice`, { credentials: 'include' })
+    setLoading(true);
+    const p = fetch(`/api/guilds/${guildId}/voice`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.hubs) setHubs(data.hubs);
@@ -27,6 +42,8 @@ export const VoicePage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   useEffect(() => {
@@ -138,7 +155,7 @@ export const VoicePage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && hubs.length === 0 && tempRooms.length === 0) return <MdLoading />;
 
   return (
     <div className="flex flex-col gap-6">

@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { MdButton, MdTextField, MdSelect, MdLoading, MdIcon } from '../components/atoms';
-import { MdTabs, PageHeader, NoticeBanner, SurfaceCard, SwitchRow, EmptyState } from '../components/molecules';
+import {
+  MdButton,
+  MdTextField,
+  MdSelect,
+  MdLoading,
+  MdIcon,
+  MdTabs,
+  PageHeader,
+  NoticeBanner,
+  SurfaceCard,
+  SwitchRow,
+  EmptyState,
+} from '../components/ui';
 import { ChannelItem, RoleItem } from '../types/api';
+import { useServerSwitch } from '../components/layout';
 
 const TAB_MAP: Record<string, number> = {
   general: 0,
@@ -20,6 +32,7 @@ export const SettingsPage: React.FC = () => {
   const [roles, setRoles] = useState<RoleItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { registerServerFetch } = useServerSwitch();
   const [saving, setSaving] = useState(false);
   const [testingMilestone, setTestingMilestone] = useState(false);
   const [notice, setNotice] = useState('');
@@ -52,7 +65,8 @@ export const SettingsPage: React.FC = () => {
   }, [searchParams]);
 
   const fetchSettings = () => {
-    Promise.all([
+    setLoading(true);
+    const p = Promise.all([
       fetch(`/api/guilds/${guildId}/settings`, { credentials: 'include' }).then((r) => r.json()),
       fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' }).then((r) => r.json()),
       fetch(`/api/guilds/${guildId}/roles`, { credentials: 'include' }).then((r) => r.json()),
@@ -88,6 +102,8 @@ export const SettingsPage: React.FC = () => {
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
+
+    registerServerFetch(p);
   };
 
   useEffect(() => {
@@ -167,7 +183,7 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  if (loading) return <MdLoading />;
+  if (loading && channels.length === 0 && roles.length === 0) return <MdLoading />;
 
   const channelOptions = [
     { value: '', label: 'Select a channel...' },

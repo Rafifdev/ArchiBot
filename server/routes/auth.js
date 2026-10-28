@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
 import { config, updateEnvFile } from '../config.js';
 import { signUserToken, verifySession } from '../middleware/auth.js';
-import { client } from '../botClient.js';
+import { client, ensureBotReady } from '../botClient.js';
 
 const router = Router();
 const userGuildsCache = new Map();
@@ -107,11 +107,15 @@ router.get('/callback', async (req, res) => {
     // Store token for guild fetching
     userTokens.set(discordUser.id, accessToken);
 
+    const avatarUrl = discordUser.avatar
+      ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+      : null;
+
     const userPayload = {
       id: discordUser.id,
       username: discordUser.username,
       global_name: discordUser.global_name || discordUser.username,
-      avatar: discordUser.avatar,
+      avatar: avatarUrl,
       discriminator: discordUser.discriminator,
       isOwner: false,
     };
@@ -136,21 +140,41 @@ router.post('/dev-login', async (req, res) => {
   try {
     let ownerId = '1';
     let ownerName = 'Bot Administrator';
+    let globalName = 'Bot Administrator';
     let avatar = null;
+
+    if (!client.isReady()) {
+      await ensureBotReady().catch(() => null);
+    }
 
     if (client.isReady() && client.application) {
       const app = await client.application.fetch().catch(() => null);
       if (app?.owner) {
-        ownerId = app.owner.id;
-        ownerName = app.owner.username || app.owner.name || 'Owner';
-        avatar = app.owner.avatar || null;
+        let realOwner = null;
+        if (app.owner.ownerUserId) {
+          // Team owner
+          realOwner = await client.users.fetch(app.owner.ownerUserId).catch(() => null);
+        } else if (app.owner.id) {
+          realOwner = await client.users.fetch(app.owner.id).catch(() => app.owner);
+        }
+
+        if (realOwner) {
+          ownerId = realOwner.id;
+          ownerName = realOwner.username;
+          globalName = realOwner.globalName || realOwner.username;
+          if (typeof realOwner.displayAvatarURL === 'function') {
+            avatar = realOwner.displayAvatarURL({ extension: 'png', size: 128 });
+          } else if (realOwner.avatar) {
+            avatar = `https://cdn.discordapp.com/avatars/${realOwner.id}/${realOwner.avatar}.png`;
+          }
+        }
       }
     }
 
     const devUser = {
       id: ownerId,
       username: ownerName,
-      global_name: `${ownerName} (Local Admin)`,
+      global_name: globalName,
       avatar,
       discriminator: '0',
       isOwner: true,
@@ -172,8 +196,39 @@ router.post('/dev-login', async (req, res) => {
   }
 });
 
-router.get('/me', verifySession, (req, res) => {
-  res.json({ user: req.user });
+router.get('/me', verifySession, async (req, res) => {
+  const user = { ...req.user };
+
+  // Strip legacy "(Local Admin)" if present in active session cookie
+  if (user.global_name && user.global_name.includes(' (Local Admin)')) {
+    user.global_name = user.global_name.replace(' (Local Admin)', '').trim();
+  }
+
+  // Ensure live real user info from Discord
+  if (!client.isReady()) {
+    await ensureBotReady().catch(() => null);
+  }
+
+  if (client.isReady() && user.id && user.id !== '1') {
+    try {
+      const realDiscordUser =
+        client.users.cache.get(user.id) || (await client.users.fetch(user.id).catch(() => null));
+      if (realDiscordUser) {
+        user.username = realDiscordUser.username;
+        user.global_name = realDiscordUser.globalName || realDiscordUser.username;
+        if (typeof realDiscordUser.displayAvatarURL === 'function') {
+          user.avatar = realDiscordUser.displayAvatarURL({ extension: 'png', size: 128 });
+        } else if (realDiscordUser.avatar) {
+          user.avatar = `https://cdn.discordapp.com/avatars/${realDiscordUser.id}/${realDiscordUser.avatar}.png`;
+        }
+      }
+    } catch {}
+  }
+
+  if (user.avatar && !user.avatar.startsWith('http://') && !user.avatar.startsWith('https://')) {
+    user.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+  }
+  res.json({ user });
 });
 
 router.post('/logout', (req, res) => {
@@ -184,22 +239,6 @@ router.post('/logout', (req, res) => {
 router.get('/guilds', verifySession, async (req, res) => {
   const userId = req.user.id;
   const clientId = client.user?.id || config.DISCORD_CLIENT_ID;
-
-  // Local/Dev owner mode: list all servers the bot is in
-  if (req.user.isDev || req.user.isOwner) {
-    const guilds = [...client.guilds.cache.values()].map((g) => ({
-      id: g.id,
-      name: g.name,
-      icon: g.iconURL({ size: 128 }),
-      botInGuild: true,
-      isOwner: g.ownerId === userId,
-      permissions: '8', // Administrator
-      memberCount: g.memberCount,
-      channelsCount: g.channels.cache.size,
-      rolesCount: g.roles.cache.size,
-    }));
-    return res.json({ guilds });
-  }
 
   // Check cache first
   const cacheKey = `user_guilds_${userId}`;
@@ -220,58 +259,98 @@ router.get('/guilds', verifySession, async (req, res) => {
       });
       if (gRes.ok) {
         discordGuilds = await gRes.json();
+      } else if (gRes.status === 401) {
+        userTokens.delete(userId);
       }
     } catch (err) {
       console.warn('Failed to fetch guilds from Discord API:', err.message);
     }
   }
 
-  // Fallback: check mutual guilds in bot client cache
+  // Fallback or Dev mode:
+  // If Discord API didn't return guilds (e.g. dev login without OAuth or token expired)
   if (!discordGuilds.length) {
-    for (const g of client.guilds.cache.values()) {
-      if (g.ownerId === userId) {
+    if (req.user.isDev) {
+      // Dev login mode: bot cache + uninvited demo server for local testing
+      for (const g of client.guilds.cache.values()) {
         discordGuilds.push({
           id: g.id,
           name: g.name,
-          icon: g.icon,
-          owner: true,
-          permissions: '8',
+          icon: g.iconURL({ size: 128 }) || g.icon || null,
+          owner: g.ownerId === userId || true,
+          permissions: '8', // Administrator
         });
-        continue;
       }
-      const m = g.members.cache.get(userId);
-      if (m && (m.permissions.has(8n) || m.permissions.has(32n))) {
-        discordGuilds.push({
-          id: g.id,
-          name: g.name,
-          icon: g.icon,
-          owner: false,
-          permissions: m.permissions.bitfield.toString(),
-        });
+
+      // Add uninvited server so local dev can test the "Invite" action
+      discordGuilds.push({
+        id: 'dev-demo-guild-uninvited',
+        name: 'Community & Gaming Hub',
+        icon: null,
+        owner: true,
+        permissions: '8',
+      });
+    } else {
+      // Regular user fallback: check mutual guilds in bot client cache
+      for (const g of client.guilds.cache.values()) {
+        if (g.ownerId === userId) {
+          discordGuilds.push({
+            id: g.id,
+            name: g.name,
+            icon: g.iconURL({ size: 128 }) || g.icon || null,
+            owner: true,
+            permissions: '8',
+          });
+          continue;
+        }
+        const m = g.members.cache.get(userId);
+        if (m && (m.permissions.has(8n) || m.permissions.has(32n))) {
+          discordGuilds.push({
+            id: g.id,
+            name: g.name,
+            icon: g.iconURL({ size: 128 }) || g.icon || null,
+            owner: false,
+            permissions: m.permissions.bitfield.toString(),
+          });
+        }
       }
     }
   }
 
-  // Filter guilds where user has Administrator (0x8) or Manage Server (0x20) or is Owner
+  // Filter ONLY guilds where user has permission to invite the bot:
+  // Must be server owner, have Administrator (0x8), or Manage Server (0x20)
   const manageableGuilds = discordGuilds
     .filter((g) => {
-      if (g.owner) return true;
-      const permBig = BigInt(g.permissions || '0');
-      return (permBig & 8n) === 8n || (permBig & 32n) === 32n;
+      if (g.owner || g.isOwner) return true;
+      if (!g.permissions && g.permissions !== 0) return false;
+      try {
+        const perms = BigInt(g.permissions);
+        return (perms & 8n) === 8n || (perms & 32n) === 32n;
+      } catch {
+        return false;
+      }
     })
     .map((g) => {
       const botGuild = client.guilds.cache.get(g.id);
-      const iconUrl = g.icon
-        ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`
-        : null;
+      let iconUrl = null;
+      if (g.icon) {
+        iconUrl = g.icon.startsWith('http')
+          ? g.icon
+          : `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`;
+      }
+      if (!iconUrl && botGuild) {
+        iconUrl = botGuild.iconURL({ size: 128 }) || null;
+      }
+
+      const botInGuild = Boolean(botGuild);
 
       return {
         id: g.id,
         name: g.name,
         icon: iconUrl,
-        botInGuild: Boolean(botGuild),
-        isOwner: Boolean(g.owner),
-        permissions: g.permissions,
+        botInGuild,
+        isOwner: Boolean(g.owner || g.isOwner),
+        permissions: String(g.permissions || '0'),
         memberCount: botGuild ? botGuild.memberCount : null,
         channelsCount: botGuild ? botGuild.channels.cache.size : null,
         rolesCount: botGuild ? botGuild.roles.cache.size : null,
@@ -280,6 +359,15 @@ router.get('/guilds', verifySession, async (req, res) => {
           : null,
       };
     });
+
+  // Sort: Servers with bot already added first, then uninvited servers
+  manageableGuilds.sort((a, b) => {
+    if (a.botInGuild && !b.botInGuild) return -1;
+    if (!a.botInGuild && b.botInGuild) return 1;
+    if (a.isOwner && !b.isOwner) return -1;
+    if (!a.isOwner && b.isOwner) return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   userGuildsCache.set(cacheKey, { guilds: manageableGuilds, timestamp: Date.now() });
   return res.json({ guilds: manageableGuilds });

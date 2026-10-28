@@ -3,27 +3,39 @@ import { resolve } from 'node:path';
 
 const ENV_PATH = resolve(process.cwd(), '.env');
 
+function getEnv(key, defaultVal = '') {
+  if (process.env[key]?.trim()) return process.env[key].trim();
+  if (existsSync(ENV_PATH)) {
+    try {
+      const content = readFileSync(ENV_PATH, 'utf8');
+      const match = content.match(new RegExp(`^${key}=(.*)$`, 'm'));
+      if (match && match[1]?.trim()) return match[1].trim();
+    } catch {}
+  }
+  return defaultVal;
+}
+
 export const config = {
   get PORT() {
-    return Number(process.env.PORT || 3001);
+    return Number(getEnv('PORT', '3001'));
   },
   get JWT_SECRET() {
-    return process.env.JWT_SECRET || 'archibot_jwt_dashboard_secret_2026_default';
+    return getEnv('JWT_SECRET', 'archibot_jwt_dashboard_secret_2026_default');
   },
   get FRONTEND_URL() {
-    return process.env.FRONTEND_URL || 'http://localhost:5173';
+    return getEnv('FRONTEND_URL', 'http://localhost:5173');
   },
   get DISCORD_TOKEN() {
-    return process.env.DISCORD_TOKEN?.trim() || '';
+    return getEnv('DISCORD_TOKEN');
   },
   get DISCORD_CLIENT_ID() {
-    return process.env.DISCORD_CLIENT_ID?.trim() || '';
+    return getEnv('DISCORD_CLIENT_ID');
   },
   get DISCORD_CLIENT_SECRET() {
-    return process.env.DISCORD_CLIENT_SECRET?.trim() || '';
+    return getEnv('DISCORD_CLIENT_SECRET');
   },
   get DISCORD_REDIRECT_URI() {
-    return process.env.DISCORD_REDIRECT_URI?.trim() || 'http://localhost:5173/api/auth/callback';
+    return getEnv('DISCORD_REDIRECT_URI', 'http://localhost:5173/api/auth/callback');
   },
 };
 

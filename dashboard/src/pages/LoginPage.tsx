@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdButton, MdTextField, DiscordMark, MdIcon } from '../components/atoms';
-import { NoticeBanner, SurfaceCard } from '../components/molecules';
+import { MdButton, MdTextField, DiscordMark, MdIcon, NoticeBanner, SurfaceCard } from '../components/ui';
 import { AuthStatus, UserProfile } from '../types/api';
 
 interface LoginPageProps {
@@ -16,6 +15,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [clientSecret, setClientSecret] = useState('');
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [botAvatarError, setBotAvatarError] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/status')
@@ -78,10 +78,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       <div className="max-w-md w-full flex flex-col gap-6">
         {/* Brand header */}
         <div className="text-center flex flex-col items-center">
-          <div className="w-14 h-14 rounded-2xl bg-discord-blurple flex items-center justify-center text-discord-white shadow-lg mb-4">
-            <DiscordMark className="w-8 h-8" />
-          </div>
-          <h1 className="text-xl font-normal text-discord-white">ArchiBot Dashboard</h1>
+          {status?.botAvatar && !botAvatarError ? (
+            <img
+              src={status.botAvatar}
+              alt="ARCHIBOT DASHBOARD"
+              onError={() => setBotAvatarError(true)}
+              className="w-14 h-14 rounded-2xl object-cover shadow-lg mb-4 border border-discord-border"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-discord-blurple flex items-center justify-center text-discord-white shadow-lg mb-4">
+              <DiscordMark className="w-8 h-8" />
+            </div>
+          )}
+          <h1 className="text-xl font-normal text-discord-white uppercase tracking-wider">ARCHIBOT DASHBOARD</h1>
           <p className="text-discord-muted text-xs font-normal mt-1.5 leading-relaxed max-w-xs">
             Sign in with your Discord account to configure and manage your community servers.
           </p>

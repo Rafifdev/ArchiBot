@@ -606,4 +606,29 @@ for (const modId of ['music']) {
 }
 assert.equal(musicIncluded, true);
 
+// Test Guild invite & permission filtering rules
+function canUserInviteBotToGuild(g) {
+  if (g.owner || g.isOwner) return true;
+  if (!g.permissions && g.permissions !== 0) return false;
+  try {
+    const perms = BigInt(g.permissions);
+    return (perms & 8n) === 8n || (perms & 32n) === 32n;
+  } catch {
+    return false;
+  }
+}
+
+const mockGuildsList = [
+  { id: '1', name: 'Owner Guild', owner: true, permissions: '0' },
+  { id: '2', name: 'Admin Guild', owner: false, permissions: '8' },
+  { id: '3', name: 'Manage Server Guild', owner: false, permissions: '32' },
+  { id: '4', name: 'Combined Admin Guild', owner: false, permissions: '1071698660937' }, // Has 8n
+  { id: '5', name: 'Regular Member Guild', owner: false, permissions: '2048' }, // No 8n, no 32n
+  { id: '6', name: 'No Perms Guild', owner: false, permissions: '0' },
+];
+
+const filteredGuilds = mockGuildsList.filter(canUserInviteBotToGuild);
+assert.equal(filteredGuilds.length, 4);
+assert.deepEqual(filteredGuilds.map((g) => g.id), ['1', '2', '3', '4']);
+
 console.log('✅ All fixed sections, stats, gateway, UX, and style checks passed!');

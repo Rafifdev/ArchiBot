@@ -27,6 +27,7 @@
   --color-discord-active: #1D2136;
   --color-discord-border: #232733;
   --color-discord-border-hover: #343A4D;
+  --color-discord-divider: #4E5466;
   --color-discord-text: #F2F3F5;
   --color-discord-muted: #949BA4;
   --color-discord-premium-bg: #332818;
@@ -131,12 +132,14 @@
   --color-discord-active: #E0E3FF;
   --color-discord-border: #DBDEE1;
   --color-discord-border-hover: #B5BAC1;
+  --color-discord-divider: #C4C8CF;
   --color-discord-text: #111214;
   --color-discord-muted: #4E5058;
 }
 
-/* Normal weight (wght 400, strictly not bold), balanced 24px standard */
-md-icon {
+/* Normal weight (wght 400, strictly not bold), balanced 24px standard & anti-overflow */
+md-icon,
+.material-symbols-outlined {
   font-family: var(--md-icon-font) !important;
   font-weight: 400 !important;
   font-style: normal;
@@ -147,6 +150,9 @@ md-icon {
   justify-content: center;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+  overflow: hidden;
 }
 
 /* Center all Material Web Dialogs in viewport (Overriding Tailwind's * { margin: 0 } reset) */
