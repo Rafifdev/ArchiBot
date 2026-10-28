@@ -1,4 +1,4 @@
-﻿# 🤖 ArchiBot — All-in-One Discord Server Architect
+# 🤖 ArchiBot — All-in-One Discord Server Architect
 
 > Effortlessly architect, build, and manage production-ready Discord community servers with zero manual channel setup.
 
@@ -106,10 +106,22 @@ Copy `.env.example` to `.env` and paste your bot token:
 DISCORD_TOKEN=your_bot_token_here
 ```
 
-### 4. Run the Bot
+### 4. Run the Bot & Web Dashboard
 ```bash
+# Starts both ArchiBot and the Web Dashboard at http://localhost:3001
 npm start
 ```
+
+Or run frontend development server separately with Vite HMR:
+```bash
+# In dashboard folder:
+cd dashboard
+npm run dev
+```
+
+Open `http://localhost:3001` (or `http://localhost:5173` in Vite dev mode) in your browser.
+- **Log in with Discord OAuth2** or use **Quick Login as Bot Owner (Localhost)**.
+- Manage literally the entire server: Channels, Roles, Members, Lego Builder, Dynamic Voice, Rich Embeds, Backups, and Automod.
 
 Run test suite:
 ```bash

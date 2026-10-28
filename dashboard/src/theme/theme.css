@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   SINGLE SOURCE OF TRUTH: DISCORD OFFICIAL BRAND PALETTE & TAILWIND THEME
+   Ref: Discord Corebook Brand Guidelines (Blurple, Green, Yellow, Fuchsia, Red, Dark Surfaces)
+   ========================================================================== */
+@theme {
+  --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Official Discord Corebook Brand Colors */
+  --color-discord-blurple: #5865F2;
+  --color-discord-blurple-hover: #4752C4;
+  --color-discord-blurple-soft: #1E2238;
+  --color-discord-green: #57F287;
+  --color-discord-yellow: #FEE75C;
+  --color-discord-fuchsia: #EB459E;
+  --color-discord-red: #ED4245;
+  --color-discord-white: #FFFFFF;
+  --color-discord-black: #000000;
+
+  /* Discord Dark Theme UI Surfaces */
+  --color-discord-sidebar: #0E1015;
+  --color-discord-canvas: #14161D;
+  --color-discord-card: #181B23;
+  --color-discord-card-hover: #1D202A;
+  --color-discord-surface: #20242F;
+  --color-discord-active: #1D2136;
+  --color-discord-border: #232733;
+  --color-discord-border-hover: #343A4D;
+  --color-discord-text: #F2F3F5;
+  --color-discord-muted: #949BA4;
+  --color-discord-premium-bg: #332818;
+  --color-discord-premium-text: #E5A93C;
+}
+
+/* ==========================================================================
+   MATERIAL DESIGN 3 (@material/web) SYSTEM TOKENS MAPPED TO DISCORD PALETTE
+   ========================================================================== */
+:root {
+  --md-icon-font: 'Material Symbols Outlined';
+  --md-ref-typeface-brand: 'Poppins', sans-serif;
+  --md-ref-typeface-plain: 'Poppins', sans-serif;
+  color-scheme: dark;
+
+  --md-sys-color-primary: var(--color-discord-blurple);
+  --md-sys-color-on-primary: var(--color-discord-white);
+  --md-sys-color-primary-container: var(--color-discord-active);
+  --md-sys-color-on-primary-container: var(--color-discord-text);
+
+  --md-sys-color-secondary: var(--color-discord-blurple);
+  --md-sys-color-on-secondary: var(--color-discord-white);
+  --md-sys-color-secondary-container: var(--color-discord-surface);
+  --md-sys-color-on-secondary-container: var(--color-discord-text);
+
+  --md-sys-color-tertiary: var(--color-discord-green);
+  --md-sys-color-on-tertiary: #003915;
+
+  --md-sys-color-background: var(--color-discord-canvas);
+  --md-sys-color-on-background: var(--color-discord-text);
+
+  --md-sys-color-surface: var(--color-discord-card);
+  --md-sys-color-on-surface: var(--color-discord-text);
+  --md-sys-color-surface-container: var(--color-discord-surface);
+  --md-sys-color-surface-container-low: var(--color-discord-card);
+  --md-sys-color-surface-container-high: var(--color-discord-card-hover);
+  --md-sys-color-surface-container-highest: var(--color-discord-border-hover);
+  --md-sys-color-on-surface-variant: var(--color-discord-muted);
+
+  --md-sys-color-outline: var(--color-discord-border-hover);
+  --md-sys-color-outline-variant: var(--color-discord-border);
+
+  --md-sys-color-error: var(--color-discord-red);
+  --md-sys-color-on-error: var(--color-discord-white);
+
+  /* Material Web Component Tokens - Normal Standard Weights, Sized Balanced */
+  --md-outlined-text-field-container-shape: 8px;
+  --md-outlined-select-text-field-container-shape: 8px;
+  --md-filled-button-container-shape: 8px;
+  --md-outlined-button-container-shape: 8px;
+  --md-filled-tonal-button-container-shape: 8px;
+  --md-text-button-container-shape: 8px;
+  --md-dialog-container-color: var(--color-discord-card);
+  --md-dialog-container-shape: 16px;
+  --md-list-container-color: transparent;
+  --md-list-item-one-line-container-height: 40px;
+  --md-list-item-top-space: 6px;
+  --md-list-item-bottom-space: 6px;
+  --md-list-item-leading-space: 12px;
+  --md-list-item-trailing-space: 12px;
+  --md-list-item-label-text-size: 12px;
+  --md-list-item-label-text-line-height: 20px;
+  --md-list-item-label-text-weight: 400;
+  --md-menu-container-color: var(--color-discord-card);
+  --md-menu-container-shape: 12px;
+  --md-fab-container-shape: 16px;
+
+  /* Standard text tokens with strictly normal font weight */
+  --md-filled-button-label-text-size: 12px;
+  --md-filled-button-label-text-weight: 400;
+  --md-outlined-button-label-text-size: 12px;
+  --md-outlined-button-label-text-weight: 400;
+  --md-filled-tonal-button-label-text-size: 12px;
+  --md-filled-tonal-button-label-text-weight: 400;
+  --md-text-button-label-text-size: 12px;
+  --md-text-button-label-text-weight: 400;
+  --md-primary-tab-label-text-size: 12px;
+  --md-primary-tab-label-text-weight: 400;
+  --md-secondary-tab-label-text-size: 12px;
+  --md-secondary-tab-label-text-weight: 400;
+  --md-list-item-headline-size: 12px;
+  --md-list-item-headline-weight: 400;
+  --md-list-item-supporting-text-size: 11px;
+  --md-list-item-supporting-text-weight: 400;
+
+  /* Input fields text size (text-xs / 12px) */
+  --md-outlined-text-field-input-text-size: 12px;
+  --md-outlined-text-field-label-text-size: 12px;
+  --md-outlined-text-field-supporting-text-size: 11px;
+  --md-outlined-select-text-field-input-text-size: 12px;
+  --md-outlined-select-text-field-label-text-size: 12px;
+}
+
+/* Light theme override when toggled via header */
+[data-theme='light'] {
+  color-scheme: light;
+  --color-discord-sidebar: #F2F3F5;
+  --color-discord-canvas: #FFFFFF;
+  --color-discord-card: #F8F9FA;
+  --color-discord-card-hover: #EBEDEF;
+  --color-discord-surface: #E3E5E8;
+  --color-discord-active: #E0E3FF;
+  --color-discord-border: #DBDEE1;
+  --color-discord-border-hover: #B5BAC1;
+  --color-discord-text: #111214;
+  --color-discord-muted: #4E5058;
+}
+
+/* Normal weight (wght 400, strictly not bold), balanced 24px standard */
+md-icon {
+  font-family: var(--md-icon-font) !important;
+  font-weight: 400 !important;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Center all Material Web Dialogs in viewport (Overriding Tailwind's * { margin: 0 } reset) */
+md-dialog {
+  margin: auto !important;
+  max-width: min(620px, calc(100vw - 32px)) !important;
+  max-height: min(720px, calc(100vh - 32px)) !important;
+  --md-dialog-container-shape: 16px;
+}
+
+/* Perfect-pixel unified padding with generous breathing space above & below search bar */
+md-dialog [slot="headline"] {
+  padding: 16px 16px 6px 16px !important;
+}
+
+md-dialog [slot="content"] {
+  padding: 12px 16px 16px 16px !important;
+}
+
+md-dialog [slot="actions"] {
+  padding: 8px 16px 16px 16px !important;
+}
+
+/* Search bar height locked at 48px */
+md-dialog md-outlined-text-field {
+  --md-outlined-text-field-top-space: 12px;
+  --md-outlined-text-field-bottom-space: 12px;
+}
+
+/* Command palette scroll container: exact 316px height (2 category headers + 5 x 48px items) and flush right edge */
+.command-palette-scroll {
+  height: 316px !important;
+  max-height: 316px !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.command-palette-scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Command palette list: 48px per item (matching search bar height), clean zero padding */
+md-dialog md-list,
+.command-palette-list {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+md-dialog md-list-item,
+.command-palette-list md-list-item {
+  --md-list-item-one-line-container-height: 48px !important;
+  --md-list-item-two-line-container-height: 48px !important;
+  --md-list-item-top-space: 10px !important;
+  --md-list-item-bottom-space: 10px !important;
+  --md-list-item-leading-space: 12px !important;
+  --md-list-item-trailing-space: 12px !important;
+  --md-list-item-label-text-size: 12px !important;
+  --md-list-item-label-text-line-height: 20px !important;
+  --md-list-item-label-text-weight: 400 !important;
+  min-height: 48px !important;
+  height: 48px !important;
+  max-height: 48px !important;
+  border-radius: 8px;
+}
+
+/* Sleek Discord-style Dark Scrollbars (without arrow buttons) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-discord-surface);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-discord-border-hover);
+}

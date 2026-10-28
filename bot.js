@@ -2334,6 +2334,15 @@ client.on(Events.InviteDelete, (invite) => {
   guildInvites.get(invite.guild.id)?.delete(invite.code);
 });
 
+client.on(Events.PresenceUpdate, (oldPresence, newPresence) => {
+  if (!newPresence?.guild) return;
+  const cfg = state.guilds[newPresence.guild.id];
+  if (!cfg?.presenceId) return;
+  if (oldPresence?.status !== newPresence?.status) {
+    scheduleStatsSync(newPresence.guild);
+  }
+});
+
 client.on(Events.GuildMemberAdd, async (member) => {
   const cfg = state.guilds[member.guild.id];
   if (!cfg) return;
@@ -4212,6 +4221,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
+export {
+  client,
+  state,
+  saveState,
+  toSlug,
+  getFixedChannelIds,
+  syncGuildStats,
+  scheduleStatsSync,
+  cacheGuildInvites,
+  ensureVerifiedRole,
+  ensureMemberRole,
+  executeClearChannels,
+  executeSetup,
+  applyVoicePrivacy,
+  cleanupVoiceRoom,
+  sendFreshVoicePanel,
+  buildCaptchaCard,
+  ensureCategory,
+  ensureChannel,
+  DANGEROUS_PERMS,
+};
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const token = process.env.DISCORD_TOKEN?.trim();
