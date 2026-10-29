@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   MdButton,
@@ -17,6 +17,7 @@ import {
 } from '../components/ui';
 import { ChannelItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
+import { useRealtime } from '../hooks/useRealtime';
 
 export const ChannelsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
@@ -60,6 +61,25 @@ export const ChannelsPage: React.FC = () => {
   useEffect(() => {
     fetchChannels();
   }, [guildId]);
+
+  // Real-time WebSocket synchronization with Discord events
+  const { connected: wsConnected } = useRealtime(
+    guildId,
+    useCallback(
+      (msg) => {
+        if (msg.event && msg.event.startsWith('CHANNEL_')) {
+          // Refetch channels silently without full-page spinner flicker
+          fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.channels) setChannels(data.channels);
+            })
+            .catch(() => {});
+        }
+      },
+      [guildId]
+    )
+  );
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -245,6 +265,12 @@ export const ChannelsPage: React.FC = () => {
         description="Organize categories, lock or unlock channels, and configure channel properties."
         actions={
           <>
+            {wsConnected && (
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-discord-green/10 border border-discord-green/20 text-discord-green text-xs font-normal">
+                <span className="w-2 h-2 rounded-full bg-discord-green animate-pulse" />
+                <span>Live Sync</span>
+              </div>
+            )}
             <div className="w-56">
               <MdTextField
                 label="Search channels"

@@ -1,10 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { createServer } from 'node:http';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config } from './config.js';
 import { ensureBotReady } from './botClient.js';
+import { initWebSocket } from './ws.js';
 
 import authRoutes from './routes/auth.js';
 import overviewRoutes from './routes/overview.js';
@@ -64,7 +66,7 @@ if (existsSync(dashboardDistPath)) {
   });
 }
 
-// Start bot and server
+// Start bot, WebSocket gateway, and HTTP server
 async function start() {
   console.log('🤖 Initializing ArchiBot client connection...');
   try {
@@ -73,7 +75,10 @@ async function start() {
     console.warn(`⚠️ Discord Client initialization notice: ${err.message}`);
   }
 
-  app.listen(config.PORT, () => {
+  const httpServer = createServer(app);
+  initWebSocket(httpServer);
+
+  httpServer.listen(config.PORT, () => {
     console.log(`🌐 ArchiBot API & Web Dashboard is live at http://localhost:${config.PORT}`);
     console.log(`📡 Frontend dev proxy configured for http://localhost:5173`);
   });
