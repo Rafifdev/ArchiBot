@@ -1,3 +1,4 @@
+import { Events } from 'discord.js';
 import {
   client,
   state,
@@ -41,9 +42,7 @@ export async function ensureBotReady() {
         resolve(client);
         return;
       }
-      const onReady = () => resolve(client);
-      client.once('clientReady', onReady);
-      client.once('ready', onReady);
+      client.once(Events.ClientReady, () => resolve(client));
       client.login(token).catch((err) => {
         loginPromise = null;
         console.error('❌ Bot login failed:', err.message);
