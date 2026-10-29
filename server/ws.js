@@ -138,6 +138,25 @@ function attachDiscordEvents() {
       timestamp: Date.now(),
     });
   });
+
+  // Real-time Guild Membership Events (Bot added/removed from a server)
+  client.on('guildCreate', (guild) => {
+    broadcastAll({
+      event: 'GUILD_CREATE',
+      guildId: guild.id,
+      guildName: guild.name,
+      timestamp: Date.now(),
+    });
+  });
+
+  client.on('guildDelete', (guild) => {
+    broadcastAll({
+      event: 'GUILD_DELETE',
+      guildId: guild.id,
+      guildName: guild.name,
+      timestamp: Date.now(),
+    });
+  });
 }
 
 export function initWebSocket(httpServer) {

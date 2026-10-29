@@ -1,5 +1,6 @@
 node_modules/
 .env
 state.json
+server/data/
 dashboard/dist/
 *.tsbuildinfo
