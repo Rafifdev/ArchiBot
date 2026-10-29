@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
 import { config, updateEnvFile } from '../config.js';
 import { signUserToken, verifySession } from '../middleware/auth.js';
 import { client, ensureBotReady } from '../botClient.js';
@@ -7,7 +9,67 @@ import { client, ensureBotReady } from '../botClient.js';
 const router = Router();
 const userGuildsCache = new Map();
 const userTokens = new Map();
-const GUILD_CACHE_TTL = 60_000; // 60 seconds
+const GUILD_CACHE_TTL = 30_000; // 30 seconds
+
+const TOKENS_PATH = resolve(process.cwd(), 'server', 'data', 'tokens.json');
+const GUILDS_PATH = resolve(process.cwd(), 'server', 'data', 'user_guilds.json');
+
+function getStoredToken(userId) {
+  if (userTokens.has(userId)) return userTokens.get(userId);
+  if (existsSync(TOKENS_PATH)) {
+    try {
+      const data = JSON.parse(readFileSync(TOKENS_PATH, 'utf8'));
+      if (data[userId]?.accessToken) {
+        userTokens.set(userId, data[userId].accessToken);
+        return data[userId].accessToken;
+      }
+    } catch {}
+  }
+  return null;
+}
+
+function saveStoredToken(userId, accessToken) {
+  userTokens.set(userId, accessToken);
+  try {
+    mkdirSync(dirname(TOKENS_PATH), { recursive: true });
+    let data = {};
+    if (existsSync(TOKENS_PATH)) {
+      try {
+        data = JSON.parse(readFileSync(TOKENS_PATH, 'utf8'));
+      } catch {}
+    }
+    data[userId] = { accessToken, updatedAt: Date.now() };
+    writeFileSync(TOKENS_PATH, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to save token to file:', err.message);
+  }
+}
+
+function getSavedUserGuilds(userId) {
+  if (existsSync(GUILDS_PATH)) {
+    try {
+      const data = JSON.parse(readFileSync(GUILDS_PATH, 'utf8'));
+      return data[userId] || null;
+    } catch {}
+  }
+  return null;
+}
+
+function saveUserGuilds(userId, guilds) {
+  try {
+    mkdirSync(dirname(GUILDS_PATH), { recursive: true });
+    let data = {};
+    if (existsSync(GUILDS_PATH)) {
+      try {
+        data = JSON.parse(readFileSync(GUILDS_PATH, 'utf8'));
+      } catch {}
+    }
+    data[userId] = guilds;
+    writeFileSync(GUILDS_PATH, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to save user guilds to file:', err.message);
+  }
+}
 
 router.get('/status', (req, res) => {
   const clientId = client.user?.id || config.DISCORD_CLIENT_ID || null;
@@ -104,11 +166,24 @@ router.get('/callback', async (req, res) => {
 
     const discordUser = await userRes.json();
 
-    // Store token for guild fetching
-    userTokens.set(discordUser.id, accessToken);
+    // Persist token for guild fetching across restarts
+    saveStoredToken(discordUser.id, accessToken);
+
+    // Eagerly fetch and persist user guilds from Discord API
+    try {
+      const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (guildsRes.ok) {
+        const discordGuilds = await guildsRes.json();
+        saveUserGuilds(discordUser.id, discordGuilds);
+      }
+    } catch (gErr) {
+      console.warn('Initial guild fetch warning:', gErr.message);
+    }
 
     const avatarUrl = discordUser.avatar
-      ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+      ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png?size=128`
       : null;
 
     const userPayload = {
@@ -118,6 +193,7 @@ router.get('/callback', async (req, res) => {
       avatar: avatarUrl,
       discriminator: discordUser.discriminator,
       isOwner: false,
+      accessToken,
     };
 
     const jwtToken = signUserToken(userPayload);
@@ -165,11 +241,13 @@ router.post('/dev-login', async (req, res) => {
           if (typeof realOwner.displayAvatarURL === 'function') {
             avatar = realOwner.displayAvatarURL({ extension: 'png', size: 128 });
           } else if (realOwner.avatar) {
-            avatar = `https://cdn.discordapp.com/avatars/${realOwner.id}/${realOwner.avatar}.png`;
+            avatar = `https://cdn.discordapp.com/avatars/${realOwner.id}/${realOwner.avatar}.png?size=128`;
           }
         }
       }
     }
+
+    const storedToken = getStoredToken(ownerId);
 
     const devUser = {
       id: ownerId,
@@ -179,6 +257,7 @@ router.post('/dev-login', async (req, res) => {
       discriminator: '0',
       isOwner: true,
       isDev: true,
+      ...(storedToken ? { accessToken: storedToken } : {}),
     };
 
     const token = signUserToken(devUser);
@@ -219,14 +298,14 @@ router.get('/me', verifySession, async (req, res) => {
         if (typeof realDiscordUser.displayAvatarURL === 'function') {
           user.avatar = realDiscordUser.displayAvatarURL({ extension: 'png', size: 128 });
         } else if (realDiscordUser.avatar) {
-          user.avatar = `https://cdn.discordapp.com/avatars/${realDiscordUser.id}/${realDiscordUser.avatar}.png`;
+          user.avatar = `https://cdn.discordapp.com/avatars/${realDiscordUser.id}/${realDiscordUser.avatar}.png?size=128`;
         }
       }
     } catch {}
   }
 
   if (user.avatar && !user.avatar.startsWith('http://') && !user.avatar.startsWith('https://')) {
-    user.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+    user.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
   }
   res.json({ user });
 });
@@ -240,6 +319,10 @@ router.get('/guilds', verifySession, async (req, res) => {
   const userId = req.user.id;
   const clientId = client.user?.id || config.DISCORD_CLIENT_ID;
 
+  if (!client.isReady()) {
+    await ensureBotReady().catch(() => null);
+  }
+
   // Check cache first
   const cacheKey = `user_guilds_${userId}`;
   const forceRefresh = req.query.refresh === 'true';
@@ -249,9 +332,10 @@ router.get('/guilds', verifySession, async (req, res) => {
     return res.json({ guilds: cached.guilds });
   }
 
-  const accessToken = userTokens.get(userId);
+  const accessToken = req.user.accessToken || userTokens.get(userId) || getStoredToken(userId);
   let discordGuilds = [];
 
+  // 1. Fetch live user guilds from Discord OAuth API if accessToken is available
   if (accessToken) {
     try {
       const gRes = await fetch('https://discord.com/api/users/@me/guilds', {
@@ -259,6 +343,7 @@ router.get('/guilds', verifySession, async (req, res) => {
       });
       if (gRes.ok) {
         discordGuilds = await gRes.json();
+        saveUserGuilds(userId, discordGuilds);
       } else if (gRes.status === 401) {
         userTokens.delete(userId);
       }
@@ -267,43 +352,30 @@ router.get('/guilds', verifySession, async (req, res) => {
     }
   }
 
-  // Fallback or Dev mode:
-  // If Discord API didn't return guilds (e.g. dev login without OAuth or token expired)
+  // 2. If Discord API was not reachable or token absent, check persisted user guilds
   if (!discordGuilds.length) {
-    if (req.user.isDev) {
-      // Dev login mode: bot cache + uninvited demo server for local testing
-      for (const g of client.guilds.cache.values()) {
+    const saved = getSavedUserGuilds(userId);
+    if (Array.isArray(saved) && saved.length > 0) {
+      discordGuilds = saved;
+    }
+  }
+
+  // 3. Fallback: Check mutual guilds in bot client cache
+  // Strictly ONLY include servers where user has genuine ownership or Administrator (0x8) / Manage Server (0x20)
+  if (!discordGuilds.length && client.isReady()) {
+    for (const g of client.guilds.cache.values()) {
+      if (g.ownerId === userId) {
         discordGuilds.push({
           id: g.id,
           name: g.name,
           icon: g.iconURL({ size: 128 }) || g.icon || null,
-          owner: g.ownerId === userId || true,
+          owner: true,
           permissions: '8', // Administrator
         });
+        continue;
       }
-
-      // Add uninvited server so local dev can test the "Invite" action
-      discordGuilds.push({
-        id: 'dev-demo-guild-uninvited',
-        name: 'Community & Gaming Hub',
-        icon: null,
-        owner: true,
-        permissions: '8',
-      });
-    } else {
-      // Regular user fallback: check mutual guilds in bot client cache
-      for (const g of client.guilds.cache.values()) {
-        if (g.ownerId === userId) {
-          discordGuilds.push({
-            id: g.id,
-            name: g.name,
-            icon: g.iconURL({ size: 128 }) || g.icon || null,
-            owner: true,
-            permissions: '8',
-          });
-          continue;
-        }
-        const m = g.members.cache.get(userId);
+      try {
+        const m = g.members.cache.get(userId) || (await g.members.fetch(userId).catch(() => null));
         if (m && (m.permissions.has(8n) || m.permissions.has(32n))) {
           discordGuilds.push({
             id: g.id,
@@ -313,15 +385,17 @@ router.get('/guilds', verifySession, async (req, res) => {
             permissions: m.permissions.bitfield.toString(),
           });
         }
-      }
+      } catch {}
     }
   }
 
-  // Filter ONLY guilds where user has permission to invite the bot:
-  // Must be server owner, have Administrator (0x8), or Manage Server (0x20)
+  // Filter ONLY valid Discord guilds where user has permissions to invite/manage the bot:
+  // - Must have valid snowflake ID (no fake/mock servers allowed)
+  // - User must be server owner OR have Administrator (0x8) OR have Manage Server (0x20)
   const manageableGuilds = discordGuilds
     .filter((g) => {
-      if (g.owner || g.isOwner) return true;
+      if (!g.id || !/^\d{17,20}$/.test(String(g.id))) return false;
+      if (g.owner === true || g.isOwner === true) return true;
       if (!g.permissions && g.permissions !== 0) return false;
       try {
         const perms = BigInt(g.permissions);
@@ -336,7 +410,7 @@ router.get('/guilds', verifySession, async (req, res) => {
       if (g.icon) {
         iconUrl = g.icon.startsWith('http')
           ? g.icon
-          : `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`;
+          : `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`;
       }
       if (!iconUrl && botGuild) {
         iconUrl = botGuild.iconURL({ size: 128 }) || null;
@@ -349,7 +423,7 @@ router.get('/guilds', verifySession, async (req, res) => {
         name: g.name,
         icon: iconUrl,
         botInGuild,
-        isOwner: Boolean(g.owner || g.isOwner),
+        isOwner: Boolean(g.owner || g.isOwner || (botGuild && botGuild.ownerId === userId)),
         permissions: String(g.permissions || '0'),
         memberCount: botGuild ? botGuild.memberCount : null,
         channelsCount: botGuild ? botGuild.channels.cache.size : null,
@@ -360,7 +434,7 @@ router.get('/guilds', verifySession, async (req, res) => {
       };
     });
 
-  // Sort: Servers with bot already added first, then uninvited servers
+  // Sort: Servers with bot already added first, then uninvited servers, then alphabetical
   manageableGuilds.sort((a, b) => {
     if (a.botInGuild && !b.botInGuild) return -1;
     if (!a.botInGuild && b.botInGuild) return 1;

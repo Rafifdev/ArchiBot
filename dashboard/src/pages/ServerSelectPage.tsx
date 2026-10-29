@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   MdButton,
+  MdIconButton,
   MdLoading,
   MdIcon,
   DiscordMark,
@@ -14,6 +15,45 @@ import {
 import { GuildSummary } from '../types/api';
 
 type ViewMode = 'featured' | 'grid' | 'list';
+
+const GuildAvatar: React.FC<{
+  icon?: string | null;
+  name: string;
+  sizeClass?: string;
+  roundedClass?: string;
+  ringClass?: string;
+}> = ({
+  icon,
+  name,
+  sizeClass = 'w-12 h-12',
+  roundedClass = 'rounded-lg',
+  ringClass = '',
+}) => {
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setError(false);
+  }, [icon]);
+
+  if (icon && !error) {
+    return (
+      <img
+        src={icon}
+        alt={name}
+        onError={() => setError(true)}
+        className={`${sizeClass} ${roundedClass} ${ringClass} object-cover shrink-0`}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`${sizeClass} ${roundedClass} ${ringClass} bg-discord-blurple text-discord-white flex items-center justify-center shrink-0 shadow-sm`}
+    >
+      <DiscordMark className="w-1/2 h-1/2" />
+    </div>
+  );
+};
 
 const ServerSelectSkeleton: React.FC<{ viewMode: ViewMode }> = ({ viewMode }) => {
   if (viewMode === 'featured') {
@@ -121,9 +161,9 @@ export const ServerSelectPage: React.FC = () => {
     localStorage.setItem('server_view_mode', mode);
   };
 
-  const fetchGuilds = () => {
+  const fetchGuilds = (force = false) => {
     setLoading(true);
-    fetch('/api/auth/guilds', { credentials: 'include' })
+    fetch(`/api/auth/guilds${force ? '?refresh=true' : ''}`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => {
         if (data.guilds) setGuilds(data.guilds);
@@ -155,56 +195,65 @@ export const ServerSelectPage: React.FC = () => {
         title="Select a Server"
         description="Choose a server to configure with ArchiBot or invite the bot to a new community."
         actions={
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setDropdownOpen((prev) => !prev)}
-              className="min-w-[168px] flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-discord-card hover:bg-discord-card-hover border border-discord-border text-discord-white text-xs font-medium cursor-pointer transition-colors shadow-sm select-none"
-            >
-              <div className="flex items-center gap-2">
-                <MdIcon name={currentOption.icon} className="text-base text-discord-white shrink-0" />
-                <span>{currentOption.label}</span>
-              </div>
-              <MdIcon
-                name="expand_more"
-                className={`text-base text-discord-white/80 shrink-0 transition-transform duration-200 ${
-                  dropdownOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
+          <div className="flex items-center gap-2">
+            <MdIconButton
+              icon="refresh"
+              title="Refresh servers from Discord"
+              onClick={() => fetchGuilds(true)}
+              disabled={loading}
+              className="text-discord-muted hover:text-discord-white"
+            />
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className="min-w-[168px] flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-discord-card hover:bg-discord-card-hover border border-discord-border text-discord-white text-xs font-medium cursor-pointer transition-colors shadow-sm select-none"
+              >
+                <div className="flex items-center gap-2">
+                  <MdIcon name={currentOption.icon} className="text-base text-discord-white shrink-0" />
+                  <span>{currentOption.label}</span>
+                </div>
+                <MdIcon
+                  name="expand_more"
+                  className={`text-base text-discord-white/80 shrink-0 transition-transform duration-200 ${
+                    dropdownOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
 
-            {dropdownOpen && (
-              <div className="absolute right-0 mt-1.5 min-w-full w-max bg-discord-card border border-discord-border rounded-xl shadow-2xl p-1.5 z-50 flex flex-col gap-1">
-                {viewOptions.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => {
-                      handleSetViewMode(opt.id);
-                      setDropdownOpen(false);
-                    }}
-                    className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border-0 whitespace-nowrap text-left ${
-                      viewMode === opt.id
-                        ? 'bg-discord-blurple text-discord-white shadow-sm font-semibold'
-                        : 'bg-transparent text-discord-text hover:text-discord-white hover:bg-discord-surface'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <MdIcon
-                        name={opt.icon}
-                        className={`text-base shrink-0 ${
-                          viewMode === opt.id ? 'text-discord-white' : 'text-discord-muted'
-                        }`}
-                      />
-                      <span>{opt.label}</span>
-                    </div>
-                    {viewMode === opt.id && (
-                      <MdIcon name="check" className="text-sm text-discord-white shrink-0 ml-1.5" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-1.5 min-w-full w-max bg-discord-card border border-discord-border rounded-xl shadow-2xl p-1.5 z-50 flex flex-col gap-1">
+                  {viewOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        handleSetViewMode(opt.id);
+                        setDropdownOpen(false);
+                      }}
+                      className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border-0 whitespace-nowrap text-left ${
+                        viewMode === opt.id
+                          ? 'bg-discord-blurple text-discord-white shadow-sm font-semibold'
+                          : 'bg-transparent text-discord-text hover:text-discord-white hover:bg-discord-surface'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MdIcon
+                          name={opt.icon}
+                          className={`text-base shrink-0 ${
+                            viewMode === opt.id ? 'text-discord-white' : 'text-discord-muted'
+                          }`}
+                        />
+                        <span>{opt.label}</span>
+                      </div>
+                      {viewMode === opt.id && (
+                        <MdIcon name="check" className="text-sm text-discord-white shrink-0 ml-1.5" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         }
       />
@@ -244,17 +293,13 @@ export const ServerSelectPage: React.FC = () => {
                       <DiscordMark className="w-28 h-28" />
                     </div>
 
-                    {g.icon ? (
-                      <img
-                        src={g.icon}
-                        alt={g.name}
-                        className="w-14 h-14 rounded-full object-cover ring-4 ring-[#13151f]/80 shadow-2xl relative z-10 transition-transform duration-200 group-hover:scale-105 shrink-0"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-full bg-discord-blurple text-discord-white flex items-center justify-center ring-4 ring-[#13151f]/80 shadow-2xl relative z-10 transition-transform duration-200 group-hover:scale-105 shrink-0">
-                        <DiscordMark className="w-7 h-7" />
-                      </div>
-                    )}
+                    <GuildAvatar
+                      icon={g.icon}
+                      name={g.name}
+                      sizeClass="w-14 h-14"
+                      roundedClass="rounded-full"
+                      ringClass="ring-4 ring-[#13151f]/80 shadow-2xl relative z-10 transition-transform duration-200 group-hover:scale-105"
+                    />
                   </div>
 
                   {/* Bottom Info Row: Server Name on left & Manage / Invite Button on right (No horizontal line) */}
@@ -312,17 +357,13 @@ export const ServerSelectPage: React.FC = () => {
                   className="p-4 flex flex-col justify-between gap-4 transition-all duration-200 ease-out select-none hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
-                    {g.icon ? (
-                      <img
-                        src={g.icon}
-                        alt={g.name}
-                        className="w-12 h-12 rounded-lg object-cover shrink-0 shadow-sm border border-discord-border/50"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-discord-blurple text-discord-white flex items-center justify-center shrink-0 shadow-sm">
-                        <DiscordMark className="w-6 h-6" />
-                      </div>
-                    )}
+                    <GuildAvatar
+                      icon={g.icon}
+                      name={g.name}
+                      sizeClass="w-12 h-12"
+                      roundedClass="rounded-lg"
+                      ringClass="shadow-sm border border-discord-border/50"
+                    />
 
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-sm text-discord-white truncate leading-tight" title={g.name}>
@@ -399,17 +440,13 @@ export const ServerSelectPage: React.FC = () => {
                   className="p-3.5 px-5 flex items-center justify-between gap-4 transition-all duration-200 hover:bg-discord-card-hover hover:border-discord-border-hover cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    {g.icon ? (
-                      <img
-                        src={g.icon}
-                        alt={g.name}
-                        className="w-10 h-10 rounded-lg object-cover shrink-0 shadow-sm border border-discord-border/50"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-discord-blurple text-discord-white flex items-center justify-center shrink-0 shadow-sm">
-                        <DiscordMark className="w-5 h-5" />
-                      </div>
-                    )}
+                    <GuildAvatar
+                      icon={g.icon}
+                      name={g.name}
+                      sizeClass="w-10 h-10"
+                      roundedClass="rounded-lg"
+                      ringClass="shadow-sm border border-discord-border/50"
+                    />
 
                     <div className="min-w-0">
                       <div className="font-semibold text-sm text-discord-white truncate leading-tight" title={g.name}>
