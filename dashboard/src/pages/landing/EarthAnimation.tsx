@@ -72,10 +72,9 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
   const [ready, setReady] = useState(false);
   const [isInView, setIsInView] = useState(false);
 
-  // Monitor visibility with IntersectionObserver so RAF is paused offscreen
+  // Pre-initialize subpaths during browser idle time so there is 0 calculation latency on scroll
   useEffect(() => {
-    const node = divRef.current;
-    if (!node) return;
+    if (ready) return;
 
     const initSubpaths = () => {
       if (!glowSvgRef.current || ready) return;
@@ -99,15 +98,31 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
       setReady(true);
     };
 
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const id = (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => number }).requestIdleCallback(
+        initSubpaths,
+        { timeout: 1500 }
+      );
+      return () => {
+        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
+      };
+    } else {
+      const timer = setTimeout(initSubpaths, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [ready]);
+
+  // Monitor visibility strictly to pause/resume the RAF loop
+  useEffect(() => {
+    const node = divRef.current;
+    if (!node) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries.some((e) => e.isIntersecting);
         setIsInView(visible);
-        if (visible && !ready) {
-          initSubpaths();
-        }
       },
-      { rootMargin: "100px" },
+      { rootMargin: "150px" },
     );
 
     observer.observe(node);
@@ -115,7 +130,7 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
     return () => {
       observer.disconnect();
     };
-  }, [ready]);
+  }, []);
 
   // Rebuild dots when config changes
   useEffect(() => {

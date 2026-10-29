@@ -143,26 +143,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch latest terminal items from Solana Media API if available
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(
-      `https://solana-com-media.vercel.app/api/links/latest?category=${selectedCategory}&limit=10`,
-      { signal: controller.signal }
-    )
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
-          setLiveTerminalFeed((prev) => ({
-            ...prev,
-            [selectedCategory]: data.items,
-          }));
-        }
-      })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [selectedCategory]);
-
   // Keyboard shortcut Cmd+K / Ctrl+K for Search Modal, Escape to close modals
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -606,6 +586,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <img
             src="/src/img/index/hero-bg.webp"
             alt=""
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover select-none"
           />
           <SafeUnicornScene
@@ -704,6 +686,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 <img
                   src={currentPromo.image}
                   alt={currentPromo.title}
+                  decoding="async"
                   className="w-full h-auto max-h-[112px] object-contain select-none"
                 />
               </div>
@@ -729,6 +712,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     alt={logo.alt}
                     width={logo.width}
                     height={logo.height}
+                    decoding="async"
+                    loading="lazy"
                     className="max-h-full max-w-full object-contain opacity-90 hover:opacity-100 transition-opacity"
                   />
                 </div>
@@ -799,6 +784,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     src={evt.img}
                     alt={evt.title}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
@@ -837,6 +823,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             src="/src/img/index/performance-bg.webp"
             alt=""
             loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover select-none"
           />
           <SafeUnicornScene
@@ -1030,10 +1017,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     }`}
                   >
                     {/* Curtain transition overlay when switching categories */}
-                    <div
-                      key={`curtain-${curtainKey}-${index}`}
-                      className="bg-nd-cta absolute inset-0 z-10 pointer-events-none animate-curtain-ltr"
-                    />
+                    {curtainKey > 0 && (
+                      <div
+                        key={`curtain-${curtainKey}-${index}`}
+                        className="bg-nd-cta absolute inset-0 z-10 pointer-events-none animate-curtain-ltr"
+                      />
+                    )}
 
                     {item ? (
                       <a
@@ -1153,6 +1142,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       <img
                         src={project.logo}
                         alt={project.name}
+                        loading="lazy"
+                        decoding="async"
                         className={`${project.logoClassName} w-auto object-contain`}
                       />
                       <span className="size-8 rounded-full border border-white/20 bg-black/30 inline-flex items-center justify-center text-white/80 group-hover:bg-white group-hover:text-black transition-colors">
@@ -1202,6 +1193,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       <img
                         src={logo.src}
                         alt={logo.alt}
+                        loading="lazy"
+                        decoding="async"
                         style={{ height: `${logo.height}px` }}
                         className="w-auto max-w-full object-contain opacity-90 hover:opacity-100 transition-opacity"
                       />
@@ -1233,6 +1226,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             alt=""
             width={620}
             height={280}
+            loading="lazy"
+            decoding="async"
             className="absolute right-[50%] top-0 translate-x-[48.7%] h-[74%] w-auto mix-blend-plus-lighter"
           />
           <img
@@ -1240,6 +1235,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             alt=""
             width={630}
             height={302}
+            loading="lazy"
+            decoding="async"
             className="absolute left-[50%] bottom-0 -translate-x-[56.8%] h-[79.5%] w-auto mix-blend-plus-lighter"
           />
         </div>
@@ -1296,6 +1293,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     src={post.heroImage}
                     alt={post.title}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
                   />
                 </div>
@@ -1385,6 +1383,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     src={vid.thumbnail}
                     alt={vid.title}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />

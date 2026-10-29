@@ -1,66 +1,57 @@
-import React, { useEffect, useRef, useState } from "react";
-import UnicornScene, { type UnicornSceneProps } from "unicornstudio-react";
+import React from "react";
+import { type UnicornSceneProps } from "unicornstudio-react";
 
-class UnicornSceneErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: unknown) {
-    console.warn("UnicornScene failed to initialize:", error);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return null;
-    }
-    return this.props.children;
-  }
-}
-
-export const SafeUnicornScene: React.FC<UnicornSceneProps> = (props) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          setVisible(entry.isIntersecting);
-        });
-      },
-      { rootMargin: "60px" },
+/**
+ * High-Performance Ambient Scene (Option A - Zero-Lag Solution)
+ *
+ * Instead of spinning up heavy WebGL fragment shaders and compiling Direct3D
+ * pipeline state synchronously during scroll (which causes the 300ms browser freeze),
+ * this component renders silky-smooth, GPU-accelerated ambient overlays using native
+ * CSS compositor animations and pre-rendered WebP artwork.
+ */
+export const SafeUnicornScene: React.FC<UnicornSceneProps> = ({
+  projectId,
+  className,
+}) => {
+  if (projectId === "community") {
+    return (
+      <div className={`pointer-events-none select-none overflow-hidden ${className || ""}`}>
+        {/* Crisp high-resolution ambient nebula backdrop for community section */}
+        <img
+          src="/src/img/index/decor-bg.webp"
+          alt=""
+          decoding="async"
+          loading="lazy"
+          className="w-full h-full object-cover opacity-70 transform-gpu"
+        />
+        {/* Subtle hardware-accelerated ambient purple/green pulse */}
+        <div
+          className="absolute inset-0 bg-gradient-to-tr from-[#9945FF]/15 via-transparent to-[#14F195]/10 mix-blend-screen animate-pulse"
+          style={{ animationDuration: "6s" }}
+        />
+      </div>
     );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
+  }
 
-  // Cap DPI strictly at 1.0 to prevent GPU shader lag on integrated graphics
-  const effectiveDpi = Math.min(props.dpi ?? 1, 1);
-  const effectiveFps = props.fps && props.fps <= 30 ? props.fps : 30;
+  if (projectId === "performance") {
+    return (
+      <div className={`pointer-events-none select-none overflow-hidden ${className || ""}`}>
+        {/* Ambient glow accent for performance section */}
+        <div
+          className="absolute inset-0 bg-radial from-[#9945FF]/10 via-transparent to-transparent mix-blend-screen transform-gpu"
+        />
+      </div>
+    );
+  }
 
+  // Hero section ambient accent
   return (
-    <div ref={ref} className={props.className}>
-      {visible && (
-        <UnicornSceneErrorBoundary>
-          <UnicornScene
-            {...props}
-            dpi={effectiveDpi}
-            fps={effectiveFps}
-            className="w-full h-full pointer-events-none"
-          />
-        </UnicornSceneErrorBoundary>
-      )}
+    <div className={`pointer-events-none select-none overflow-hidden ${className || ""}`}>
+      {/* Hardware-accelerated ambient illumination */}
+      <div
+        className="absolute inset-0 bg-radial from-[#14F195]/10 via-transparent to-transparent mix-blend-screen transform-gpu animate-pulse"
+        style={{ animationDuration: "8s" }}
+      />
     </div>
   );
 };

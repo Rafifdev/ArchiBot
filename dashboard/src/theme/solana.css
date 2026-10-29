@@ -333,8 +333,8 @@
 }
 
 .solana-section-contained {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 700px;
+  contain: layout style;
+  transform: translateZ(0);
 }
 
 @media (prefers-reduced-motion: no-preference) {
