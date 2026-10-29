@@ -82,7 +82,7 @@ export const SOLANA_EVENTS: SolanaEventItem[] = [
   {
     key: 'evt-2',
     title: 'Solana AI & Agents Summit',
-    img: '/src/img/events/event-2.png',
+    img: '/src/img/events/event-2.jpg',
     dateFormatted: 'Sat, Nov 14',
     location: 'London',
     url: 'https://solana.com/events',
@@ -98,7 +98,7 @@ export const SOLANA_EVENTS: SolanaEventItem[] = [
   {
     key: 'evt-4',
     title: 'Superteam Indonesia Builder Night',
-    img: '/src/img/events/event-4.png',
+    img: '/src/img/events/event-4.jpg',
     dateFormatted: 'Thu, Nov 19',
     location: 'Jakarta',
     url: 'https://solana.com/events',
@@ -106,7 +106,7 @@ export const SOLANA_EVENTS: SolanaEventItem[] = [
   {
     key: 'evt-5',
     title: 'Solana Hacker House APAC',
-    img: '/src/img/events/event-5.png',
+    img: '/src/img/events/event-5.jpg',
     dateFormatted: 'Tue, Nov 24',
     location: 'Singapore',
     url: 'https://solana.com/events',

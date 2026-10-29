@@ -982,7 +982,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/breakpoint-london-lineup",
     "description": "Breakpoint 2026 adds leaders from Revolut, Westminster, Zelle, DTCC, Mastercard, Backpack, and Bitwise to its London lineup.",
-    "heroImage": "/src/img/uploads/posts/breakpoint-london-lineup/heroImage.webp",
+    "heroImage": "/uploads/posts/breakpoint-london-lineup/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1006,7 +1006,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/solana-changelog-october-22-2026",
     "description": "Agave v4.3.2 and Firedancer v26.10.4 arrive with new program SDKs and work on Alpenglow, validator I/O, gossip, and Transaction V1.",
-    "heroImage": "/src/img/uploads/posts/solana-changelog-october-22-2026/heroImage.webp",
+    "heroImage": "/uploads/posts/solana-changelog-october-22-2026/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1029,7 +1029,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/solana-changelog-october-16-2026",
     "description": "Solana Web3.js v3.1 lands alongside Agave and Firedancer releases, plus updates on CU limits, Alpenglow, and validator performance.",
-    "heroImage": "/src/img/uploads/posts/default-blog.webp",
+    "heroImage": "/uploads/posts/default-blog.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1049,7 +1049,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/geo-aware-leader-schedule",
     "description": "This study evaluates SIMD-0675, a geo-aware leader schedule for Solana. It reorders the stake-weighted random schedule so that consecutive leaders are geographically close, which cuts handoff latency. No validator’s number of leader windows changes. Two parameters are tuned: STAKE_FLOOR (σ), the stake fraction that sets each location’s compatibility radius, and RUN_LENGTH (γ), the size of the contiguous blocks of compatible leaders. They are tested on 6,250 synthetic Monte Carlo networks built on today’s 124 validator locations. The handoff gain levels off quickly as γ grows, while the risks keep rising: leaders concentrating in one region, and validators declaring fake locations. The study recommends σ ≈ 10%, the highest value that keeps Asia’s bins local, and γ between 3 and 7 (about 29 ms mean gain over random at γ = 7). These conclusions depend on today’s geography.",
-    "heroImage": "/src/img/uploads/posts/default-blog.webp",
+    "heroImage": "/uploads/posts/default-blog.webp",
     "author": {
       "name": "Umberto Natale",
       "avatar": "/uploads/authors/MostlyData_.webp"
@@ -1071,7 +1071,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/breakpoint-2026-london-speakers-2",
     "description": "Twelve more speakers join Breakpoint 2026 at Olympia London, taking the stage from 15–17 November across finance, trading and infrastructure.",
-    "heroImage": "/src/img/uploads/posts/breakpoint-2026-london-speakers-2/heroImage.webp",
+    "heroImage": "/uploads/posts/breakpoint-2026-london-speakers-2/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1094,7 +1094,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/payments-on-solana-september-2026-in-five-stories",
     "description": "Payment Channels topped 1 million payments per second in testing as Solana stablecoin supply reached $17.3 billion and x402 share hit 76%.",
-    "heroImage": "/src/img/uploads/posts/payments-on-solana-september-2026-in-five-stories/heroImage.webp",
+    "heroImage": "/uploads/posts/payments-on-solana-september-2026-in-five-stories/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1117,7 +1117,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/breakpoint-guide-part2",
     "description": "Arrive at Breakpoint London 2026 ready for a 6,000-person event, with travel booked, devices secured, and your week mapped in advance.",
-    "heroImage": "/src/img/uploads/posts/breakpoint-guide-part2/heroImage.webp",
+    "heroImage": "/uploads/posts/breakpoint-guide-part2/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1141,7 +1141,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/solana-changelog-october-8-2026",
     "description": "web3.js v3 is ready for general use, while Solana activates a feature gate to cut slot times from 250ms to 200ms after one epoch.",
-    "heroImage": "/src/img/uploads/posts/solana-changelog-october-8-2026/heroImage.webp",
+    "heroImage": "/uploads/posts/solana-changelog-october-8-2026/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1165,7 +1165,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/samsung-wallet",
     "description": "Beginning the last week of October 2026, Samsung Wallet will support USDC cross-border transfers on Solana across 82 million U.S. Galaxy devices.",
-    "heroImage": "/src/img/uploads/posts/samsung-wallet/heroImage.webp",
+    "heroImage": "/uploads/posts/samsung-wallet/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
@@ -1183,7 +1183,7 @@ export const NEWS_POSTS: NewsPostItem[] = [
     ],
     "url": "/news/solana-ecosystem-roundup-september-2026",
     "description": "September saw growth across tokenized stocks, stablecoins, payments, and DeFi. Tokenized equity supply reached $684 million, stablecoins hit $17.51 billion, and the network processed 3.18 billion non-vote transactions.",
-    "heroImage": "/src/img/uploads/posts/solana-ecosystem-roundup-september-2026/heroImage.webp",
+    "heroImage": "/uploads/posts/solana-ecosystem-roundup-september-2026/heroImage.webp",
     "author": {
       "name": "Solana Foundation",
       "avatar": "/uploads/authors/solanaLogoMark.svg"
