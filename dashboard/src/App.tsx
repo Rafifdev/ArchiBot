@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { ServerSelectPage } from './pages/ServerSelectPage';
 import { OverviewPage } from './pages/OverviewPage';
@@ -19,6 +20,7 @@ export const AppContent: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' })
@@ -39,7 +41,9 @@ export const AppContent: React.FC = () => {
     navigate('/login');
   };
 
-  if (loading) {
+  const isLandingRoute = location.pathname === '/' || location.pathname === '/id';
+
+  if (loading && !isLandingRoute) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-discord-canvas">
         <MdLoading />
@@ -49,6 +53,9 @@ export const AppContent: React.FC = () => {
 
   return (
     <Routes>
+      <Route path="/" element={<LandingPage user={user} />} />
+      <Route path="/id" element={<LandingPage user={user} />} />
+
       <Route
         path="/login"
         element={user ? <Navigate to="/servers" replace /> : <LoginPage onLoginSuccess={setUser} />}

@@ -1,0 +1,351 @@
+/* ==========================================================================
+   SOLANA.COM OFFICIAL FONTS (ABC Diatype & ABC Diatype Semi-Mono)
+   ========================================================================== */
+@font-face {
+  font-family: 'Diatype';
+  src: url('/fonts/diatype/ABCDiatype-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Diatype';
+  src: url('/fonts/diatype/ABCDiatype-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Diatype';
+  src: url('/fonts/diatype/ABCDiatype-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Diatype';
+  src: url('/fonts/diatype/ABCDiatype-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DSemi';
+  src: url('/fonts/semimono/ABCDiatypeSemi-Mono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DSemi';
+  src: url('/fonts/semimono/ABCDiatypeSemi-Mono-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DSemi';
+  src: url('/fonts/semimono/ABCDiatypeSemi-Mono-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   SOLANA.COM DESIGN TOKENS & TYPOGRAPHY SYSTEM (packages/tailwind/index.ts)
+   ========================================================================== */
+:root {
+  --font-brand: 'Diatype', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-brand-mono: 'DSemi', monospace;
+}
+
+.font-brand {
+  font-family: var(--font-brand);
+}
+
+.font-brand-mono {
+  font-family: var(--font-brand-mono);
+}
+
+/* Solana ND Color Utilities */
+.bg-nd-bg { background-color: #000000; }
+.bg-nd-inverse { background-color: #000000; }
+.bg-nd-cta { background-color: #FFFFFF; }
+.bg-nd-primary { background-color: #FFFFFF; }
+.bg-nd-border-light { background-color: #ECE4FD1F; }
+.bg-nd-border-prominent { background-color: #ECE4FD33; }
+.bg-nd-border-hovered { background-color: #ECE4FD52; }
+.bg-nd-highlight-green { background-color: #55E9AB; }
+
+.text-nd-inverse { color: #000000; }
+.text-nd-high-em-text { color: #FFFFFF; }
+.text-nd-mid-em-text { color: #ABABBA; }
+.text-nd-mid-em-text-alpha { color: #FFFFFFA3; }
+.text-nd-primary { color: #FFFFFF; }
+.text-nd-highlight-lavendar { color: #CA9FF5; }
+.text-nd-highlight-blue { color: #6693F7; }
+.text-nd-highlight-gold { color: #FFC526; }
+.text-nd-highlight-orange { color: #F48252; }
+.text-nd-highlight-green { color: #55E9AB; }
+.text-nd-highlight-lime { color: #CFF15E; }
+
+.border-nd-border-light { border-color: #ECE4FD1F; }
+.border-nd-border-prominent { border-color: #ECE4FD33; }
+.border-nd-border-hovered { border-color: #ECE4FD52; }
+.divide-nd-border-light > :not([hidden]) ~ :not([hidden]) { border-color: #ECE4FD1F; }
+.divide-nd-border-prominent > :not([hidden]) ~ :not([hidden]) { border-color: #ECE4FD33; }
+
+/* Headings */
+.nd-heading-2xl {
+  font-family: var(--font-brand);
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  .nd-heading-2xl {
+    font-size: 64px;
+    line-height: 0.96;
+  }
+}
+@media (min-width: 1280px) {
+  .nd-heading-2xl {
+    font-size: 88px;
+  }
+}
+
+.nd-heading-xl {
+  font-family: var(--font-brand);
+  font-size: 32px;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  .nd-heading-xl {
+    font-size: 48px;
+    line-height: 1.04;
+  }
+}
+@media (min-width: 1280px) {
+  .nd-heading-xl {
+    font-size: 64px;
+    line-height: 1;
+  }
+}
+
+.nd-heading-l {
+  font-family: var(--font-brand);
+  font-size: 28px;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  .nd-heading-l {
+    font-size: 40px;
+    line-height: 1.1;
+  }
+}
+@media (min-width: 1280px) {
+  .nd-heading-l {
+    font-size: 48px;
+    line-height: 1.08;
+  }
+}
+
+.nd-heading-m {
+  font-family: var(--font-brand);
+  font-size: 24px;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  .nd-heading-m {
+    font-size: 32px;
+    line-height: 1.12;
+  }
+}
+@media (min-width: 1280px) {
+  .nd-heading-m {
+    font-size: 36px;
+    line-height: 1.11;
+  }
+}
+
+.nd-heading-s {
+  font-family: var(--font-brand);
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+@media (min-width: 768px) {
+  .nd-heading-s {
+    font-size: 24px;
+    line-height: 1.16;
+  }
+}
+
+/* Body Typography */
+.nd-body-2xl {
+  font-family: var(--font-brand);
+  font-size: 18px;
+  line-height: 1.33;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 768px) {
+  .nd-body-2xl {
+    font-size: 24px;
+    line-height: 1.33;
+  }
+}
+@media (min-width: 1280px) {
+  .nd-body-2xl {
+    font-size: 32px;
+    line-height: 1.25;
+  }
+}
+
+.nd-body-xl {
+  font-family: var(--font-brand);
+  font-size: 18px;
+  line-height: 1.33;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 1280px) {
+  .nd-body-xl {
+    font-size: 24px;
+    line-height: 1.33;
+  }
+}
+
+.nd-body-l {
+  font-family: var(--font-brand);
+  font-size: 16px;
+  line-height: 1.375;
+}
+@media (min-width: 1280px) {
+  .nd-body-l {
+    font-size: 18px;
+    line-height: 1.33;
+  }
+}
+
+.nd-body-m {
+  font-family: var(--font-brand);
+  font-size: 14px;
+  line-height: 1.28;
+}
+@media (min-width: 1280px) {
+  .nd-body-m {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+}
+
+.nd-body-s {
+  font-family: var(--font-brand);
+  font-size: 14px;
+  line-height: 1.28;
+}
+
+.nd-body-xs {
+  font-family: var(--font-brand);
+  font-size: 12px;
+  line-height: 1.33;
+}
+
+/* Keyframes from packages/tailwind/index.ts */
+@keyframes curtain-left-to-right {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(1); transform-origin: left; }
+  50.001% { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+@keyframes curtain-top-to-bottom {
+  0% { transform: scaleY(0); transform-origin: top; }
+  50% { transform: scaleY(1); transform-origin: top; }
+  50.001% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+@keyframes stretch-in {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes terminal-loader {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-curtain-ltr {
+  animation: curtain-left-to-right 0.3s ease-in-out forwards;
+}
+
+.animate-curtain-ttb {
+  animation: curtain-top-to-bottom 0.3s ease-in-out forwards;
+}
+
+.animate-stretch-in {
+  animation: stretch-in 0.3s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out forwards;
+}
+
+.animate-terminal-loader {
+  animation: terminal-loader 2s linear infinite;
+}
+
+/* Scroll Entry Reveal Effects (Modern Web Guidance: scroll-entry-exit-effects) */
+@keyframes solana-entry-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .solana-scroll-reveal {
+      animation: solana-entry-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 65%;
+    }
+  }
+
+  @supports not ((animation-timeline: view()) and (animation-range: entry)) {
+    .solana-scroll-reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .solana-scroll-reveal.is-in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
