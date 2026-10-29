@@ -451,7 +451,13 @@ router.get('/guilds', verifySession, async (req, res) => {
     return a.name.localeCompare(b.name);
   });
 
-  return res.json({ guilds: manageableGuilds });
+  return res.json({
+    guilds: manageableGuilds,
+    hasOAuth: Boolean(accessToken),
+    botInviteUrl: clientId
+      ? `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`
+      : null,
+  });
 });
 
 export default router;

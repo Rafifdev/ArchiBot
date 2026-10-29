@@ -141,6 +141,8 @@ const ServerSelectSkeleton: React.FC<{ viewMode: ViewMode }> = ({ viewMode }) =>
 export const ServerSelectPage: React.FC = () => {
   const navigate = useNavigate();
   const [guilds, setGuilds] = useState<GuildSummary[]>([]);
+  const [hasOAuth, setHasOAuth] = useState(true);
+  const [botInviteUrl, setBotInviteUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -182,6 +184,8 @@ export const ServerSelectPage: React.FC = () => {
           );
           setGuilds(sanitized);
         }
+        if (data.hasOAuth !== undefined) setHasOAuth(data.hasOAuth);
+        if (data.botInviteUrl) setBotInviteUrl(data.botInviteUrl);
       })
       .catch((err) => console.error(err))
       .finally(() => {
@@ -211,6 +215,13 @@ export const ServerSelectPage: React.FC = () => {
         description="Choose a server to configure with ArchiBot or invite the bot to a new community."
         actions={
           <div className="flex items-center gap-2">
+            {botInviteUrl && (
+              <a href={botInviteUrl} target="_blank" rel="noopener noreferrer" className="no-underline inline-flex">
+                <MdButton variant="filled" icon="add" size="sm">
+                  Add Bot to Server
+                </MdButton>
+              </a>
+            )}
             <MdIconButton
               icon="refresh"
               title="Refresh servers from Discord"
@@ -272,6 +283,15 @@ export const ServerSelectPage: React.FC = () => {
           </div>
         }
       />
+
+      {!loading && !hasOAuth && (
+        <div className="p-3 px-4 rounded-xl bg-discord-card border border-discord-border flex items-center justify-between gap-3 text-xs text-discord-muted -mt-3">
+          <div className="flex items-center gap-2.5">
+            <MdIcon name="info" className="text-discord-blurple text-base shrink-0" />
+            <span>Mode Dev Login aktif. Klik <strong>Add Bot to Server</strong> untuk mengundang bot ke servermu yang lain (seperti <em>NusantaraGank</em> atau <em>TEST</em>).</span>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="overflow-y-auto max-h-[calc(100vh-220px)] pr-2 -mr-2 pt-2 pb-6">
