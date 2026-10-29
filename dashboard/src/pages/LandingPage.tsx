@@ -278,59 +278,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   return (
     <div className="min-h-screen bg-nd-bg text-nd-high-em-text font-brand selection:bg-[#9945FF]/40 selection:text-white overflow-x-hidden">
       {/* =====================================================================
-          1. STICKY HEADER (packages/ui-chrome/src/header.tsx)
+          1. FIXED HEADER (packages/ui-chrome/src/header.tsx)
           ===================================================================== */}
       <header
-        className="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl backdrop-saturate-150"
+        className="fixed top-0 left-0 right-0 w-full z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl backdrop-saturate-150"
         onMouseLeave={() => setOpenMenuId(null)}
       >
         <div className="w-full max-w-[1440px] mx-auto px-[20px] md:px-[32px] xl:px-[40px] h-14 flex items-center justify-between gap-4">
-          {/* Left: Official Solana Logo + Desktop Navigation */}
+          {/* Left: Official ArchiBot Logo + Desktop Navigation */}
           <div className="flex items-center gap-6 xl:gap-8">
             <a
               href="#top"
-              aria-label="Solana"
-              className="inline-flex items-center shrink-0 focus:outline-none"
+              aria-label="ArchiBot"
+              className="inline-flex items-center gap-3 shrink-0 focus:outline-none !no-underline"
             >
-              <svg
-                width="120"
-                height="18"
-                viewBox="0 0 120 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="block h-[17px] xl:h-[18px] w-auto"
-              >
-                <g clipPath="url(#solana_header_clip)">
-                  <path
-                    d="M21.0235 14.3772L17.5356 18.0801C17.4027 18.2212 17.2248 18.3168 17.0315 18.3511C16.8381 18.3854 16.6388 18.3563 16.4666 18.2686H0.405958C0.326699 18.2686 0.249129 18.2458 0.182534 18.2028C0.115938 18.1599 0.0631954 18.0987 0.0306332 18.0266C-0.00192907 17.9546 -0.0128725 17.8748 -0.000882339 17.7968C0.0111078 17.7187 0.0455312 17.6458 0.0982616 17.5867L3.58888 13.8838C3.72162 13.7429 3.89927 13.6474 4.09234 13.6131C4.28541 13.5789 4.48441 13.6079 4.65645 13.6954H20.717C20.7963 13.6954 20.8739 13.7182 20.9405 13.7611C21.0071 13.8041 21.0598 13.8653 21.0924 13.9373C21.1249 14.0094 21.1359 14.0892 21.1239 14.1672C21.1119 14.2452 21.0775 14.3182 21.0247 14.3772H21.0235ZM17.5356 6.92004C17.4028 6.77911 17.2252 6.68364 17.0321 6.6494C16.8391 6.61515 16.6401 6.64415 16.468 6.73168H0.405958C0.326699 6.73168 0.249129 6.75449 0.182534 6.79743C0.115938 6.84038 0.0631954 6.90159 0.0306332 6.97362C-0.00192907 7.04565 -0.0128725 7.12546 -0.000882339 7.20348C0.0111078 7.2815 0.0455312 7.35444 0.0982616 7.41354L3.58888 11.1164C3.72162 11.2573 3.89927 11.3528 4.09234 11.3871C4.28541 11.4213 4.48441 11.3923 4.65645 11.3048H20.717C20.7963 11.3048 20.8739 11.282 20.9405 11.239C21.0071 11.1961 21.0598 11.1349 21.0924 11.0628C21.1249 10.9908 21.1359 10.911 21.1239 10.833C21.1119 10.755 21.0775 10.682 21.0247 10.6229L17.5356 6.92004ZM0.405958 4.68285H16.4666C16.6388 4.77052 16.8381 4.79957 17.0315 4.76528C17.2248 4.73098 17.4027 4.6354 17.5356 4.49431L21.0235 0.791445C21.0766 0.732459 21.1113 0.659557 21.1235 0.581506C21.1357 0.503455 21.125 0.423557 21.0925 0.351412C21.06 0.279267 21.0073 0.217965 20.9407 0.174961C20.874 0.131957 20.7964 0.109131 20.717 0.109172H4.65645C4.48441 0.0216466 4.28541 -0.00735802 4.09234 0.0268881C3.89927 0.0611343 3.72162 0.156603 3.58888 0.297538L0.0994827 4.0004C0.0465196 4.05941 0.011906 4.13229 -0.000237597 4.21031C-0.0123812 4.28833 -0.00156427 4.36818 0.0309166 4.44026C0.0633975 4.51235 0.116114 4.57361 0.18271 4.61658C0.249306 4.65955 0.326899 4.68236 0.406187 4.68231L0.405958 4.68285Z"
-                    fill="url(#solana_header_grad)"
-                  />
-                  <path
-                    d="M39.961 7.64867H31.8359V4.89207H42.1931V2.18994H31.7519C31.0214 2.17635 30.3125 2.4357 29.7669 2.91632C29.2213 3.39693 28.8789 4.06384 28.8079 4.78449V7.74957C28.8782 8.46945 29.2194 9.13582 29.7636 9.61646C30.3077 10.0971 31.0151 10.3574 31.7448 10.3455H39.8769V13.1092H28.3877V15.8042H39.961C40.6889 15.8147 41.3945 15.5549 41.938 15.0762C42.4815 14.5975 42.8239 13.934 42.897 13.2169V10.2518C42.8232 9.53564 42.4809 8.87293 41.9381 8.39448C41.3953 7.91604 40.6907 7.65604 39.9633 7.64409L39.961 7.64867ZM58.2995 2.18994H48.6227C47.8935 2.17799 47.1872 2.43757 46.6423 2.91772C46.0974 3.39787 45.7544 4.06376 45.6806 4.78335V13.2089C45.7541 13.9287 46.097 14.5949 46.642 15.0752C47.1869 15.5555 47.8934 15.8151 48.6227 15.8031H58.2995C59.0298 15.8168 59.7374 15.5576 60.2832 15.0771C60.829 14.5966 61.1717 13.9296 61.2435 13.2089V4.78335C61.1714 4.06285 60.8286 3.39617 60.2829 2.91591C59.7372 2.43566 59.0297 2.17643 58.2995 2.18994ZM58.2155 13.1092H48.7068V4.89207H58.2155V13.1092ZM76.9685 13.1021H67.3758V2.18994H64.3496V13.2089C64.4214 13.9288 64.7634 14.5948 65.3079 15.075C65.8524 15.5553 66.5586 15.815 67.2881 15.8031H76.9649L76.9685 13.1021ZM91.0954 2.18994H81.6746C80.9467 2.17946 80.2411 2.43927 79.6976 2.91798C79.1541 3.39668 78.8117 4.0602 78.7386 4.77728V15.8031H81.7648V11.4793H91.0114V15.8031H94.0376V4.77728C93.9652 4.0595 93.6227 3.39535 93.0789 2.91638C92.535 2.43741 91.8289 2.17806 91.1006 2.18994H91.0954ZM91.0114 8.77558H81.7648V4.89207H91.0114V8.77558ZM110.942 2.18994V11.9163L101.86 2.18994H97.2356V15.8031H100.262V6.07671L109.344 15.8031H113.968V2.18994H110.942Z"
-                    fill="white"
-                  />
-                </g>
-                <defs>
-                  <linearGradient
-                    id="solana_header_grad"
-                    x1="1.8"
-                    y1="19"
-                    x2="19.2"
-                    y2="-0.5"
-                    gradientUnits="userSpaceOnUse"
+              <div className="relative size-8 rounded-xl bg-gradient-to-tr from-[#5865F2] via-[#9945FF] to-[#19FB9B] p-[1.5px] shadow-lg shadow-indigo-500/20">
+                <div className="w-full h-full bg-[#08070B] rounded-[10px] flex items-center justify-center">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <stop offset="0.08" stopColor="#9945FF" />
-                    <stop offset="0.3" stopColor="#8752F3" />
-                    <stop offset="0.5" stopColor="#5497D5" />
-                    <stop offset="0.6" stopColor="#43B4CA" />
-                    <stop offset="0.72" stopColor="#28E0B9" />
-                    <stop offset="0.97" stopColor="#19FB9B" />
-                  </linearGradient>
-                  <clipPath id="solana_header_clip">
-                    <rect width="120" height="18" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
+                    <path
+                      d="M12 2V5M12 5C7.58172 5 4 8.58172 4 13V18C4 19.6569 5.34315 21 7 21H17C18.6569 21 20 19.6569 20 18V13C20 8.58172 16.4183 5 12 5ZM9 12H9.01M15 12H15.01M9 16C10 17 14 17 15 16"
+                      stroke="url(#archibot_header_grad)"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <defs>
+                      <linearGradient id="archibot_header_grad" x1="4" y1="5" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#5865F2" />
+                        <stop offset="0.5" stopColor="#9945FF" />
+                        <stop offset="1" stopColor="#19FB9B" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <span className="font-brand font-bold text-[18px] tracking-[0.06em] text-white">
+                ARCHI<span className="bg-gradient-to-r from-[#9945FF] to-[#19FB9B] bg-clip-text text-transparent">BOT</span>
+              </span>
             </a>
 
             {/* Desktop Mega-Menu Triggers */}
@@ -601,7 +591,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           ===================================================================== */}
       <section
         id="top"
-        className="relative overflow-hidden bg-nd-bg text-nd-high-em-text"
+        className="relative overflow-hidden bg-nd-bg text-nd-high-em-text pt-14"
       >
         {/* Background Image + Interactive WebGL UnicornScene */}
         <div className="absolute left-0 top-0 bottom-14 md:bottom-0 w-full overflow-hidden pointer-events-none">
@@ -633,16 +623,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         </div>
 
         {/* Main Hero Container */}
-        <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[64px] md:pt-[112px] xl:pt-[120px] min-h-[calc(100vh-56px-73px)] xl:min-h-[calc(100vh-56px-123px)] relative z-10">
+        <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[48px] md:pt-[96px] xl:pt-[108px] min-h-[calc(100vh-56px-73px)] xl:min-h-[calc(100vh-56px-123px)] relative z-10">
           <div className="px-[20px] md:px-[32px] xl:px-[40px] max-w-[1024px]">
             <h1 className="nd-heading-2xl text-nd-high-em-text tracking-tight">
-              Pasar modal
+              Arsitektur server
               <br />
-              <span className="font-light">untuk setiap aset di bumi.</span>
+              <span className="font-light">untuk setiap komunitas di Discord.</span>
             </h1>
             <p className="nd-body-xl text-nd-mid-em-text max-w-[440px] xl:max-w-[580px] mt-4 md:mt-6">
-              Solana adalah jaringan berkinerja tinggi terkemuka yang mendukung
-              pasar modal internet, pembayaran, dan aplikasi kripto.
+              ArchiBot adalah bot dan platform manajemen berkinerja tinggi terkemuka yang mendukung
+              otomasi server Discord, manajemen peran, template lego, dan voice hub.
             </p>
             <div className="mt-6 md:mt-10 flex flex-wrap items-center gap-3">
               <button
@@ -741,13 +731,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       </section>
 
       {/* =====================================================================
-          4. EVENTS CAROUSEL SECTION (Temui Solana secara langsung. Bangun koneksi.)
+          4. EVENTS CAROUSEL SECTION (Temui ArchiBot secara langsung. Bangun koneksi.)
           ===================================================================== */}
       <section className="border-t border-nd-border-light solana-scroll-reveal">
         <div className="max-w-[1440px] mx-auto py-[56px] md:py-[112px] xl:py-[160px] px-[20px] md:px-[32px] xl:px-[40px]">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-11 xl:mb-12 gap-6">
             <h2 className="nd-heading-xl">
-              Temui Solana secara langsung.
+              Temui ArchiBot secara langsung.
               <br />
               <span className="font-light">Bangun koneksi.</span>
             </h2>
@@ -860,16 +850,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="px-[20px] md:px-[32px] xl:px-[40px] grid grid-cols-1 xl:grid-cols-12 gap-10 pb-[80px] md:pb-[160px] xl:pb-[248px]">
             <div className="xl:col-span-8">
               <h2 className="nd-heading-xl">
-                Platform keuangan
+                Platform manajemen server
                 <br />
                 <span className="font-light">
                   terkemuka dengan pertumbuhan tercepat
                 </span>
               </h2>
               <p className="nd-body-xl text-nd-mid-em-text max-w-[660px] mt-4 xl:mt-6 font-normal">
-                Platform nomor satu untuk startup dan perusahaan, dengan
-                pengguna terbanyak, pengembang terbanyak, aktivitas perdagangan
-                tertinggi, dan TPS nyata tertinggi.
+                Platform nomor satu untuk komunitas dan server Discord, dengan
+                pengguna terbanyak, modul arsitektur terlengkap, aktivitas otomasi
+                tertinggi, dan latensi terendah.
               </p>
             </div>
 
@@ -883,7 +873,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       {totalTx.toLocaleString('en-US')}+
                     </div>
                     <div className="text-xs md:text-sm text-nd-mid-em-text-alpha mt-1">
-                      Total transaksi hingga saat ini
+                      Total otomasi hingga saat ini
                     </div>
                   </div>
                   <div>
@@ -891,7 +881,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       {liveTps.toLocaleString('en-US')}
                     </div>
                     <div className="text-xs md:text-sm text-nd-mid-em-text-alpha mt-1">
-                      Transaksi per detik
+                      Eksekusi per detik
                     </div>
                   </div>
                 </div>
@@ -937,12 +927,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <h2 className="nd-heading-xl">
               Apa yang terjadi
               <br />
-              <span className="font-light">saat ini</span>
+              <span className="font-light">di ArchiBot saat ini</span>
             </h2>
             <a
-              href="https://solana.com/id/terminal"
-              target="_blank"
-              rel="noreferrer"
+              href="/servers"
               className="group inline-flex items-center rounded-full font-medium transition-colors bg-nd-cta text-nd-inverse hover:bg-nd-cta/90 text-sm md:text-base px-4 py-2 md:py-2.5 !no-underline"
             >
               <span>Lihat semua</span>
@@ -1107,14 +1095,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[56px] md:pt-[112px] xl:pt-[160px]">
           <div className="px-[20px] md:px-[32px] xl:px-[40px] flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-11 xl:mb-12 gap-6">
             <h2 className="nd-heading-xl max-w-[920px]">
-              Institusi dan fintech terbesar di dunia{' '}
+              Komunitas dan server Discord terbesar{' '}
               <br className="max-md:hidden" />
-              <span className="font-light">sedang membangun di Solana.</span>
+              <span className="font-light">sedang membangun di ArchiBot.</span>
             </h2>
             <a
-              href="https://solana.com/id/enterprise"
-              target="_blank"
-              rel="noreferrer"
+              href="/servers"
               className="group inline-flex items-center rounded-full font-medium transition-colors bg-nd-cta text-nd-inverse hover:bg-nd-cta/90 text-sm md:text-base px-4 py-2 md:py-2.5 shrink-0 !no-underline"
             >
               <span>Lihat semua</span>
@@ -1260,7 +1246,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <h2 className="nd-heading-xl">
               Ikuti
               <br />
-              <span className="font-light">perkembangan terbaru Solana</span>
+              <span className="font-light">perkembangan terbaru ArchiBot</span>
             </h2>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -1348,9 +1334,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <div>
               <h2 className="nd-heading-xl">Bagaimana kami membangunnya</h2>
               <p className="nd-body-xl text-nd-mid-em-text mt-3 md:mt-4">
-                Dengarkan dari para pionir yang menciptakan masa depan pasar{' '}
+                Dengarkan dari para kreator dan arsitek yang merancang masa depan komunitas{' '}
                 <br className="max-xl:hidden" />
-                keuangan global.
+                Discord global.
               </p>
             </div>
 
@@ -1454,11 +1440,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <h2 className="nd-heading-2xl">
               Bangun bersama
               <br />
-              <span className="font-light">komunitas global kami.</span>
+              <span className="font-light">komunitas global ArchiBot.</span>
             </h2>
             <p className="nd-body-xl text-nd-mid-em-text mt-4 md:mt-6 max-w-[540px] mx-auto">
-              Baik Anda seorang pengembang, kreator, validator, atau pendukung,
-              ada tempat bagi Anda untuk membantu.
+              Baik Anda seorang pemilik server, moderator, kreator template, atau pengembang,
+              ada tempat bagi Anda untuk berkontribusi.
             </p>
           </div>
 
@@ -1517,50 +1503,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           className="w-full max-w-[1440px] px-5 md:px-8 xl:px-[72px] pt-16 md:pt-20 xl:pt-24 pb-[136px] md:pb-[164px] xl:pb-[300px] mx-auto bg-[length:100%_auto] bg-bottom bg-no-repeat relative z-10"
           style={{ backgroundImage: 'url(/src/img/solana-bg.svg)' }}
         >
-          {/* Top Bar: Solana Foundation Logo + Language Selector */}
+          {/* Top Bar: ArchiBot Logo + Language Selector */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-10 md:pb-14 xl:pb-16 border-b border-white/[0.08]">
             <a
               href="#top"
-              aria-label="Solana Foundation"
-              className="!no-underline !text-white inline-block"
+              aria-label="ArchiBot"
+              className="!no-underline !text-white inline-flex items-center gap-3.5"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 210 35"
-                fill="none"
-                className="block w-[140px] xl:w-[170px] h-auto"
-              >
-                <g clipPath="url(#sf_footer_clip)">
-                  <path
-                    fill="#fff"
-                    d="M67.245 3.493H55.6V6.37h8.55a3.126 3.126 0 0 1 2.19.895 3.026 3.026 0 0 1 .906 2.164v2.513a3.013 3.013 0 0 1-.902 2.167 3.085 3.085 0 0 1-2.194.891H52.687v-2.877h11.647V9.248h-8.55a3.126 3.126 0 0 1-2.19-.896 3.053 3.053 0 0 1-.907-2.164V3.675a3.012 3.012 0 0 1 .903-2.167 3.112 3.112 0 0 1 2.194-.891h11.461v2.877-.001ZM81.363.616c1.722 0 3.117 1.358 3.117 3.06v8.265c0 1.702-1.395 3.06-3.117 3.06h-8.96a3.113 3.113 0 0 1-2.194-.892 3.04 3.04 0 0 1-.902-2.168V3.675a3.011 3.011 0 0 1 .902-2.168 3.084 3.084 0 0 1 2.194-.891h8.96Zm.184 2.877h-9.329v8.63h9.33v-8.63Zm8.117 8.53h11.359v3.1H88.536c-.532-.002-1.043-.211-1.42-.583a1.978 1.978 0 0 1-.59-1.403V.494h3.138v11.528ZM115.717.615c1.394 0 2.522 1.094 2.522 2.472V15h-2.933v-4.72h-9.329V15h-2.912V3.088A2.463 2.463 0 0 1 104.607.8c.305-.124.631-.186.96-.184h10.15Zm-.411 2.877h-9.329v3.91h9.329v-3.91Zm17.22-2.877h2.933v12.52c0 1.034-.862 1.864-1.908 1.864h-2.255a1.823 1.823 0 0 1-1.681-.992l-5.659-10.515h-.759V15h-2.912V2.5c0-1.053.841-1.884 1.887-1.884h2.379c.697 0 1.353.365 1.681.993l5.658 10.514h.636V.617Zm17.63 0c1.395 0 2.522 1.094 2.522 2.472V15h-2.932v-4.72h-9.329V15h-2.912V3.088A2.463 2.463 0 0 1 139.047.8c.305-.124.631-.186.96-.184h10.149Zm-.41 2.877h-9.329v3.91h9.329v-3.91Zm-82.788 18.75H55.6v2.877h11.36v2.877h-11.36v5.753h-2.911V19.366h14.27v2.877Zm14.105-2.877c1.722 0 3.116 1.358 3.116 3.06v8.265c0 1.702-1.394 3.06-3.116 3.06h-8.96a3.112 3.112 0 0 1-2.195-.892 3.011 3.011 0 0 1-.902-2.168v-8.266a3.011 3.011 0 0 1 .902-2.168 3.112 3.112 0 0 1 2.194-.892h8.96Zm.184 2.877h-9.33v8.63h9.33v-8.63Zm17.22-2.877h2.932v9.563c-.021 2.674-2.194 4.821-4.9 4.821h-5.393a4.916 4.916 0 0 1-1.87-.363 4.868 4.868 0 0 1-1.585-1.045 4.804 4.804 0 0 1-1.057-1.566 4.76 4.76 0 0 1-.368-1.848v-9.562h2.912v8.975c0 .672.27 1.316.75 1.79a2.58 2.58 0 0 0 1.813.742h4.203a2.58 2.58 0 0 0 1.812-.741c.48-.475.75-1.12.75-1.791v-8.975Zm17.22 0h2.932v12.52c0 1.034-.861 1.864-1.907 1.864h-2.255a1.825 1.825 0 0 1-1.682-.992l-5.659-10.515h-.758V33.75h-2.912v-12.5c0-1.053.841-1.884 1.886-1.884h2.379c.697 0 1.353.365 1.681.993l5.659 10.514h.636V19.367Zm15.251 0c2.707 0 4.88 2.168 4.901 4.822v4.74c-.021 2.675-2.194 4.822-4.901 4.822h-10.272V19.366h10.272Zm1.969 5.43a2.553 2.553 0 0 0-2.563-2.553h-6.766v8.63h6.766a2.58 2.58 0 0 0 1.812-.742 2.52 2.52 0 0 0 .751-1.79v-3.546Zm17.63-5.43c1.394 0 2.522 1.094 2.522 2.472V33.75h-2.932v-4.72h-9.329v4.72h-2.912V21.838a2.432 2.432 0 0 1 .728-1.753 2.483 2.483 0 0 1 1.773-.719h10.15Zm-.41 2.877h-9.329v3.91h9.329v-3.91Zm4.979-2.877h14.557v2.877h-5.823V33.75h-2.911V22.243h-5.823v-2.877Zm19.531 14.384h-2.912V19.366h2.912V33.75Zm14.11-14.384c1.722 0 3.116 1.358 3.116 3.06v8.265c0 1.702-1.394 3.06-3.116 3.06h-8.96a3.11 3.11 0 0 1-2.194-.892 3.01 3.01 0 0 1-.902-2.168v-8.266a3.01 3.01 0 0 1 .902-2.168 3.11 3.11 0 0 1 2.194-.892h8.96Zm.184 2.877h-9.329v8.63h9.329v-8.63Zm17.22-2.877h2.932v12.52c0 1.034-.861 1.864-1.906 1.864h-2.256a1.822 1.822 0 0 1-1.681-.992l-5.659-10.515h-.759V33.75h-2.911v-12.5c0-1.053.84-1.884 1.886-1.884h2.378c.697 0 1.354.365 1.681.993l5.66 10.514h.635V19.367Z"
-                  />
-                  <path
-                    fill="url(#sf_footer_grad)"
-                    d="m37.4 27.173-6.205 6.588a1.44 1.44 0 0 1-1.055.454H.722a.728.728 0 0 1-.552-.253.708.708 0 0 1 .025-.947l6.21-6.588a1.439 1.439 0 0 1 1.052-.453h29.418a.725.725 0 0 1 .66.429.707.707 0 0 1-.135.77Zm-6.205-13.266a1.44 1.44 0 0 0-1.055-.454H.722a.73.73 0 0 0-.553.253.709.709 0 0 0 .025.947l6.211 6.588a1.44 1.44 0 0 0 1.051.454h29.418a.726.726 0 0 0 .551-.254.707.707 0 0 0-.025-.946l-6.205-6.588ZM.721 9.174H30.14a1.453 1.453 0 0 0 1.054-.454L37.4 2.133a.71.71 0 0 0-.527-1.2H7.457a1.454 1.454 0 0 0-1.051.453L.196 7.974a.71.71 0 0 0 .525 1.2Z"
-                  />
-                </g>
-                <defs>
-                  <linearGradient
-                    id="sf_footer_grad"
-                    x1="3.174"
-                    x2="33.674"
-                    y1="35.008"
-                    y2=".274"
-                    gradientUnits="userSpaceOnUse"
+              <div className="relative size-10 rounded-2xl bg-gradient-to-tr from-[#5865F2] via-[#9945FF] to-[#19FB9B] p-[2px] shadow-xl">
+                <div className="w-full h-full bg-[#08070B] rounded-[14px] flex items-center justify-center">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <stop offset=".08" stopColor="#9945FF" />
-                    <stop offset=".3" stopColor="#8752F3" />
-                    <stop offset=".5" stopColor="#5497D5" />
-                    <stop offset=".6" stopColor="#43B4CA" />
-                    <stop offset=".72" stopColor="#28E0B9" />
-                    <stop offset=".97" stopColor="#19FB9B" />
-                  </linearGradient>
-                  <clipPath id="sf_footer_clip">
-                    <path fill="#fff" d="M0 0h210v35H0z" />
-                  </clipPath>
-                </defs>
-              </svg>
+                    <path
+                      d="M12 2V5M12 5C7.58172 5 4 8.58172 4 13V18C4 19.6569 5.34315 21 7 21H17C18.6569 21 20 19.6569 20 18V13C20 8.58172 16.4183 5 12 5ZM9 12H9.01M15 12H15.01M9 16C10 17 14 17 15 16"
+                      stroke="url(#archibot_footer_grad)"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <defs>
+                      <linearGradient id="archibot_footer_grad" x1="4" y1="5" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#5865F2" />
+                        <stop offset="0.5" stopColor="#9945FF" />
+                        <stop offset="1" stopColor="#19FB9B" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-brand font-bold text-xl tracking-[0.06em] text-white">
+                  ARCHI<span className="bg-gradient-to-r from-[#9945FF] to-[#19FB9B] bg-clip-text text-transparent">BOT</span>
+                </span>
+                <span className="font-brand-mono text-[10px] uppercase tracking-[0.16em] text-white/50">
+                  Discord Architecture Platform
+                </span>
+              </div>
             </a>
 
             {/* Footer Language Selector */}
@@ -1734,7 +1717,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
             <div className="mt-5">
               <span className="text-white/45 text-xs leading-relaxed">
-                © {new Date().getFullYear()} Yayasan Solana. Semua hak dilindungi.
+                © {new Date().getFullYear()} ArchiBot. Semua hak dilindungi.
               </span>
             </div>
           </div>
@@ -1754,7 +1737,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
-              <h3 className="nd-heading-m">Mulai dengan Solana</h3>
+              <h3 className="nd-heading-m">Mulai dengan ArchiBot</h3>
               <button
                 type="button"
                 onClick={() => setGetStartedOpen(false)}
@@ -1882,7 +1865,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari dokumentasi, ekosistem, berita Solana..."
+                placeholder="Cari dokumentasi, modul, berita ArchiBot..."
                 className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
               />
               <button
@@ -1897,7 +1880,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             <div className="max-h-[380px] overflow-y-auto p-3 space-y-4">
               <div>
                 <div className="px-2 pb-1.5 font-brand-mono text-[10px] uppercase tracking-wider text-white/45">
-                  TAUTAN CEPAT SOLANA
+                  TAUTAN CEPAT ARCHIBOT
                 </div>
                 <div className="space-y-1">
                   {HEADER_MEGA_MENUS.flatMap((m) =>
