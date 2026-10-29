@@ -36,10 +36,19 @@ export async function ensureBotReady() {
       console.warn('⚠️ Warning: DISCORD_TOKEN is missing. Bot client cannot connect until token is provided.');
       return client;
     }
-    loginPromise = client.login(token).catch((err) => {
-      loginPromise = null;
-      console.error('❌ Bot login failed:', err.message);
-      throw err;
+    loginPromise = new Promise((resolve, reject) => {
+      if (client.isReady()) {
+        resolve(client);
+        return;
+      }
+      const onReady = () => resolve(client);
+      client.once('clientReady', onReady);
+      client.once('ready', onReady);
+      client.login(token).catch((err) => {
+        loginPromise = null;
+        console.error('❌ Bot login failed:', err.message);
+        reject(err);
+      });
     });
   }
 

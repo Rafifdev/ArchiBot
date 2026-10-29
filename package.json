@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "node --env-file-if-exists=.env server/index.js",
-    "dashboard": "node --env-file-if-exists=.env server/index.js",
-    "dev": "node --env-file-if-exists=.env server/dev.js",
+    "start": "node --watch --env-file-if-exists=.env server/index.js",
+    "dashboard": "node --watch --env-file-if-exists=.env server/index.js",
+    "dev": "node --watch --env-file-if-exists=.env server/dev.js",
     "bot": "node --env-file-if-exists=.env bot.js",
     "build:dashboard": "npm run build --prefix dashboard",
     "dashboard:build": "npm run build --prefix dashboard",

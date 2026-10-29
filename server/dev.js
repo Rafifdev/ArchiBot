@@ -21,3 +21,15 @@ viteProc.on('exit', (code) => {
     console.log(`ℹ️ Vite dev server exited with code ${code}. Dashboard remains available at http://localhost:3001`);
   }
 });
+
+process.on('exit', () => {
+  try { viteProc.kill(); } catch {}
+});
+process.on('SIGINT', () => {
+  try { viteProc.kill(); } catch {}
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  try { viteProc.kill(); } catch {}
+  process.exit(0);
+});

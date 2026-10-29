@@ -360,32 +360,39 @@ router.get('/guilds', verifySession, async (req, res) => {
     }
   }
 
-  // 3. Fallback: Check mutual guilds in bot client cache
+  // 3. Fallback: Check mutual guilds in bot client
   // Strictly ONLY include servers where user has genuine ownership or Administrator (0x8) / Manage Server (0x20)
-  if (!discordGuilds.length && client.isReady()) {
-    for (const g of client.guilds.cache.values()) {
-      if (g.ownerId === userId) {
-        discordGuilds.push({
-          id: g.id,
-          name: g.name,
-          icon: g.iconURL({ size: 128 }) || g.icon || null,
-          owner: true,
-          permissions: '8', // Administrator
-        });
-        continue;
-      }
-      try {
-        const m = g.members.cache.get(userId) || (await g.members.fetch(userId).catch(() => null));
-        if (m && (m.permissions.has(8n) || m.permissions.has(32n))) {
+  if (!discordGuilds.length && (client.isReady() || client.user)) {
+    try {
+      const fetchedGuilds = await client.guilds.fetch();
+      for (const [gid, oauthGuild] of fetchedGuilds) {
+        const g = await oauthGuild.fetch().catch(() => null);
+        if (!g) continue;
+        if (g.ownerId === userId) {
           discordGuilds.push({
             id: g.id,
             name: g.name,
             icon: g.iconURL({ size: 128 }) || g.icon || null,
-            owner: false,
-            permissions: m.permissions.bitfield.toString(),
+            owner: true,
+            permissions: '8', // Administrator
           });
+          continue;
         }
-      } catch {}
+        try {
+          const m = g.members.cache.get(userId) || (await g.members.fetch(userId).catch(() => null));
+          if (m && (m.permissions.has(8n) || m.permissions.has(32n))) {
+            discordGuilds.push({
+              id: g.id,
+              name: g.name,
+              icon: g.iconURL({ size: 128 }) || g.icon || null,
+              owner: false,
+              permissions: m.permissions.bitfield.toString(),
+            });
+          }
+        } catch {}
+      }
+    } catch (fetchErr) {
+      console.warn('Failed to fetch bot client guilds:', fetchErr.message);
     }
   }
 
