@@ -89,12 +89,12 @@ export const MdButton: React.FC<MdButtonProps> = ({
   ...rest
 }) => {
   const sizeStyles: Record<string, string> = {
-    xs: 'h-7 px-2.5 text-[11px] gap-1.5 rounded-lg font-medium',
-    sm: 'h-8 px-3 text-xs gap-2 rounded-lg font-medium',
-    md: 'h-9 px-4 text-xs gap-2 rounded-xl font-medium',
-    lg: 'h-10 px-5 text-sm gap-2.5 rounded-xl font-medium',
-    xl: 'h-12 px-6 text-base gap-3 rounded-2xl font-medium',
-    '2xl': 'h-14 px-8 text-lg gap-3.5 rounded-2xl font-semibold',
+    xs: 'h-7 min-h-[28px] px-2.5 text-[11px] gap-1.5 rounded-lg font-medium',
+    sm: 'h-9 min-h-[36px] px-3.5 text-xs gap-1.5 rounded-lg font-medium',
+    md: 'h-10 min-h-[40px] px-4 text-xs sm:text-sm gap-2 rounded-xl font-medium',
+    lg: 'h-11 min-h-[44px] px-5 text-sm gap-2.5 rounded-xl font-medium',
+    xl: 'h-12 min-h-[48px] px-6 text-base gap-3 rounded-2xl font-medium',
+    '2xl': 'h-14 min-h-[56px] px-8 text-lg gap-3.5 rounded-2xl font-semibold',
   };
 
   const iconSizes: Record<string, string> = {
@@ -128,7 +128,7 @@ export const MdButton: React.FC<MdButtonProps> = ({
       ) : icon && !iconTrailing ? (
         <MdIcon name={icon} className={`shrink-0 leading-none ${iconSizes[size] || 'text-base'}`} />
       ) : null}
-      {children && <span className="truncate leading-none">{children}</span>}
+      {children && <span className="whitespace-nowrap leading-normal flex items-center">{children}</span>}
       {!loading && icon && iconTrailing && (
         <MdIcon name={icon} className={`shrink-0 leading-none ${iconSizes[size] || 'text-base'}`} />
       )}

@@ -69,9 +69,9 @@ const ServerSelectSkeleton: React.FC<{ viewMode: ViewMode }> = ({ viewMode }) =>
               <div className="w-14 h-14 rounded-full bg-discord-surface/80 ring-4 ring-[#13151f]/80" />
             </div>
             {/* Bottom Info Row Skeleton */}
-            <div className="p-3.5 px-4 flex items-center justify-between gap-2.5 bg-[#13151f]">
+            <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-[#13151f] min-h-[56px]">
               <div className="h-4 w-28 bg-discord-surface/90 rounded-md" />
-              <div className="h-7 w-16 bg-discord-surface/90 rounded-lg shrink-0" />
+              <div className="h-9 w-20 bg-discord-surface/90 rounded-lg shrink-0" />
             </div>
           </div>
         ))}
@@ -303,19 +303,20 @@ export const ServerSelectPage: React.FC = () => {
                   </div>
 
                   {/* Bottom Info Row: Server Name on left & Manage / Invite Button on right (No horizontal line) */}
-                  <div className="p-3.5 px-4 flex items-center justify-between gap-2.5 bg-[#13151f]">
+                  <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-[#13151f] min-h-[56px]">
                     <span
-                      className="font-semibold text-xs sm:text-sm text-discord-white truncate min-w-0 flex-1 leading-tight"
+                      className="font-semibold text-xs sm:text-sm text-discord-white truncate min-w-0 flex-1 leading-normal"
                       title={g.name}
                     >
                       {g.name}
                     </span>
 
-                    <div className="shrink-0">
+                    <div className="shrink-0 flex items-center">
                       {g.botInGuild ? (
                         <MdButton
                           size="sm"
                           variant="filled"
+                          className="px-4 shadow-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/guilds/${g.id}`);
@@ -328,10 +329,10 @@ export const ServerSelectPage: React.FC = () => {
                           href={g.inviteUrl || '#'}
                           target="_blank"
                           rel="noreferrer"
-                          className="no-underline"
+                          className="no-underline inline-flex items-center"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <MdButton size="sm" variant="tonal" icon="add">
+                          <MdButton size="sm" variant="tonal" icon="add" className="px-3.5">
                             Invite
                           </MdButton>
                         </a>
@@ -473,11 +474,12 @@ export const ServerSelectPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center">
                     {g.botInGuild ? (
                       <MdButton
                         size="sm"
                         variant="filled"
+                        className="px-4 shadow-sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/guilds/${g.id}`);
@@ -490,10 +492,10 @@ export const ServerSelectPage: React.FC = () => {
                         href={g.inviteUrl || '#'}
                         target="_blank"
                         rel="noreferrer"
-                        className="no-underline"
+                        className="no-underline inline-flex items-center"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <MdButton size="sm" variant="tonal" icon="add">
+                        <MdButton size="sm" variant="tonal" icon="add" className="px-3.5">
                           Invite
                         </MdButton>
                       </a>
