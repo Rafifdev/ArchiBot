@@ -807,10 +807,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
       return;
     }
 
-    const isDifferent = prevGuildIdRef.current !== guildId;
+    const isRealServerSwitch = Boolean(prevGuildIdRef.current && prevGuildIdRef.current !== guildId);
     prevGuildIdRef.current = guildId;
 
-    if (isDifferent) {
+    if (isRealServerSwitch) {
       isServerSwitchingRef.current = true;
       setIsSwitchingServer(true);
 
@@ -836,7 +836,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
       })
       .catch(() => {});
 
-    if (isDifferent) {
+    if (isRealServerSwitch) {
       registerServerFetch(overviewPromise);
     }
   }, [guildId, registerServerFetch]);
