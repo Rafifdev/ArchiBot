@@ -390,9 +390,9 @@ router.get('/guilds', verifySession, async (req, res) => {
     }
   }
 
-  // Filter ONLY valid Discord guilds where user has permissions to invite/manage the bot:
-  // - Must have valid snowflake ID (no fake/mock servers allowed)
-  // - User must be server owner OR have Administrator (0x8) OR have Manage Server (0x20)
+  // Filter valid Discord guilds:
+  // 1. If bot is already in this guild, include it (Active server)
+  // 2. If bot is not in guild, user must be server owner OR have Administrator (0x8) OR have Manage Server (0x20)
   const manageableGuilds = discordGuilds
     .filter((g) => {
       if (!g || !g.id || !/^\d{17,20}$/.test(String(g.id))) return false;
@@ -403,6 +403,11 @@ router.get('/guilds', verifySession, async (req, res) => {
       ) {
         return false;
       }
+
+      // If bot is already present in this server, always include it for management
+      if (client.guilds.cache.has(g.id)) return true;
+
+      // Otherwise, only include if user has permissions to add/invite the bot
       if (g.owner === true || g.isOwner === true) return true;
       if (!g.permissions && g.permissions !== 0) return false;
       try {
