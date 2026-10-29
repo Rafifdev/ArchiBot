@@ -184,13 +184,19 @@ router.get('/callback', async (req, res) => {
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png?size=128`
       : null;
 
+    let isAppOwner = false;
+    if (client.isReady() && client.application) {
+      const appOwnerId = client.application.owner?.ownerUserId || client.application.owner?.id;
+      if (appOwnerId === discordUser.id) isAppOwner = true;
+    }
+
     const userPayload = {
       id: discordUser.id,
       username: discordUser.username,
       global_name: discordUser.global_name || discordUser.username,
       avatar: avatarUrl,
       discriminator: discordUser.discriminator,
-      isOwner: false,
+      isOwner: isAppOwner,
       accessToken,
     };
 
@@ -305,6 +311,15 @@ router.get('/me', verifySession, async (req, res) => {
   if (user.avatar && !user.avatar.startsWith('http://') && !user.avatar.startsWith('https://')) {
     user.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
   }
+
+  // Ensure application owner has isOwner flag
+  if (client.isReady() && client.application) {
+    const appOwnerId = client.application.owner?.ownerUserId || client.application.owner?.id;
+    if (appOwnerId && appOwnerId === user.id) {
+      user.isOwner = true;
+    }
+  }
+
   res.json({ user });
 });
 
