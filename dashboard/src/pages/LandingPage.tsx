@@ -587,7 +587,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             src="/src/img/index/hero-bg.webp"
             alt=""
             decoding="async"
-            fetchPriority="high"
             className="w-full h-full object-cover select-none"
           />
           <SafeUnicornScene
