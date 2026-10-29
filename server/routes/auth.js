@@ -124,7 +124,10 @@ router.get('/login', (req, res) => {
 });
 
 router.get('/callback', async (req, res) => {
-  const { code } = req.query;
+  const { code, error } = req.query;
+  if (error) {
+    return res.redirect(`${config.FRONTEND_URL}/login?error=${encodeURIComponent(error)}`);
+  }
   if (!code) {
     return res.redirect(`${config.FRONTEND_URL}/login?error=missing_code`);
   }
