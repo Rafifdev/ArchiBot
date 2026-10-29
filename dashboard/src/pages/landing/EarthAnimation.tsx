@@ -72,13 +72,15 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
   const [ready, setReady] = useState(false);
   const [isInView, setIsInView] = useState(false);
 
-  // Pre-initialize subpaths during browser idle time so there is 0 calculation latency on scroll
+  // Initialize subpaths & dots as soon as the element is near viewport
   useEffect(() => {
-    if (ready) return;
+    const node = divRef.current;
+    if (!node) return;
 
-    const initSubpaths = () => {
-      if (!glowSvgRef.current || ready) return;
+    const initializeAnimation = () => {
+      if (!glowSvgRef.current || !dotLayerRef.current) return;
       const glowSVG = glowSvgRef.current;
+      const dotLayer = dotLayerRef.current;
       const d = BASE_PATH_D;
       const subDs = (d.match(/M[^M]+/g) || []).map((s) => s.trim());
 
@@ -94,35 +96,44 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
         return { path: p, length: p.getTotalLength() };
       });
 
+      // Clear existing dots
+      while (dotLayer.firstChild) {
+        dotLayer.removeChild(dotLayer.firstChild);
+      }
+
+      const dots: Dot[] = [];
+      subpaths.forEach((sp, subIdx) => {
+        const L = sp.length;
+        if (!isFinite(L) || L <= 1) return;
+
+        const count = Math.max(1, Math.floor(L / gap));
+        for (let i = 0; i < count; i++) {
+          const offset = (i * gap) % L;
+          const c = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle",
+          );
+          c.setAttribute("r", dotSize.toString());
+          c.setAttribute("fill", dotColor);
+          dotLayer.appendChild(c);
+          dots.push({ elem: c, subIdx, offset, length: L, baseR: dotSize });
+        }
+      });
+
       subpathsRef.current = subpaths;
+      dotsRef.current = dots;
       setReady(true);
     };
-
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      const id = (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => number }).requestIdleCallback(
-        initSubpaths,
-        { timeout: 1500 }
-      );
-      return () => {
-        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
-      };
-    } else {
-      const timer = setTimeout(initSubpaths, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [ready]);
-
-  // Monitor visibility strictly to pause/resume the RAF loop
-  useEffect(() => {
-    const node = divRef.current;
-    if (!node) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries.some((e) => e.isIntersecting);
         setIsInView(visible);
+        if (visible && !ready) {
+          initializeAnimation();
+        }
       },
-      { rootMargin: "150px" },
+      { rootMargin: "300px" },
     );
 
     observer.observe(node);
@@ -130,45 +141,11 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
     return () => {
       observer.disconnect();
     };
-  }, []);
-
-  // Rebuild dots when config changes
-  useEffect(() => {
-    if (!dotLayerRef.current || subpathsRef.current.length === 0) return;
-
-    const dotLayer = dotLayerRef.current;
-    const subpaths = subpathsRef.current;
-    const dots: Dot[] = [];
-
-    // Clear existing dots
-    while (dotLayer.firstChild) {
-      dotLayer.removeChild(dotLayer.firstChild);
-    }
-
-    subpaths.forEach((sp, subIdx) => {
-      const L = sp.length;
-      if (!isFinite(L) || L <= 1) return;
-
-      const count = Math.max(1, Math.floor(L / gap));
-      for (let i = 0; i < count; i++) {
-        const offset = (i * gap) % L;
-        const c = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "circle",
-        );
-        c.setAttribute("r", dotSize.toString());
-        c.setAttribute("fill", dotColor);
-        dotLayer.appendChild(c);
-        dots.push({ elem: c, subIdx, offset, length: L, baseR: dotSize });
-      }
-    });
-
-    dotsRef.current = dots;
-  }, [dotSize, gap, dotColor, ready]);
+  }, [ready, gap, dotSize, dotColor]);
 
   // Performance-optimized animation loop
   useEffect(() => {
-    if (!isInView || !glowSvgRef.current || dotsRef.current.length === 0) {
+    if (!isInView || !ready || dotsRef.current.length === 0) {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
@@ -234,7 +211,7 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
         animationFrameRef.current = null;
       }
     };
-  }, [isInView, lapSeconds, dotColor, ready, dotSize]);
+  }, [isInView, ready, lapSeconds, dotSize]);
 
   // Throttled Cursor tracking
   useEffect(() => {

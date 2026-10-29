@@ -594,7 +594,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             jsonFilePath="/src/img/index/hero-bg.json"
             width="100%"
             height="100%"
-            scale={1}
+            scale={0.75}
             dpi={1}
             fps={30}
             lazyLoad={true}
@@ -830,7 +830,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             jsonFilePath="/src/img/index/performance-bg.json"
             width="100%"
             height="100%"
-            scale={1}
+            scale={0.75}
             dpi={1}
             fps={30}
             lazyLoad={true}
@@ -1431,7 +1431,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             jsonFilePath="/src/img/index/community-bg.json"
             width="100%"
             height="100%"
-            scale={1}
+            scale={0.75}
             dpi={1}
             fps={30}
             lazyLoad={true}
