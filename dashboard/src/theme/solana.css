@@ -315,7 +315,7 @@
   animation: terminal-loader 2s linear infinite;
 }
 
-/* Scroll Entry Reveal Effects (Modern Web Guidance: scroll-entry-exit-effects) */
+/* Scroll Entry Reveal Effects & GPU Compositing (Modern Web Guidance) */
 @keyframes solana-entry-reveal {
   from {
     opacity: 0;
@@ -327,12 +327,23 @@
   }
 }
 
+.solana-scroll-reveal {
+  contain: layout style;
+  backface-visibility: hidden;
+}
+
+.solana-section-contained {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @supports ((animation-timeline: view()) and (animation-range: entry)) {
     .solana-scroll-reveal {
       animation: solana-entry-reveal linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 65%;
+      will-change: transform, opacity;
     }
   }
 
@@ -342,6 +353,7 @@
       transform: translateY(24px);
       transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
     }
     .solana-scroll-reveal.is-in-view {
       opacity: 1;

@@ -39,17 +39,26 @@ export const SafeUnicornScene: React.FC<UnicornSceneProps> = (props) => {
           setVisible(entry.isIntersecting);
         });
       },
-      { rootMargin: "150px" },
+      { rootMargin: "60px" },
     );
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
+  // Cap DPI strictly at 1.0 to prevent GPU shader lag on integrated graphics
+  const effectiveDpi = Math.min(props.dpi ?? 1, 1);
+  const effectiveFps = props.fps && props.fps <= 30 ? props.fps : 30;
+
   return (
     <div ref={ref} className={props.className}>
       {visible && (
         <UnicornSceneErrorBoundary>
-          <UnicornScene {...props} className="w-full h-full" />
+          <UnicornScene
+            {...props}
+            dpi={effectiveDpi}
+            fps={effectiveFps}
+            className="w-full h-full pointer-events-none"
+          />
         </UnicornSceneErrorBoundary>
       )}
     </div>

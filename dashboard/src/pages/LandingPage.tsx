@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { UserProfile } from '../types/api';
 import { EarthAnimation } from './landing/EarthAnimation';
 import { SafeUnicornScene } from './landing/SafeUnicornScene';
+import { LiveTotalTxCounter, LiveTpsCounter } from './landing/LiveCounters';
 import {
   COMMUNITY_CARDS,
   FOOTER_COLUMNS,
@@ -117,10 +118,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   // Hero rotating promo banner state
   const [promoIndex, setPromoIndex] = useState(0);
 
-  // Live Performance Counters (Solana Transactions & TPS)
-  const [totalTx, setTotalTx] = useState(402845192310);
-  const [liveTps, setLiveTps] = useState(4128);
-
   // What's Up Terminal state
   const [selectedCategory, setSelectedCategory] = useState<
     'all' | 'defi' | 'institutions' | 'consumer' | 'developers' | 'ecosystem'
@@ -143,16 +140,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     const interval = setInterval(() => {
       setPromoIndex((prev) => (prev + 1) % HERO_PROMOS.length);
     }, 8000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Live ticking transactions & TPS counter
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const nextTps = Math.floor(3890 + Math.random() * 520);
-      setLiveTps(nextTps);
-      setTotalTx((prev) => prev + Math.floor(nextTps / 4));
-    }, 250);
     return () => clearInterval(interval);
   }, []);
 
@@ -220,28 +207,49 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     return () => observer.disconnect();
   }, []);
 
-  // Footer mouse-tracking glow effect
+  // Footer mouse-tracking glow effect (throttled with RAF, no forced reflows)
   useEffect(() => {
     const container = footerRef.current;
     const glow = footerGlowRef.current;
     if (!container || !glow) return;
 
-    const handleMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    let rafId: number | null = null;
+    let cachedRect: DOMRect | null = null;
+
+    const handleMouseEnter = () => {
+      cachedRect = container.getBoundingClientRect();
       glow.style.visibility = 'visible';
       glow.style.opacity = '1';
-      glow.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+
+    const handleMove = (e: MouseEvent) => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (!cachedRect) {
+          cachedRect = container.getBoundingClientRect();
+        }
+        const x = e.clientX - cachedRect.left;
+        const y = e.clientY - cachedRect.top;
+        glow.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      });
     };
 
     const handleLeave = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      cachedRect = null;
       glow.style.opacity = '0';
     };
 
-    container.addEventListener('mousemove', handleMove);
-    container.addEventListener('mouseleave', handleLeave);
+    container.addEventListener('mouseenter', handleMouseEnter, { passive: true });
+    container.addEventListener('mousemove', handleMove, { passive: true });
+    container.addEventListener('mouseleave', handleLeave, { passive: true });
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      container.removeEventListener('mouseenter', handleMouseEnter);
       container.removeEventListener('mousemove', handleMove);
       container.removeEventListener('mouseleave', handleLeave);
     };
@@ -606,7 +614,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             width="100%"
             height="100%"
             scale={1}
-            dpi={1.5}
+            dpi={1}
             fps={30}
             lazyLoad={true}
             production={true}
@@ -822,7 +830,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           5. PERFORMANCE SECTION (apps/web/src/components/index/performance.tsx)
           ===================================================================== */}
-      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal">
+      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         {/* Background WebGL Shader + Fallback */}
         <div className="absolute inset-0 pointer-events-none">
           <img
@@ -837,7 +845,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             width="100%"
             height="100%"
             scale={1}
-            dpi={1.5}
+            dpi={1}
             fps={30}
             lazyLoad={true}
             production={true}
@@ -870,7 +878,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 <div className="flex flex-col gap-6">
                   <div>
                     <div className="text-[28px] md:text-[36px] leading-[1.11] font-brand-mono font-medium tracking-tight text-white tabular-nums">
-                      {totalTx.toLocaleString('en-US')}+
+                      <LiveTotalTxCounter />
                     </div>
                     <div className="text-xs md:text-sm text-nd-mid-em-text-alpha mt-1">
                       Total otomasi hingga saat ini
@@ -878,7 +886,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   </div>
                   <div>
                     <div className="text-[28px] md:text-[36px] leading-[1.11] font-brand-mono font-medium tracking-tight text-white tabular-nums">
-                      {liveTps.toLocaleString('en-US')}
+                      <LiveTpsCounter />
                     </div>
                     <div className="text-xs md:text-sm text-nd-mid-em-text-alpha mt-1">
                       Eksekusi per detik
@@ -920,7 +928,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           6. WHAT'S UP / TERMINAL SECTION (apps/web/src/components/index/whats-up.tsx)
           ===================================================================== */}
-      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal">
+      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         <div className="flex flex-col justify-between max-w-[1440px] mx-auto py-[56px] md:py-[112px] xl:py-[160px] px-[20px] md:px-[32px] xl:px-[40px]">
           {/* Section Title + CTA */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-11 xl:mb-12 gap-6">
@@ -1091,7 +1099,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           7. PROJECTS / INSTITUTIONS SECTION (apps/web/src/components/index/projects.tsx)
           ===================================================================== */}
-      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal">
+      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[56px] md:pt-[112px] xl:pt-[160px]">
           <div className="px-[20px] md:px-[32px] xl:px-[40px] flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-11 xl:mb-12 gap-6">
             <h2 className="nd-heading-xl max-w-[920px]">
@@ -1240,7 +1248,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           9. NEWS CAROUSEL SECTION (Ikuti perkembangan terbaru Solana)
           ===================================================================== */}
-      <section className="border-t border-nd-border-light solana-scroll-reveal">
+      <section className="border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         <div className="max-w-[1440px] mx-auto py-[56px] md:py-[112px] xl:py-[160px] px-[20px] md:px-[32px] xl:px-[40px]">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-11 xl:mb-12 gap-6">
             <h2 className="nd-heading-xl">
@@ -1328,7 +1336,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           10. VIDEOS CAROUSEL SECTION (Bagaimana kami membangunnya)
           ===================================================================== */}
-      <section className="border-t border-nd-border-light solana-scroll-reveal">
+      <section className="border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         <div className="max-w-[1440px] mx-auto py-[56px] md:py-[112px] xl:py-[160px] px-[20px] md:px-[32px] xl:px-[40px]">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-11 xl:mb-12 gap-6">
             <div>
@@ -1417,7 +1425,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           11. COMMUNITY SECTION + WIREFRAME EARTH GLOBE (community.tsx)
           ===================================================================== */}
-      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal">
+      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         {/* WebGL Background + Interactive Wireframe EarthAnimation */}
         <div className="absolute inset-0 pointer-events-none">
           <SafeUnicornScene
@@ -1426,7 +1434,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             width="100%"
             height="100%"
             scale={1}
-            dpi={1.5}
+            dpi={1}
             fps={30}
             lazyLoad={true}
             production={true}
@@ -1461,7 +1469,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 href={card.href}
                 target="_blank"
                 rel="noreferrer"
-                className={`${card.cols} group rounded-xl bg-nd-border-light hover:bg-nd-border-prominent border border-nd-border-light hover:border-nd-border-hovered backdrop-blur-[8px] p-5 md:p-6 xl:p-8 flex flex-col justify-between gap-6 transition-all !no-underline text-white`}
+                className={`${card.cols} group rounded-xl bg-[#0e0c14]/90 hover:bg-[#16131f] border border-white/10 hover:border-white/25 p-5 md:p-6 xl:p-8 flex flex-col justify-between gap-6 transition-all !no-underline text-white`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="nd-heading-s text-white group-hover:text-[#55E9AB] transition-colors">
