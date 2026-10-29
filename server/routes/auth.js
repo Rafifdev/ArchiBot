@@ -184,19 +184,13 @@ router.get('/callback', async (req, res) => {
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png?size=128`
       : null;
 
-    let isAppOwner = false;
-    if (client.isReady() && client.application) {
-      const appOwnerId = client.application.owner?.ownerUserId || client.application.owner?.id;
-      if (appOwnerId === discordUser.id) isAppOwner = true;
-    }
-
     const userPayload = {
       id: discordUser.id,
       username: discordUser.username,
       global_name: discordUser.global_name || discordUser.username,
       avatar: avatarUrl,
       discriminator: discordUser.discriminator,
-      isOwner: isAppOwner,
+      isOwner: false,
       accessToken,
     };
 
@@ -312,14 +306,6 @@ router.get('/me', verifySession, async (req, res) => {
     user.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
   }
 
-  // Ensure application owner has isOwner flag
-  if (client.isReady() && client.application) {
-    const appOwnerId = client.application.owner?.ownerUserId || client.application.owner?.id;
-    if (appOwnerId && appOwnerId === user.id) {
-      user.isOwner = true;
-    }
-  }
-
   res.json({ user });
 });
 
@@ -419,10 +405,7 @@ router.get('/guilds', verifySession, async (req, res) => {
         return false;
       }
 
-      // If bot is already present in this server, always include it for management
-      if (client.guilds.cache.has(g.id)) return true;
-
-      // Otherwise, only include if user has permissions to add/invite the bot
+      // Only include servers where the user has permissions to add/manage the bot (Owner, Administrator 0x8, or Manage Server 0x20)
       if (g.owner === true || g.isOwner === true) return true;
       if (!g.permissions && g.permissions !== 0) return false;
       try {

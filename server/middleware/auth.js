@@ -36,18 +36,9 @@ export async function verifyGuildAccess(req, res, next) {
 
   req.guild = guild;
 
-  // Local owner or dev login has full access
-  if (req.user?.isDev || req.user?.isOwner) {
+  // Local dev login has full access
+  if (req.user?.isDev) {
     return next();
-  }
-
-  // Bot Application Owner has full master access to all servers where ArchiBot is installed
-  if (client.isReady() && client.application) {
-    const appOwnerId = client.application.owner?.ownerUserId || client.application.owner?.id;
-    if (appOwnerId && appOwnerId === req.user?.id) {
-      if (req.user) req.user.isOwner = true;
-      return next();
-    }
   }
 
   // Guild owner always has access
