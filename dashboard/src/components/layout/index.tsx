@@ -734,9 +734,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
   const [isSwitchingServer, setIsSwitchingServer] = useState(false);
 
   const prevGuildIdRef = useRef<string | undefined>(undefined);
+  const isServerSwitchingRef = useRef(false);
   const activeFetchesRef = useRef<Set<Promise<any>>>(new Set());
+  const switchTimeoutRef = useRef<any>(null);
 
   const registerServerFetch = useCallback((p: Promise<any>) => {
+    // Only register fetch and trigger fullscreen blur if we are actively switching servers!
+    // When navigating between menus inside the same server, do NOT trigger the blur overlay.
+    if (!isServerSwitchingRef.current) return;
+
     setIsSwitchingServer(true);
     activeFetchesRef.current.add(p);
 
@@ -744,6 +750,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
       activeFetchesRef.current.delete(p);
       if (activeFetchesRef.current.size === 0) {
         setIsSwitchingServer(false);
+        isServerSwitchingRef.current = false;
+        if (switchTimeoutRef.current) clearTimeout(switchTimeoutRef.current);
       }
     });
   }, []);
@@ -794,12 +802,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
     if (!guildId) {
       setGuildInfo(null);
       setIsSwitchingServer(false);
+      isServerSwitchingRef.current = false;
       prevGuildIdRef.current = undefined;
       return;
     }
 
     const isDifferent = prevGuildIdRef.current !== guildId;
     prevGuildIdRef.current = guildId;
+
+    if (isDifferent) {
+      isServerSwitchingRef.current = true;
+      setIsSwitchingServer(true);
+
+      if (switchTimeoutRef.current) clearTimeout(switchTimeoutRef.current);
+      switchTimeoutRef.current = setTimeout(() => {
+        setIsSwitchingServer(false);
+        isServerSwitchingRef.current = false;
+        activeFetchesRef.current.clear();
+      }, 4000);
+    }
 
     const overviewPromise = fetch(`/api/guilds/${guildId}/overview`, { credentials: 'include' })
       .then((r) => r.json())
