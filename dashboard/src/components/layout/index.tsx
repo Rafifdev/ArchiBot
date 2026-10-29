@@ -513,10 +513,22 @@ export const CommandSearchModal: React.FC<CommandSearchModalProps> = ({
 
   useEffect(() => {
     if (open && !guildId && (!allGuilds || allGuilds.length === 0)) {
-      fetch('/api/auth/guilds', { credentials: 'include' })
+      fetch(`/api/auth/guilds?_t=${Date.now()}`, {
+        credentials: 'include',
+        headers: { 'Cache-Control': 'no-cache, no-store' },
+      })
         .then((r) => r.json())
         .then((data) => {
-          if (data.guilds) setInternalGuilds(data.guilds);
+          if (data.guilds) {
+            setInternalGuilds(
+              (data.guilds as GuildSummary[]).filter(
+                (g) =>
+                  g.id !== 'dev-demo-guild-uninvited' &&
+                  !g.id.includes('demo') &&
+                  !g.name?.toLowerCase().includes('community & gaming')
+              )
+            );
+          }
         })
         .catch(() => {});
     }
@@ -758,10 +770,22 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
   }, []);
 
   useEffect(() => {
-    fetch('/api/auth/guilds', { credentials: 'include' })
+    fetch(`/api/auth/guilds?_t=${Date.now()}`, {
+      credentials: 'include',
+      headers: { 'Cache-Control': 'no-cache, no-store' },
+    })
       .then((r) => r.json())
       .then((data) => {
-        if (data.guilds) setAllGuilds(data.guilds);
+        if (data.guilds) {
+          setAllGuilds(
+            (data.guilds as GuildSummary[]).filter(
+              (g) =>
+                g.id !== 'dev-demo-guild-uninvited' &&
+                !g.id.includes('demo') &&
+                !g.name?.toLowerCase().includes('community & gaming')
+            )
+          );
+        }
       })
       .catch(() => {});
   }, []);

@@ -7,9 +7,7 @@ import { signUserToken, verifySession } from '../middleware/auth.js';
 import { client, ensureBotReady } from '../botClient.js';
 
 const router = Router();
-const userGuildsCache = new Map();
 const userTokens = new Map();
-const GUILD_CACHE_TTL = 30_000; // 30 seconds
 
 const TOKENS_PATH = resolve(process.cwd(), 'server', 'data', 'tokens.json');
 const GUILDS_PATH = resolve(process.cwd(), 'server', 'data', 'user_guilds.json');
@@ -316,20 +314,16 @@ router.post('/logout', (req, res) => {
 });
 
 router.get('/guilds', verifySession, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+
   const userId = req.user.id;
   const clientId = client.user?.id || config.DISCORD_CLIENT_ID;
 
   if (!client.isReady()) {
     await ensureBotReady().catch(() => null);
-  }
-
-  // Check cache first
-  const cacheKey = `user_guilds_${userId}`;
-  const forceRefresh = req.query.refresh === 'true';
-  const cached = userGuildsCache.get(cacheKey);
-
-  if (!forceRefresh && cached && Date.now() - cached.timestamp < GUILD_CACHE_TTL) {
-    return res.json({ guilds: cached.guilds });
   }
 
   const accessToken = req.user.accessToken || userTokens.get(userId) || getStoredToken(userId);
@@ -401,7 +395,14 @@ router.get('/guilds', verifySession, async (req, res) => {
   // - User must be server owner OR have Administrator (0x8) OR have Manage Server (0x20)
   const manageableGuilds = discordGuilds
     .filter((g) => {
-      if (!g.id || !/^\d{17,20}$/.test(String(g.id))) return false;
+      if (!g || !g.id || !/^\d{17,20}$/.test(String(g.id))) return false;
+      if (
+        g.id === 'dev-demo-guild-uninvited' ||
+        String(g.id).includes('demo') ||
+        (g.name && String(g.name).toLowerCase().includes('community & gaming'))
+      ) {
+        return false;
+      }
       if (g.owner === true || g.isOwner === true) return true;
       if (!g.permissions && g.permissions !== 0) return false;
       try {
@@ -450,7 +451,6 @@ router.get('/guilds', verifySession, async (req, res) => {
     return a.name.localeCompare(b.name);
   });
 
-  userGuildsCache.set(cacheKey, { guilds: manageableGuilds, timestamp: Date.now() });
   return res.json({ guilds: manageableGuilds });
 });
 

@@ -163,10 +163,25 @@ export const ServerSelectPage: React.FC = () => {
 
   const fetchGuilds = (force = false) => {
     setLoading(true);
-    fetch(`/api/auth/guilds${force ? '?refresh=true' : ''}`, { credentials: 'include' })
+    fetch(`/api/auth/guilds?_t=${Date.now()}${force ? '&refresh=true' : ''}`, {
+      credentials: 'include',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    })
       .then((r) => r.json())
       .then((data) => {
-        if (data.guilds) setGuilds(data.guilds);
+        if (data.guilds) {
+          const sanitized = (data.guilds as GuildSummary[]).filter(
+            (g) =>
+              g.id !== 'dev-demo-guild-uninvited' &&
+              !g.id.includes('demo') &&
+              !g.name?.toLowerCase().includes('community & gaming')
+          );
+          setGuilds(sanitized);
+        }
       })
       .catch((err) => console.error(err))
       .finally(() => {
