@@ -453,10 +453,236 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 };
 
 export const MdLoading: React.FC = () => (
-  <div className="flex items-center justify-center p-10">
-    <md-circular-progress indeterminate />
+  <div className="flex flex-col gap-4 animate-pulse select-none py-4">
+    <div className="h-6 w-48 bg-discord-surface/90 rounded-lg" />
+    <div className="h-4 w-80 bg-discord-surface/60 rounded" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="h-28 rounded-xl bg-discord-card border border-discord-border p-4 flex flex-col gap-2.5">
+          <div className="h-4 w-28 bg-discord-surface/90 rounded" />
+          <div className="h-3 w-full bg-discord-surface/60 rounded" />
+        </div>
+      ))}
+    </div>
   </div>
 );
+
+
+export const PageHeaderSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-2 mb-6 animate-pulse select-none">
+    <div className="h-3 w-28 bg-discord-surface/60 rounded" />
+    <div className="h-7 w-56 bg-discord-surface/90 rounded-lg" />
+    <div className="h-3.5 w-80 max-w-full bg-discord-surface/70 rounded" />
+  </div>
+);
+
+export const OverviewSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-8 animate-pulse select-none">
+    <div className="flex items-center gap-4">
+      <div className="w-16 h-16 rounded-xl bg-discord-surface/90 shrink-0" />
+      <div className="flex flex-col gap-2">
+        <div className="h-3 w-24 bg-discord-surface/60 rounded" />
+        <div className="h-6 w-48 bg-discord-surface/90 rounded-lg" />
+      </div>
+    </div>
+    <div>
+      <div className="h-5 w-32 bg-discord-surface/90 rounded mb-4" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="p-4 rounded-xl bg-discord-card border border-discord-border flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-lg bg-discord-surface/90 shrink-0" />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="h-4 w-28 bg-discord-surface/90 rounded" />
+              <div className="h-3 w-36 bg-discord-surface/60 rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div>
+      <div className="h-5 w-24 bg-discord-surface/90 rounded mb-4" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="p-4 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3 min-h-[110px]">
+            <div className="w-9 h-9 rounded-lg bg-discord-surface/90" />
+            <div className="h-4 w-32 bg-discord-surface/90 rounded" />
+            <div className="h-3 w-full bg-discord-surface/60 rounded" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+export const ChannelsSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="h-10 w-full max-w-md bg-discord-card border border-discord-border rounded-xl" />
+    <div className="flex flex-col gap-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="rounded-xl bg-discord-card border border-discord-border p-4 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between pb-2 border-b border-discord-border/50">
+            <div className="h-4 w-36 bg-discord-surface/90 rounded" />
+            <div className="h-4 w-12 bg-discord-surface/60 rounded" />
+          </div>
+          {Array.from({ length: 3 }).map((_, j) => (
+            <div key={j} className="h-10 rounded-lg bg-discord-surface/70 flex items-center px-3.5 gap-3">
+              <div className="w-4 h-4 rounded bg-discord-surface/90" />
+              <div className="h-3.5 w-40 bg-discord-surface/90 rounded" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const RolesSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="p-4 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3">
+      <div className="h-4 w-44 bg-discord-surface/90 rounded" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="h-12 bg-discord-surface/80 rounded-lg" />
+        <div className="h-12 bg-discord-surface/80 rounded-lg" />
+      </div>
+    </div>
+    <div className="rounded-xl bg-discord-card border border-discord-border p-4 flex flex-col gap-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="h-11 rounded-lg bg-discord-surface/70 flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <div className="w-3.5 h-3.5 rounded-full bg-discord-surface/90" />
+            <div className="h-3.5 w-32 bg-discord-surface/90 rounded" />
+          </div>
+          <div className="h-7 w-20 bg-discord-surface/80 rounded-md" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const MembersSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="flex gap-4 border-b border-discord-border pb-2">
+      <div className="h-8 w-32 bg-discord-surface/90 rounded-lg" />
+      <div className="h-8 w-32 bg-discord-surface/60 rounded-lg" />
+    </div>
+    <div className="h-10 w-full max-w-sm bg-discord-card border border-discord-border rounded-xl" />
+    <div className="rounded-xl bg-discord-card border border-discord-border p-2 flex flex-col gap-1.5">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="h-14 rounded-lg bg-discord-surface/60 flex items-center justify-between px-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-full bg-discord-surface/90" />
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3.5 w-28 bg-discord-surface/90 rounded" />
+              <div className="h-2.5 w-20 bg-discord-surface/60 rounded" />
+            </div>
+          </div>
+          <div className="h-7 w-20 bg-discord-surface/80 rounded-md" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const VoiceSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3 min-h-[140px]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-discord-surface/90" />
+            <div className="flex flex-col gap-1.5">
+              <div className="h-4 w-32 bg-discord-surface/90 rounded" />
+              <div className="h-3 w-24 bg-discord-surface/60 rounded" />
+            </div>
+          </div>
+          <div className="h-3 w-full bg-discord-surface/60 rounded mt-2" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const ArchitectSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="flex gap-3 border-b border-discord-border pb-2">
+      <div className="h-9 w-36 bg-discord-surface/90 rounded-lg" />
+      <div className="h-9 w-36 bg-discord-surface/60 rounded-lg" />
+      <div className="h-9 w-36 bg-discord-surface/60 rounded-lg" />
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3">
+          <div className="w-10 h-10 rounded-lg bg-discord-surface/90" />
+          <div className="h-4 w-36 bg-discord-surface/90 rounded" />
+          <div className="h-3 w-full bg-discord-surface/60 rounded" />
+          <div className="h-9 w-full bg-discord-surface/80 rounded-lg mt-3" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const EmbedsSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-4">
+        <div className="h-4 w-40 bg-discord-surface/90 rounded" />
+        <div className="h-10 bg-discord-surface/70 rounded-lg" />
+        <div className="h-24 bg-discord-surface/70 rounded-lg" />
+        <div className="h-10 bg-discord-surface/70 rounded-lg" />
+      </div>
+      <div className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3">
+        <div className="h-4 w-32 bg-discord-surface/90 rounded" />
+        <div className="h-48 bg-discord-surface/60 rounded-lg border-l-4 border-discord-surface/90" />
+      </div>
+    </div>
+  </div>
+);
+
+export const BackupsSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="h-4 w-36 bg-discord-surface/90 rounded" />
+            <div className="h-4 w-20 bg-discord-surface/60 rounded" />
+          </div>
+          <div className="h-3 w-48 bg-discord-surface/60 rounded" />
+          <div className="flex gap-2 mt-2">
+            <div className="h-8 w-24 bg-discord-surface/80 rounded-md" />
+            <div className="h-8 w-24 bg-discord-surface/80 rounded-md" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const SettingsSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="flex gap-3 border-b border-discord-border pb-2">
+      <div className="h-9 w-28 bg-discord-surface/90 rounded-lg" />
+      <div className="h-9 w-28 bg-discord-surface/60 rounded-lg" />
+      <div className="h-9 w-28 bg-discord-surface/60 rounded-lg" />
+    </div>
+    <div className="p-6 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-5 max-w-2xl">
+      <div className="h-4 w-44 bg-discord-surface/90 rounded" />
+      <div className="h-12 bg-discord-surface/70 rounded-lg" />
+      <div className="h-12 bg-discord-surface/70 rounded-lg" />
+      <div className="h-9 w-32 bg-discord-surface/80 rounded-lg" />
+    </div>
+  </div>
+);
+
 
 export const SectionHeader: React.FC<{ title: string; className?: string }> = ({ title, className = 'mb-4' }) => (
   <div className={className}>

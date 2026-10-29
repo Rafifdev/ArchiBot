@@ -4,7 +4,7 @@ import {
   MdButton,
   MdTextField,
   MdSelect,
-  MdLoading,
+  ArchitectSkeleton,
   MdIcon,
   MdTabs,
   ConfirmDialog,
@@ -189,7 +189,7 @@ export const ArchitectPage: React.FC = () => {
     }
   };
 
-  if (loading && templates.length === 0 && legoModules.length === 0) return <MdLoading />;
+  if (loading && templates.length === 0 && legoModules.length === 0) return <ArchitectSkeleton />;
 
   const channelOptions = channels.map((c) => ({ value: c.id, label: `#${c.name}` }));
   const roleOptions = [{ value: '', label: 'Auto (Verified Role)' }, ...roles.map((r) => ({ value: r.id, label: r.name }))];

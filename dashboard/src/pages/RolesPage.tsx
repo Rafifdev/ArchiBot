@@ -4,7 +4,7 @@ import {
   MdButton,
   MdTextField,
   MdIconButton,
-  MdLoading,
+  RolesSkeleton,
   MdSelect,
   MdIcon,
   Badge,
@@ -206,7 +206,7 @@ export const RolesPage: React.FC = () => {
     }
   };
 
-  if (loading && roles.length === 0) return <MdLoading />;
+  if (loading && roles.length === 0) return <RolesSkeleton />;
 
   const roleOptions = [{ value: '', label: 'None' }, ...roles.map((r) => ({ value: r.id, label: r.name }))];
 

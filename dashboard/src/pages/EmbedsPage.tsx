@@ -5,7 +5,7 @@ import {
   MdTextField,
   MdSelect,
   MdIconButton,
-  MdLoading,
+  EmbedsSkeleton,
   MdIcon,
   PageHeader,
   NoticeBanner,
@@ -162,7 +162,7 @@ export const EmbedsPage: React.FC = () => {
     }
   };
 
-  if (loading && channels.length === 0) return <MdLoading />;
+  if (loading && channels.length === 0) return <EmbedsSkeleton />;
 
   const channelOptions = channels.map((c) => ({ value: c.id, label: `#${c.name}` }));
 

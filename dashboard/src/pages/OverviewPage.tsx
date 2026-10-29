@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DiscordMark, MdLoading, SectionHeader, QuickActionCard, ModuleCard } from '../components/ui';
+import { DiscordMark, OverviewSkeleton, SectionHeader, QuickActionCard, ModuleCard } from '../components/ui';
 import { useServerSwitch } from '../components/layout';
 
 export const OverviewPage: React.FC = () => {
@@ -27,7 +27,7 @@ export const OverviewPage: React.FC = () => {
     fetchOverview();
   }, [guildId]);
 
-  if (loading && !data) return <MdLoading />;
+  if (loading && !data) return <OverviewSkeleton />;
   if (!data) return <div className="text-xs text-discord-muted">Failed to load server data.</div>;
 
   const quickActions = [

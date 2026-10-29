@@ -5,7 +5,7 @@ import {
   MdTextField,
   MdSelect,
   MdIconButton,
-  MdLoading,
+  VoiceSkeleton,
   MdIcon,
   Badge,
   StatusBadge,
@@ -155,7 +155,7 @@ export const VoicePage: React.FC = () => {
     }
   };
 
-  if (loading && hubs.length === 0 && tempRooms.length === 0) return <MdLoading />;
+  if (loading && hubs.length === 0 && tempRooms.length === 0) return <VoiceSkeleton />;
 
   return (
     <div className="flex flex-col gap-6">

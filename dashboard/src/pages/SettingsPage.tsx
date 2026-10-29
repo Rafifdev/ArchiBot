@@ -4,7 +4,7 @@ import {
   MdButton,
   MdTextField,
   MdSelect,
-  MdLoading,
+  SettingsSkeleton,
   MdIcon,
   MdTabs,
   PageHeader,
@@ -183,7 +183,7 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  if (loading && channels.length === 0 && roles.length === 0) return <MdLoading />;
+  if (loading && channels.length === 0 && roles.length === 0) return <SettingsSkeleton />;
 
   const channelOptions = [
     { value: '', label: 'Select a channel...' },

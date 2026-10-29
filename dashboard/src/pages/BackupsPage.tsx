@@ -4,7 +4,7 @@ import {
   MdButton,
   MdTextField,
   MdIconButton,
-  MdLoading,
+  BackupsSkeleton,
   MdIcon,
   MdDialog,
   ConfirmDialog,
@@ -171,7 +171,7 @@ export const BackupsPage: React.FC = () => {
     }
   };
 
-  if (loading && backups.length === 0) return <MdLoading />;
+  if (loading && backups.length === 0) return <BackupsSkeleton />;
 
   return (
     <div className="flex flex-col gap-6">

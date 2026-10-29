@@ -5,7 +5,7 @@ import {
   MdTextField,
   MdSelect,
   MdIconButton,
-  MdLoading,
+  ChannelsSkeleton,
   MdIcon,
   Badge,
   StatusBadge,
@@ -189,7 +189,7 @@ export const ChannelsPage: React.FC = () => {
     }
   };
 
-  if (loading && channels.length === 0) return <MdLoading />;
+  if (loading && channels.length === 0) return <ChannelsSkeleton />;
 
   const filtered = channels.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
   const categories = filtered.filter((c) => c.typeName === 'category');

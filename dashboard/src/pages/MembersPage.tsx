@@ -5,7 +5,7 @@ import {
   MdTextField,
   MdSelect,
   MdIconButton,
-  MdLoading,
+  MembersSkeleton,
   MdIcon,
   Badge,
   StatusBadge,
@@ -225,7 +225,7 @@ export const MembersPage: React.FC = () => {
     }
   };
 
-  if (loading && members.length === 0) return <MdLoading />;
+  if (loading && members.length === 0) return <MembersSkeleton />;
 
   return (
     <div className="flex flex-col gap-6">
