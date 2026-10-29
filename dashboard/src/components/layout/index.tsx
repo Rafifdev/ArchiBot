@@ -394,10 +394,10 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                     navigate('/servers');
                   }}
                 >
-                  <md-icon slot="start" class="text-base text-discord-white">
+                  <md-icon slot="start" class="text-sm text-discord-muted">
                     grid_view
                   </md-icon>
-                  <span className="text-xs text-discord-white font-normal">View All Servers</span>
+                  <span className="text-xs text-discord-muted font-normal">View All Servers</span>
                 </md-list-item>
               </md-list>
             </div>
