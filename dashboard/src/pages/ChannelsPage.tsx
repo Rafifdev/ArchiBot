@@ -1,5 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import {
+  DndContext,
+  DragOverlay,
+  pointerWithin,
+  rectIntersection,
+  closestCenter,
+  closestCorners,
+  defaultDropAnimationSideEffects,
+  DropAnimation,
+  CollisionDetection,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   MdButton,
   MdTextField,
@@ -19,6 +43,282 @@ import { ChannelItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
 import { useRealtime } from '../hooks/useRealtime';
 
+interface SortableChannelRowProps {
+  ch: ChannelItem;
+  parentCategory: string | null;
+  isSearchActive: boolean;
+  isLocking: boolean;
+  onToggleLock: (ch: ChannelItem) => void;
+  onSyncPermissions: (ch: ChannelItem) => void;
+  onEdit: (ch: ChannelItem) => void;
+  onDelete: (id: string, name: string) => void;
+  channelTypeIcon: (type: string, isAutoVoice: boolean) => string;
+}
+
+const SortableChannelRow: React.FC<SortableChannelRowProps> = ({
+  ch,
+  parentCategory,
+  isSearchActive,
+  isLocking,
+  onToggleLock,
+  onSyncPermissions,
+  onEdit,
+  onDelete,
+  channelTypeIcon,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: ch.id,
+    disabled: isSearchActive || isLocking,
+    data: {
+      type: 'channel',
+      channel: ch,
+      parentId: parentCategory,
+    },
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition: transition || 'transform 200ms cubic-bezier(0.2, 0, 0, 1)',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      title={!isSearchActive ? 'Tarik untuk mengubah urutan atau memindahkan antar kategori' : undefined}
+      className={`relative flex items-center justify-between px-3.5 py-2.5 bg-discord-surface hover:bg-discord-card-hover border border-discord-border rounded-lg mb-1.5 gap-3 transition-colors duration-150 ${
+        !isSearchActive && !isLocking ? 'cursor-move select-none' : ''
+      } ${isDragging ? 'opacity-25' : ''}`}
+    >
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <MdIcon name={channelTypeIcon(ch.typeName, ch.isAutoVoiceHub)} className="text-xl text-discord-muted shrink-0" />
+        <span className="font-normal text-xs text-discord-text truncate">{ch.name}</span>
+
+        {ch.isAutoVoiceHub && <StatusBadge label="Auto Voice" tone="blurple" />}
+        {ch.isLocked && <StatusBadge label="Locked" tone="red" />}
+        {ch.nsfw && <StatusBadge label="NSFW" tone="red" />}
+        {ch.rateLimitPerUser > 0 && <StatusBadge label={`Slow ${ch.rateLimitPerUser}s`} tone="neutral" />}
+      </div>
+
+      <div
+        className="flex items-center gap-1 cursor-default pointer-events-auto"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <MdIconButton
+          icon={isLocking ? 'sync' : ch.isLocked ? 'lock' : 'lock_open'}
+          className={`${isLocking ? 'animate-spin text-discord-blurple' : ch.isLocked ? 'text-discord-red hover:text-red-400' : 'text-discord-muted hover:text-discord-white'} transition-all`}
+          disabled={isLocking}
+          onClick={() => onToggleLock(ch)}
+          title={isLocking ? 'Memperbarui status lock...' : ch.isLocked ? 'Unlock Channel' : 'Lock Channel'}
+        />
+        {ch.parentId && (
+          <MdIconButton icon="sync" onClick={() => onSyncPermissions(ch)} title="Sync permissions with category" />
+        )}
+        <MdIconButton
+          icon="edit"
+          onClick={() => onEdit(ch)}
+          title="Edit Channel"
+        />
+        <MdIconButton
+          icon="delete"
+          onClick={() => onDelete(ch.id, ch.name)}
+          title="Delete Channel"
+        />
+      </div>
+    </div>
+  );
+};
+
+const DroppableCategoryCard: React.FC<{
+  cat: ChannelItem;
+  childrenChannels: ChannelItem[];
+  onAddChannel: (catId: string) => void;
+  onDeleteCategory: (catId: string, name: string) => void;
+  children: React.ReactNode;
+}> = ({
+  cat,
+  childrenChannels,
+  onAddChannel,
+  onDeleteCategory,
+  children,
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `category-${cat.id}`,
+    data: {
+      type: 'category',
+      categoryId: cat.id,
+    },
+  });
+
+  return (
+    <SurfaceCard
+      ref={setNodeRef}
+      className={`p-4 transition-all ${
+        isOver ? 'ring-2 ring-discord-blurple bg-discord-blurple/5' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <MdIcon name="folder" className="text-xl text-discord-blurple" />
+          <span className="font-normal text-xs text-discord-white uppercase tracking-wider">{cat.name}</span>
+          <span className="text-xs text-discord-muted font-normal">({childrenChannels.length})</span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <MdIconButton
+            icon="add"
+            title="Add Channel to Category"
+            onClick={() => onAddChannel(cat.id)}
+          />
+          <MdIconButton
+            icon="delete"
+            title="Delete Category"
+            onClick={() => onDeleteCategory(cat.id, cat.name)}
+          />
+        </div>
+      </div>
+
+      <SortableContext
+        items={childrenChannels.map((c) => c.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {childrenChannels.length === 0 ? (
+          <div
+            className={`text-xs text-center border-2 border-dashed rounded-lg py-4 transition-all ${
+              isOver
+                ? 'border-discord-blurple bg-discord-blurple/15 text-discord-white font-medium'
+                : 'border-discord-border/50 text-discord-muted'
+            }`}
+          >
+            Tarik channel ke sini untuk memindahkannya ke kategori ini.
+          </div>
+        ) : (
+          children
+        )}
+      </SortableContext>
+    </SurfaceCard>
+  );
+};
+
+const DroppableUnparentedCard: React.FC<{
+  channels: ChannelItem[];
+  children: React.ReactNode;
+}> = ({ channels, children }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'category-root',
+    data: {
+      type: 'category',
+      categoryId: null,
+    },
+  });
+
+  return (
+    <SurfaceCard
+      ref={setNodeRef}
+      className={`p-4 border-dashed transition-all ${
+        isOver ? 'ring-2 ring-discord-blurple bg-discord-blurple/5 border-discord-blurple' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <MdIcon name="grid_view" className="text-xl text-discord-muted" />
+          <h3 className="text-xs font-normal text-discord-muted uppercase tracking-wider">
+            Uncategorized Channels ({channels.length})
+          </h3>
+        </div>
+      </div>
+
+      <SortableContext
+        items={channels.map((c) => c.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {channels.length === 0 ? (
+          <div
+            className={`text-xs text-center border-2 border-dashed rounded-lg py-3.5 transition-all ${
+              isOver
+                ? 'border-discord-blurple bg-discord-blurple/15 text-discord-white font-medium'
+                : 'border-discord-border/50 text-discord-muted'
+            }`}
+          >
+            Lepaskan channel di sini untuk memindahkannya keluar dari kategori (root level).
+          </div>
+        ) : (
+          children
+        )}
+      </SortableContext>
+    </SurfaceCard>
+  );
+};
+
+const dropAnimationConfig: DropAnimation = {
+  duration: 200,
+  easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: '0.25',
+      },
+    },
+  }),
+};
+
+// Custom collision detection: prioritize individual sortable channel items so
+// adjacent channels immediately animate/slide when dragged over, falling back
+// to category/root cards only when dragging over empty spaces.
+const customCollisionDetection: CollisionDetection = (args) => {
+  // 1. If pointer is hovering inside a specific channel item, prioritize that channel
+  const pointerCollisions = pointerWithin(args);
+  const channelPointerCollision = pointerCollisions.find(
+    (c) => c.data?.droppableContainer?.data?.current?.type === 'channel'
+  );
+  if (channelPointerCollision) {
+    return [channelPointerCollision];
+  }
+
+  // 2. If pointer is hovering directly on a category or root droppable container
+  const containerPointerCollision = pointerCollisions.find(
+    (c) => c.data?.droppableContainer?.data?.current?.type === 'category'
+  );
+  if (containerPointerCollision) {
+    return [containerPointerCollision];
+  }
+
+  // 3. Fallback to rect intersection among sortable channels
+  const intersections = rectIntersection(args);
+  const channelIntersection = intersections.find(
+    (c) => c.data?.droppableContainer?.data?.current?.type === 'channel'
+  );
+  if (channelIntersection) {
+    return [channelIntersection];
+  }
+
+  // 4. Fallback to closestCenter among channels only
+  const channelContainers = args.droppableContainers.filter(
+    (c) => c.data.current?.type === 'channel'
+  );
+  if (channelContainers.length > 0) {
+    const channelClosest = closestCenter({
+      ...args,
+      droppableContainers: channelContainers,
+    });
+    if (channelClosest.length > 0) {
+      return channelClosest;
+    }
+  }
+
+  return closestCorners(args);
+};
+
 export const ChannelsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [channels, setChannels] = useState<ChannelItem[]>([]);
@@ -27,6 +327,7 @@ export const ChannelsPage: React.FC = () => {
   const [search, setSearch] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
+  const [createFromCatId, setCreateFromCatId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState('text');
   const [newParent, setNewParent] = useState('');
@@ -44,6 +345,29 @@ export const ChannelsPage: React.FC = () => {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState('');
+  const [lockingIds, setLockingIds] = useState<Set<string>>(new Set());
+  const lockingRef = useRef<Set<string>>(new Set());
+  const wsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // @dnd-kit Drag and Drop State
+  const [activeChannel, setActiveChannel] = useState<ChannelItem | null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    sourceCh: ChannelItem;
+    targetParentId: string | null;
+    targetCh?: ChannelItem;
+    placement?: 'before' | 'after';
+    categoryName: string;
+  } | null>(null);
+  const isReorderingRef = useRef(false);
+  const reorderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    })
+  );
 
   const fetchChannels = () => {
     setLoading(true);
@@ -62,19 +386,35 @@ export const ChannelsPage: React.FC = () => {
     fetchChannels();
   }, [guildId]);
 
-  // Real-time WebSocket synchronization with Discord events
-  const { connected: wsConnected } = useRealtime(
+  // Real-time WebSocket synchronization with Discord events (debounced + protected against stale cache overwrite)
+  useRealtime(
     guildId,
     useCallback(
       (msg) => {
         if (msg.event && msg.event.startsWith('CHANNEL_')) {
-          // Refetch channels silently without full-page spinner flicker
-          fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
-            .then((r) => r.json())
-            .then((data) => {
-              if (data.channels) setChannels(data.channels);
-            })
-            .catch(() => {});
+          if (isReorderingRef.current) return;
+          if (wsDebounceRef.current) clearTimeout(wsDebounceRef.current);
+          wsDebounceRef.current = setTimeout(() => {
+            fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' })
+              .then((r) => r.json())
+              .then((data) => {
+                if (data.channels) {
+                  setChannels((prev) =>
+                    data.channels.map((newCh: ChannelItem) => {
+                      // Preserve optimistic lock state while channel is still undergoing a lock operation
+                      if (lockingRef.current.has(newCh.id)) {
+                        const existing = prev.find((p) => p.id === newCh.id);
+                        if (existing) {
+                          return { ...newCh, isLocked: existing.isLocked };
+                        }
+                      }
+                      return newCh;
+                    })
+                  );
+                }
+              })
+              .catch(() => {});
+          }, 350);
         }
       },
       [guildId]
@@ -144,15 +484,54 @@ export const ChannelsPage: React.FC = () => {
   };
 
   const handleToggleLock = async (ch: ChannelItem) => {
+    // 1. Immediate synchronous lock prevents double-clicks in the same event loop frame
+    if (lockingRef.current.has(ch.id)) return;
+    lockingRef.current.add(ch.id);
+    setLockingIds(new Set(lockingRef.current));
+
+    // 2. Deterministic target state + optimistic UI update
+    const prevLocked = Boolean(ch.isLocked);
+    const targetLocked = !prevLocked;
+
+    setChannels((prev) =>
+      prev.map((c) => (c.id === ch.id ? { ...c, isLocked: targetLocked } : c))
+    );
+
     try {
+      // 3. Send explicit target state `locked` so backend never misinterprets rapid requests
       const res = await fetch(`/api/guilds/${guildId}/channels/${ch.id}/lock`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ locked: targetLocked }),
       });
       const data = await res.json();
-      if (data.success) fetchChannels();
+
+      if (res.ok && data.success) {
+        if (typeof data.locked === 'boolean') {
+          setChannels((prev) =>
+            prev.map((c) => (c.id === ch.id ? { ...c, isLocked: data.locked } : c))
+          );
+        }
+      } else {
+        // Rollback optimistic update on failure
+        setChannels((prev) =>
+          prev.map((c) => (c.id === ch.id ? { ...c, isLocked: prevLocked } : c))
+        );
+        alert(data.error || 'Gagal mengubah status lock channel.');
+      }
     } catch (err: any) {
+      // Rollback optimistic update on network error
+      setChannels((prev) =>
+        prev.map((c) => (c.id === ch.id ? { ...c, isLocked: prevLocked } : c))
+      );
       alert(`Lock error: ${err.message}`);
+    } finally {
+      // 4. Cooldown grace period (400ms) to ensure smooth transition and avoid Discord rate limits
+      setTimeout(() => {
+        lockingRef.current.delete(ch.id);
+        setLockingIds(new Set(lockingRef.current));
+      }, 400);
     }
   };
 
@@ -210,52 +589,166 @@ export const ChannelsPage: React.FC = () => {
     return 'tag';
   };
 
-  const renderChannelRow = (ch: ChannelItem) => (
-    <div
-      key={ch.id}
-      className="flex items-center justify-between px-3.5 py-2.5 bg-discord-surface hover:bg-discord-card-hover border border-discord-border rounded-lg mb-1.5 gap-3 transition-colors"
-    >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
-        <MdIcon name={channelTypeIcon(ch.typeName, ch.isAutoVoiceHub)} className="text-xl text-discord-muted" />
-        <span className="font-normal text-xs text-discord-text truncate">{ch.name}</span>
+  // --- @dnd-kit Drag and Drop Handlers ---
+  const handleDragStart = (event: DragStartEvent) => {
+    if (search.trim()) return;
+    const ch = channels.find((c) => c.id === event.active.id);
+    if (ch && ch.typeName !== 'category') {
+      setActiveChannel(ch);
+    }
+  };
 
-        {ch.isAutoVoiceHub && <StatusBadge label="Auto Voice" tone="blurple" />}
-        {ch.isLocked && <StatusBadge label="Locked" tone="red" />}
-        {ch.nsfw && <StatusBadge label="NSFW" tone="red" />}
-        {ch.rateLimitPerUser > 0 && <StatusBadge label={`Slow ${ch.rateLimitPerUser}s`} tone="neutral" />}
-      </div>
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveChannel(null);
+    if (!over) return;
 
-      <div className="flex items-center gap-1">
-        <MdIconButton
-          icon={ch.isLocked ? 'lock' : 'lock_open'}
-          onClick={() => handleToggleLock(ch)}
-          title={ch.isLocked ? 'Unlock Channel' : 'Lock Channel'}
-        />
-        {ch.parentId && (
-          <MdIconButton icon="sync" onClick={() => handleSyncPermissions(ch)} title="Sync permissions with category" />
-        )}
-        <MdIconButton
-          icon="edit"
-          onClick={() => {
-            setEditChannel(ch);
-            setEditName(ch.name);
-            setEditTopic(ch.topic || '');
-            setEditSlowmode(ch.rateLimitPerUser);
-            setEditNsfw(ch.nsfw);
-          }}
-          title="Edit Channel"
-        />
-        <MdIconButton
-          icon="delete"
-          onClick={() => {
-            setDeleteId(ch.id);
-            setDeleteName(ch.name);
-          }}
-          title="Delete Channel"
-        />
-      </div>
-    </div>
-  );
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    if (activeId === overId) return;
+
+    const sourceCh = channels.find((c) => c.id === activeId);
+    if (!sourceCh) return;
+
+    let targetParentId: string | null = null;
+    let targetCh: ChannelItem | undefined;
+
+    if (overId === 'category-root') {
+      targetParentId = null;
+    } else if (overId.startsWith('category-')) {
+      targetParentId = overId.replace('category-', '');
+    } else {
+      targetCh = channels.find((c) => c.id === overId);
+      if (targetCh) {
+        targetParentId = targetCh.parentId || null;
+      }
+    }
+
+    const currentParentId = sourceCh.parentId || null;
+
+    // Moving into a new category: prompt modal alert to prevent accidental permission loss (Opsi B)
+    if (targetParentId && targetParentId !== currentParentId) {
+      const cat = channels.find((c) => c.id === targetParentId);
+      setPendingMove({
+        sourceCh,
+        targetParentId,
+        targetCh,
+        placement: 'after',
+        categoryName: cat?.name || 'Kategori Baru',
+      });
+      return;
+    }
+
+    // Moving within same category or to root: execute immediately
+    executeReorder(sourceCh, targetParentId, targetCh, 'after', false);
+  };
+
+  const executeReorder = async (
+    sourceCh: ChannelItem,
+    targetParentId: string | null,
+    targetCh?: ChannelItem,
+    placement?: 'before' | 'after',
+    lockPermissions = false
+  ) => {
+    const previousChannels = [...channels];
+    const currentParentKey = sourceCh.parentId || null;
+    const targetParentKey = targetParentId || null;
+
+    let updatedChannels: ChannelItem[] = [];
+    let updates: { id: string; position: number; parentId: string | null; lockPermissions: boolean }[] = [];
+
+    // CASE 1: Reordering within the SAME category (or both root)
+    if (currentParentKey === targetParentKey) {
+      if (!targetCh || targetCh.id === sourceCh.id) return;
+
+      const siblings = channels
+        .filter((c) => c.typeName !== 'category' && (c.parentId || null) === targetParentKey)
+        .sort((a, b) => a.position - b.position);
+
+      const oldIndex = siblings.findIndex((c) => c.id === sourceCh.id);
+      const newIndex = siblings.findIndex((c) => c.id === targetCh.id);
+
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
+
+      const reorderedSiblings = arrayMove(siblings, oldIndex, newIndex).map((ch, idx) => ({
+        ...ch,
+        position: idx,
+      }));
+
+      const otherChannels = channels.filter(
+        (c) => (c.parentId || null) !== targetParentKey || c.typeName === 'category'
+      );
+      updatedChannels = [...otherChannels, ...reorderedSiblings];
+
+      updates = reorderedSiblings.map((ch) => ({
+        id: ch.id,
+        position: ch.position,
+        parentId: undefined, // Same category reorder: DO NOT pass parentId
+        lockPermissions: false,
+      }));
+    } else {
+      // CASE 2: Moving into a DIFFERENT category (cross-category)
+      const currentSiblings = channels
+        .filter((c) => c.typeName !== 'category' && (c.parentId || null) === targetParentKey && c.id !== sourceCh.id)
+        .sort((a, b) => a.position - b.position);
+
+      let nextSiblings: ChannelItem[] = [];
+      if (targetCh) {
+        const targetIdx = currentSiblings.findIndex((c) => c.id === targetCh.id);
+        const insertAt = placement === 'before'
+          ? (targetIdx >= 0 ? targetIdx : 0)
+          : (targetIdx >= 0 ? targetIdx + 1 : currentSiblings.length);
+        nextSiblings = [...currentSiblings];
+        nextSiblings.splice(insertAt, 0, { ...sourceCh, parentId: targetParentKey });
+      } else {
+        nextSiblings = [...currentSiblings, { ...sourceCh, parentId: targetParentKey }];
+      }
+
+      const indexedSiblings = nextSiblings.map((ch, idx) => ({
+        ...ch,
+        position: idx,
+      }));
+
+      const otherChannels = channels.filter(
+        (c) => (c.parentId || null) !== targetParentKey && c.id !== sourceCh.id
+      );
+      updatedChannels = [...otherChannels, ...indexedSiblings];
+
+      updates = indexedSiblings.map((ch) => ({
+        id: ch.id,
+        position: ch.position,
+        // Discord rule: Only the single channel changing its parent may have parentId set!
+        parentId: ch.id === sourceCh.id ? targetParentKey : undefined,
+        lockPermissions: ch.id === sourceCh.id ? lockPermissions : false,
+      }));
+    }
+
+    // Optimistic UI update
+    setChannels(updatedChannels);
+    isReorderingRef.current = true;
+
+    try {
+      const res = await fetch(`/api/guilds/${guildId}/channels/positions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ updates }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || `Server error (${res.status} ${res.statusText || 'Unknown'})`);
+      }
+    } catch (err: any) {
+      console.error('Channel @dnd-kit reorder error:', err);
+      setChannels(previousChannels);
+      alert(`Gagal memindahkan posisi channel: ${err.message}`);
+    } finally {
+      if (reorderTimeoutRef.current) clearTimeout(reorderTimeoutRef.current);
+      reorderTimeoutRef.current = setTimeout(() => {
+        isReorderingRef.current = false;
+      }, 700);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -264,87 +757,207 @@ export const ChannelsPage: React.FC = () => {
         title="Channels & Categories"
         description="Organize categories, lock or unlock channels, and configure channel properties."
         actions={
-          <>
-            {wsConnected && (
-              <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-discord-green/10 border border-discord-green/20 text-discord-green text-xs font-normal">
-                <span className="w-2 h-2 rounded-full bg-discord-green animate-pulse" />
-                <span>Live Sync</span>
-              </div>
-            )}
-            <div className="w-56">
+          <div className="flex items-center gap-2.5">
+            <div className="w-60 sm:w-64">
               <MdTextField
-                label="Search channels"
+                compact
+                icon="search"
                 value={search}
                 onChange={setSearch}
                 debounceMs={250}
-                placeholder="Filter by name"
+                placeholder="Search channels..."
               />
             </div>
-            <MdButton variant="filled" icon="add" onClick={() => setCreateOpen(true)}>
+            <MdButton
+              variant="tonal"
+              icon="create_new_folder"
+              onClick={() => {
+                setCreateFromCatId(null);
+                setNewParent('');
+                setNewType('category');
+                setNewName('');
+                setNewTopic('');
+                setNewSlowmode(0);
+                setNewNsfw(false);
+                setCreateOpen(true);
+              }}
+            >
+              Create Category
+            </MdButton>
+            <MdButton
+              variant="filled"
+              icon="add"
+              onClick={() => {
+                setCreateFromCatId(null);
+                setNewParent('');
+                setNewType('text');
+                setNewName('');
+                setNewTopic('');
+                setNewSlowmode(0);
+                setNewNsfw(false);
+                setCreateOpen(true);
+              }}
+            >
               Create Channel
             </MdButton>
-          </>
+          </div>
         }
       />
 
-      {unparented.length > 0 && (
-        <SurfaceCard className="p-4">
-          <h3 className="text-xs font-normal text-discord-muted uppercase tracking-wider mb-3">
-            Unparented Channels
-          </h3>
-          {unparented.map(renderChannelRow)}
-        </SurfaceCard>
-      )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={customCollisionDetection}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        {(unparented.length > 0 || (activeChannel && activeChannel.parentId)) && (
+          <DroppableUnparentedCard channels={unparented}>
+            {unparented.map((ch) => (
+              <SortableChannelRow
+                key={ch.id}
+                ch={ch}
+                parentCategory={null}
+                isSearchActive={Boolean(search.trim())}
+                isLocking={lockingIds.has(ch.id)}
+                onToggleLock={handleToggleLock}
+                onSyncPermissions={handleSyncPermissions}
+                onEdit={(c) => {
+                  setEditChannel(c);
+                  setEditName(c.name);
+                  setEditTopic(c.topic || '');
+                  setEditSlowmode(c.rateLimitPerUser);
+                  setEditNsfw(c.nsfw);
+                }}
+                onDelete={(id, name) => {
+                  setDeleteId(id);
+                  setDeleteName(name);
+                }}
+                channelTypeIcon={channelTypeIcon}
+              />
+            ))}
+          </DroppableUnparentedCard>
+        )}
 
-      {categories.map((cat) => {
-        const children = filtered.filter((c) => c.parentId === cat.id);
-        return (
-          <SurfaceCard key={cat.id} className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <MdIcon name="folder" className="text-xl text-discord-blurple" />
-                <span className="font-normal text-xs text-discord-white uppercase tracking-wider">{cat.name}</span>
-                <span className="text-xs text-discord-muted font-normal">({children.length})</span>
+        {categories.map((cat) => {
+          const children = filtered.filter((c) => c.parentId === cat.id);
+          return (
+            <DroppableCategoryCard
+              key={cat.id}
+              cat={cat}
+              childrenChannels={children}
+              onAddChannel={(catId) => {
+                setCreateFromCatId(catId);
+                setNewParent(catId);
+                setNewType('text');
+                setNewName('');
+                setNewTopic('');
+                setNewSlowmode(0);
+                setNewNsfw(false);
+                setCreateOpen(true);
+              }}
+              onDeleteCategory={(catId, name) => {
+                setDeleteId(catId);
+                setDeleteName(name);
+              }}
+            >
+              {children.map((ch) => (
+                <SortableChannelRow
+                  key={ch.id}
+                  ch={ch}
+                  parentCategory={cat.id}
+                  isSearchActive={Boolean(search.trim())}
+                  isLocking={lockingIds.has(ch.id)}
+                  onToggleLock={handleToggleLock}
+                  onSyncPermissions={handleSyncPermissions}
+                  onEdit={(c) => {
+                    setEditChannel(c);
+                    setEditName(c.name);
+                    setEditTopic(c.topic || '');
+                    setEditSlowmode(c.rateLimitPerUser);
+                    setEditNsfw(c.nsfw);
+                  }}
+                  onDelete={(id, name) => {
+                    setDeleteId(id);
+                    setDeleteName(name);
+                  }}
+                  channelTypeIcon={channelTypeIcon}
+                />
+              ))}
+            </DroppableCategoryCard>
+          );
+        })}
+
+        <DragOverlay dropAnimation={dropAnimationConfig}>
+          {activeChannel ? (
+            <div className="w-full h-full box-border flex items-center justify-between px-3.5 py-2.5 bg-discord-surface rounded-lg shadow-2xl gap-3 cursor-move select-none">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <MdIcon
+                  name={channelTypeIcon(activeChannel.typeName, activeChannel.isAutoVoiceHub)}
+                  className="text-xl text-discord-muted shrink-0"
+                />
+                <span className="font-normal text-xs text-discord-text truncate">{activeChannel.name}</span>
+
+                {activeChannel.isAutoVoiceHub && <StatusBadge label="Auto Voice" tone="blurple" />}
+                {activeChannel.isLocked && <StatusBadge label="Locked" tone="red" />}
+                {activeChannel.nsfw && <StatusBadge label="NSFW" tone="red" />}
+                {activeChannel.rateLimitPerUser > 0 && (
+                  <StatusBadge label={`Slow ${activeChannel.rateLimitPerUser}s`} tone="neutral" />
+                )}
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 opacity-70 pointer-events-none">
                 <MdIconButton
-                  icon="add"
-                  title="Add Channel to Category"
-                  onClick={() => {
-                    setNewParent(cat.id);
-                    setCreateOpen(true);
-                  }}
+                  icon={activeChannel.isLocked ? 'lock' : 'lock_open'}
+                  className={activeChannel.isLocked ? 'text-discord-red' : 'text-discord-muted'}
                 />
-                <MdIconButton
-                  icon="delete"
-                  title="Delete Category"
-                  onClick={() => {
-                    setDeleteId(cat.id);
-                    setDeleteName(cat.name);
-                  }}
-                />
+                {activeChannel.parentId && <MdIconButton icon="sync" />}
+                <MdIconButton icon="edit" />
+                <MdIconButton icon="delete" />
               </div>
             </div>
-
-            {children.length === 0 ? (
-              <div className="text-xs text-discord-muted font-normal px-3 py-2">
-                No channels inside this category.
-              </div>
-            ) : (
-              children.map(renderChannelRow)
-            )}
-          </SurfaceCard>
-        );
-      })}
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       <MdDialog
         open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        headline="Create New Channel or Category"
+        onClose={() => {
+          setCreateOpen(false);
+          setCreateFromCatId(null);
+        }}
+        headline={
+          newType === 'category' ? (
+            <div className="flex items-center gap-1.5 animate-modal-switch">
+              {createFromCatId === null && (
+                <MdIconButton
+                  icon="arrow_back"
+                  title="Back to Channel Creation"
+                  onClick={() => {
+                    setNewType('text');
+                    setNewName('');
+                  }}
+                  className="-ml-2 text-discord-muted hover:text-discord-white transition-colors"
+                />
+              )}
+              <span>Create New Category</span>
+            </div>
+          ) : createFromCatId ? (
+            <div className="animate-modal-switch">
+              Create Channel in {categories.find((c) => c.id === createFromCatId)?.name || 'Category'}
+            </div>
+          ) : (
+            <div className="animate-modal-switch">Create New Channel</div>
+          )
+        }
         actions={
           <>
-            <MdButton variant="text" onClick={() => setCreateOpen(false)}>
+            <MdButton
+              variant="text"
+              onClick={() => {
+                setCreateOpen(false);
+                setCreateFromCatId(null);
+              }}
+            >
               Cancel
             </MdButton>
             <MdButton variant="filled" onClick={handleCreate} disabled={createLoading || !newName.trim()}>
@@ -353,43 +966,81 @@ export const ChannelsPage: React.FC = () => {
           </>
         }
       >
-        <MdTextField label="Channel Name" value={newName} onChange={setNewName} placeholder="e.g. general-chat" required />
-        <MdSelect
-          label="Channel Type"
-          value={newType}
-          onChange={setNewType}
-          options={[
-            { value: 'text', label: 'Text Channel' },
-            { value: 'voice', label: 'Voice Channel' },
-            { value: 'category', label: 'Category' },
-            { value: 'announcement', label: 'Announcement Channel' },
-            { value: 'autovoice', label: 'Join-to-Create Auto Voice Hub' },
-            { value: 'readonly', label: 'Read-Only Info Channel' },
-            { value: 'stage', label: 'Stage Room' },
-          ]}
-        />
-        {newType !== 'category' && (
-          <MdSelect label="Parent Category" value={newParent} onChange={setNewParent} options={categoryOptions} />
-        )}
-        {newType === 'text' && (
-          <>
-            <MdTextField label="Channel Topic" value={newTopic} onChange={setNewTopic} placeholder="Optional topic" />
+        <div
+          key={newType === 'category' ? 'mode-category' : 'mode-channel'}
+          className="flex flex-col gap-4.5 animate-modal-switch"
+        >
+          <MdTextField
+            label={newType === 'category' ? 'Category Name' : 'Channel Name'}
+            value={newName}
+            onChange={setNewName}
+            placeholder={newType === 'category' ? 'e.g. INFORMATION' : 'e.g. general-chat'}
+          />
+          {newType !== 'category' && (
             <MdSelect
-              label="Slowmode"
-              value={String(newSlowmode)}
-              onChange={(val) => setNewSlowmode(Number(val))}
+              label="Channel Type"
+              value={newType}
+              onChange={setNewType}
               options={[
-                { value: '0', label: 'Off' },
-                { value: '5', label: '5 seconds' },
-                { value: '10', label: '10 seconds' },
-                { value: '30', label: '30 seconds' },
-                { value: '60', label: '1 minute' },
-                { value: '300', label: '5 minutes' },
+                { value: 'text', label: 'Text Channel' },
+                { value: 'voice', label: 'Voice Channel' },
+                { value: 'announcement', label: 'Announcement Channel' },
+                { value: 'autovoice', label: 'Join-to-Create Auto Voice Hub' },
+                { value: 'readonly', label: 'Read-Only Info Channel' },
+                { value: 'stage', label: 'Stage Room' },
               ]}
             />
-            <SwitchRow label="Age-Restricted (NSFW)" checked={newNsfw} onChange={setNewNsfw} />
-          </>
-        )}
+          )}
+          {!createFromCatId && newType !== 'category' && (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <MdSelect
+                  label="Parent Category"
+                  value={newParent}
+                  onChange={setNewParent}
+                  options={categoryOptions}
+                  className="w-full"
+                />
+              </div>
+              <MdIconButton
+                icon="create_new_folder"
+                variant="outlined"
+                title="Create New Category"
+                className="input-matched-icon-button shrink-0"
+                onClick={() => {
+                  setNewType('category');
+                  setNewName('');
+                  setNewParent('');
+                }}
+              />
+            </div>
+          )}
+          {newType === 'text' && (
+            <>
+              <MdTextField label="Channel Topic" value={newTopic} onChange={setNewTopic} placeholder="Optional topic" />
+              <MdSelect
+                label="Slowmode"
+                value={String(newSlowmode)}
+                onChange={(val) => setNewSlowmode(Number(val))}
+                options={[
+                  { value: '0', label: 'Off' },
+                  { value: '5', label: '5 seconds' },
+                  { value: '10', label: '10 seconds' },
+                  { value: '30', label: '30 seconds' },
+                  { value: '60', label: '1 minute' },
+                  { value: '300', label: '5 minutes' },
+                ]}
+              />
+              <SwitchRow
+                boxed
+                label="Age-Restricted (NSFW)"
+                description="Requires members to be 18+ to view this channel"
+                checked={newNsfw}
+                onChange={setNewNsfw}
+              />
+            </>
+          )}
+        </div>
       </MdDialog>
 
       <MdDialog
@@ -407,8 +1058,8 @@ export const ChannelsPage: React.FC = () => {
           </>
         }
       >
-        <MdTextField label="Channel Name" value={editName} onChange={setEditName} required />
-        <MdTextField label="Channel Topic" value={editTopic} onChange={setEditTopic} />
+        <MdTextField label="Channel Name" value={editName} onChange={setEditName} />
+        <MdTextField label="Channel Topic" value={editTopic} onChange={setEditTopic} placeholder="Optional topic" />
         <MdSelect
           label="Slowmode"
           value={String(editSlowmode)}
@@ -422,7 +1073,13 @@ export const ChannelsPage: React.FC = () => {
             { value: '300', label: '5 minutes' },
           ]}
         />
-        <SwitchRow label="Age-Restricted (NSFW)" checked={editNsfw} onChange={setEditNsfw} />
+        <SwitchRow
+          boxed
+          label="Age-Restricted (NSFW)"
+          description="Requires members to be 18+ to view this channel"
+          checked={editNsfw}
+          onChange={setEditNsfw}
+        />
       </MdDialog>
 
       <ConfirmDialog
@@ -434,6 +1091,73 @@ export const ChannelsPage: React.FC = () => {
         onConfirm={handleDelete}
         onClose={() => setDeleteId(null)}
       />
+
+      {/* Category Move Permission Sync Alert Modal */}
+      <MdDialog
+        open={Boolean(pendingMove)}
+        onClose={() => setPendingMove(null)}
+        headline="Sinkronisasi Izin Kategori?"
+        actions={
+          <>
+            <MdButton variant="text" onClick={() => setPendingMove(null)}>
+              Batal
+            </MdButton>
+            <MdButton
+              variant="tonal"
+              onClick={() => {
+                if (pendingMove) {
+                  executeReorder(
+                    pendingMove.sourceCh,
+                    pendingMove.targetParentId,
+                    pendingMove.targetCh,
+                    pendingMove.placement,
+                    false
+                  );
+                  setPendingMove(null);
+                }
+              }}
+            >
+              Pertahankan Izin Lama
+            </MdButton>
+            <MdButton
+              variant="filled"
+              icon="sync"
+              onClick={() => {
+                if (pendingMove) {
+                  executeReorder(
+                    pendingMove.sourceCh,
+                    pendingMove.targetParentId,
+                    pendingMove.targetCh,
+                    pendingMove.placement,
+                    true
+                  );
+                  setPendingMove(null);
+                }
+              }}
+            >
+              Sinkronkan Izin
+            </MdButton>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3.5">
+          <p className="text-discord-text text-xs leading-relaxed">
+            Channel <strong className="text-discord-white font-medium">#{pendingMove?.sourceCh.name}</strong> dipindahkan ke kategori <strong className="text-discord-white font-medium">{pendingMove?.categoryName}</strong>.
+          </p>
+          <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border space-y-2">
+            <div className="flex items-center gap-2 text-discord-white text-xs font-medium">
+              <MdIcon name="warning" className="text-base text-amber-400 shrink-0" />
+              <span>Pemberitahuan Izin Channel</span>
+            </div>
+            <p className="text-discord-muted text-xs leading-relaxed">
+              Memilih <strong>Sinkronkan Izin</strong> akan mengatur channel untuk otomatis menyelaraskan permission dengan kategori baru. Izin khusus lama pada channel ini akan disesuaikan dengan aturan kategori.
+            </p>
+            <p className="text-discord-muted text-xs leading-relaxed">
+              Pilih <strong>Pertahankan Izin Lama</strong> jika channel ini memiliki izin akses khusus yang tidak ingin diubah.
+            </p>
+          </div>
+        </div>
+      </MdDialog>
     </div>
   );
 };

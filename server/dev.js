@@ -18,7 +18,7 @@ const viteProc = spawn(process.execPath, [viteBin], {
 
 viteProc.on('exit', (code) => {
   if (code !== 0 && code !== null) {
-    console.log(`ℹ️ Vite dev server exited with code ${code}. Dashboard remains available at http://localhost:3001`);
+    console.log(`ℹ️ Vite dev server exited with code ${code}. Dashboard remains available at http://localhost:3000`);
   }
 });
 

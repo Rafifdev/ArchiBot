@@ -49,6 +49,7 @@ const state = {
   waiting: rawState.waiting ?? {},
   backups: rawState.backups ?? {},
   guilds: rawState.guilds ?? {},
+  stats: rawState.stats ?? { createdTickets: 0, closedTickets: 0 },
 };
 
 function saveState() {
@@ -4149,6 +4150,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
           permissionOverwrites: overwrites,
         });
 
+        state.stats = state.stats ?? { createdTickets: 0, closedTickets: 0 };
+        state.stats.createdTickets = (state.stats.createdTickets ?? 0) + 1;
+        saveState();
+
         const closeRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId('ticket:close').setLabel('🔒 Close Ticket').setStyle(ButtonStyle.Danger)
         );
@@ -4175,6 +4180,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
             flags: MessageFlags.Ephemeral,
           });
         }
+
+        state.stats = state.stats ?? { createdTickets: 0, closedTickets: 0 };
+        state.stats.closedTickets = (state.stats.closedTickets ?? 0) + 1;
+        saveState();
 
         await interaction.update({ content: `🔒 Ticket closed by <@${interaction.user.id}>. Closing channel...`, components: [] });
         setTimeout(() => interaction.channel?.delete('Ticket closed').catch(() => {}), 3000).unref();

@@ -267,9 +267,9 @@ export const BackupsPage: React.FC = () => {
           </>
         }
       >
-        <p className="text-xs text-discord-muted">
+        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
           This will serialize all current categories, channels, permissions, and roles into a reusable layout backup.
-        </p>
+        </div>
         <MdTextField
           label="Snapshot Name"
           value={snapshotName}
@@ -294,16 +294,16 @@ export const BackupsPage: React.FC = () => {
           </>
         }
       >
-        <p className="text-xs text-discord-muted">
+        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
           Choose how ArchiBot should apply the saved channels to this server:
-        </p>
+        </div>
         <SwitchRow
+          boxed
           label={replaceMode ? 'Replace Mode (Delete Old Channels)' : 'Merge Mode (Keep Existing)'}
           description={replaceMode ? 'Wipes existing channels first' : 'Creates missing channels and preserves current ones'}
           checked={replaceMode}
           onChange={setReplaceMode}
           danger={replaceMode}
-          className="py-3"
         />
       </MdDialog>
 
@@ -323,9 +323,9 @@ export const BackupsPage: React.FC = () => {
           </>
         }
       >
-        <p className="text-xs text-discord-muted">
+        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
           Paste the contents of an exported ArchiBot backup JSON file below:
-        </p>
+        </div>
         <MdTextField
           label="JSON Content"
           value={importJson}

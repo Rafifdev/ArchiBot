@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
-import { LoginPage } from './pages/LoginPage';
 import { ServerSelectPage } from './pages/ServerSelectPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { ChannelsPage } from './pages/ChannelsPage';
@@ -38,7 +37,7 @@ export const AppContent: React.FC = () => {
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     setUser(null);
-    navigate('/login');
+    navigate('/');
   };
 
   const isLandingRoute = location.pathname === '/' || location.pathname === '/id';
@@ -56,9 +55,10 @@ export const AppContent: React.FC = () => {
       <Route path="/" element={<LandingPage user={user} />} />
       <Route path="/id" element={<LandingPage user={user} />} />
 
+      {/* Redirect /login ke landing page / servers karena login page telah ditiadakan */}
       <Route
         path="/login"
-        element={user ? <Navigate to="/servers" replace /> : <LoginPage onLoginSuccess={setUser} />}
+        element={<Navigate to={user ? '/servers' : '/'} replace />}
       />
 
       <Route
@@ -69,7 +69,7 @@ export const AppContent: React.FC = () => {
               <DashboardLayout user={user} onLogout={handleLogout} />
             </div>
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/" replace />
           )
         }
       >
@@ -78,7 +78,7 @@ export const AppContent: React.FC = () => {
 
       <Route
         path="/guilds/:guildId"
-        element={user ? <DashboardLayout user={user} onLogout={handleLogout} /> : <Navigate to="/login" replace />}
+        element={user ? <DashboardLayout user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />}
       >
         <Route index element={<OverviewPage />} />
         <Route path="channels" element={<ChannelsPage />} />
@@ -91,7 +91,7 @@ export const AppContent: React.FC = () => {
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={user ? '/servers' : '/login'} replace />} />
+      <Route path="*" element={<Navigate to={user ? '/servers' : '/'} replace />} />
     </Routes>
   );
 };

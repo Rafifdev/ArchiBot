@@ -312,9 +312,9 @@ export const VoicePage: React.FC = () => {
           placeholder="➕ Create Voice"
           required
         />
-        <p className="text-xs text-discord-muted font-normal leading-relaxed">
+        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
           When any member joins this voice channel, ArchiBot will instantly create a temporary private voice room for them and move them into it.
-        </p>
+        </div>
       </MdDialog>
 
       <MdDialog

@@ -1,21 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
+import { DiscordMark } from '../components/ui';
 import { UserProfile } from '../types/api';
 import { EarthAnimation } from './landing/EarthAnimation';
 import { SafeUnicornScene } from './landing/SafeUnicornScene';
-import { LiveTotalTxCounter, LiveTpsCounter } from './landing/LiveCounters';
 import {
   COMMUNITY_CARDS,
   FOOTER_COLUMNS,
-  FOOTER_META_LINKS,
   GET_STARTED_TABS,
   HEADER_MEGA_MENUS,
-  HERO_LOGOS,
-  HERO_PROMOS,
   NEWS_POSTS,
   PERFORMANCE_STATS,
-  PROJECTS_CARDS,
-  PROJECTS_LOGOS,
   SOLANA_EVENTS,
   SOLANA_LANGUAGES,
   SOLANA_VIDEOS,
@@ -74,7 +71,7 @@ const ArrowLeftIcon: React.FC<{ className?: string }> = ({ className = 'size-4' 
   </svg>
 );
 
-const SolanaMonoIcon: React.FC<{ className?: string; style?: React.CSSProperties }> = ({
+const ArchiMonoIcon: React.FC<{ className?: string; style?: React.CSSProperties }> = ({
   className = 'w-4 h-3.5',
   style,
 }) => (
@@ -85,20 +82,23 @@ const SolanaMonoIcon: React.FC<{ className?: string; style?: React.CSSProperties
     className={className}
     style={style}
   >
+    {/* Architectural 3-Tier Modular Structure (ArchiBot Mono Icon) */}
     <path
-      d="M2.62851 10.6789C2.72895 10.5819 2.86694 10.5256 3.01105 10.5256H15.4694C15.702 10.5256 15.8184 10.7995 15.6539 10.9585L13.3715 13.1647C13.2711 13.2617 13.1331 13.318 12.989 13.318H0.530612C0.29803 13.318 0.181556 13.0441 0.346066 12.8851L2.62851 10.6789Z"
+      d="M5.0 1.0H11.0L12.17 3.8H3.83L5.0 1.0Z"
       fill="currentColor"
     />
     <path
-      d="M2.62851 0.835291C2.73297 0.738275 2.87096 0.682007 3.01105 0.682007H15.4694C15.702 0.682007 15.8184 0.955913 15.6539 1.11488L13.3715 3.32109C13.2711 3.41811 13.1331 3.47438 12.989 3.47438H0.530612C0.29803 3.47438 0.181556 3.20047 0.346066 3.04151L2.62851 0.835291Z"
+      d="M3.08 5.6H12.92L14.08 8.4H1.92L3.08 5.6Z"
       fill="currentColor"
     />
     <path
-      d="M13.3715 5.72546C13.2711 5.62845 13.1331 5.57217 12.989 5.57217H0.530612C0.29803 5.57217 0.181556 5.84608 0.346066 6.00505L2.62851 8.21126C2.72895 8.30827 2.86694 8.36454 3.01105 8.36454H15.4694C15.702 8.36454 15.8184 8.09064 15.6539 7.93167L13.3715 5.72546Z"
+      d="M1.17 10.2H14.83L16.0 13.0H0.0L1.17 10.2Z"
       fill="currentColor"
     />
   </svg>
 );
+
+const SolanaMonoIcon = ArchiMonoIcon;
 
 export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   // Header mega-menu & mobile menu state
@@ -108,15 +108,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const [footerLangOpen, setFooterLangOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState('id');
 
+  // Dashboard bot branding
+  const [botAvatar, setBotAvatar] = useState<string | null>(null);
+  const [botAvatarError, setBotAvatarError] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/status')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.botAvatar) setBotAvatar(d.botAvatar);
+      })
+      .catch(() => {});
+  }, []);
+
   // Modals state
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [getStartedOpen, setGetStartedOpen] = useState(false);
   const [getStartedTab, setGetStartedTab] = useState('institution');
   const [activeVideo, setActiveVideo] = useState<SolanaVideoItem | null>(null);
-
-  // Hero rotating promo banner state
-  const [promoIndex, setPromoIndex] = useState(0);
 
   // What's Up Terminal state
   const [selectedCategory, setSelectedCategory] = useState<
@@ -126,6 +136,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const [mobilePage, setMobilePage] = useState(0);
   const [curtainKey, setCurtainKey] = useState(0);
 
+  // Live bot stats state (dynamically fetched from /api/stats)
+  const [liveStats, setLiveStats] = useState<Record<string, any> | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveStats = async () => {
+      try {
+        const res = await fetch('/api/stats');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data) {
+            setLiveStats(data);
+          }
+        }
+      } catch {
+        // Fallback to initial values if server is offline
+      }
+    };
+
+    fetchLiveStats();
+    const interval = setInterval(fetchLiveStats, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Carousel refs
   const eventsScrollRef = useRef<HTMLDivElement>(null);
   const newsScrollRef = useRef<HTMLDivElement>(null);
@@ -134,14 +171,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   // Footer mouse glow ref
   const footerRef = useRef<HTMLDivElement>(null);
   const footerGlowRef = useRef<HTMLDivElement>(null);
-
-  // Rotate Hero Promo every 8 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPromoIndex((prev) => (prev + 1) % HERO_PROMOS.length);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Keyboard shortcut Cmd+K / Ctrl+K for Search Modal, Escape to close modals
   useEffect(() => {
@@ -235,6 +264,64 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     };
   }, []);
 
+  // Smooth scroll instance (Lenis momentum inertia scrolling)
+  const lenisRef = useRef<Lenis | null>(null);
+
+  useEffect(() => {
+    // Only enable Lenis on devices that prefer motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
+    });
+
+    lenisRef.current = lenis;
+
+    let rafId: number;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    // Smooth programmatic scroll for anchor links
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('a[href^="#"]');
+      if (!target) return;
+      const href = target.getAttribute('href');
+      if (!href || href === '#') return;
+      const element = document.querySelector(href);
+      if (element) {
+        e.preventDefault();
+        lenis.scrollTo(element as HTMLElement, { offset: -64, duration: 1.2 });
+      }
+    };
+    document.addEventListener('click', handleAnchorClick);
+
+    return () => {
+      document.removeEventListener('click', handleAnchorClick);
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+      lenisRef.current = null;
+    };
+  }, []);
+
+  // Pause Lenis scrolling when any modal overlay or mobile drawer is open
+  useEffect(() => {
+    if (searchModalOpen || getStartedOpen || mobileMenuOpen || activeVideo) {
+      lenisRef.current?.stop();
+    } else {
+      lenisRef.current?.start();
+    }
+  }, [searchModalOpen, getStartedOpen, mobileMenuOpen, activeVideo]);
+
   const handleSelectCategory = (
     catId: 'all' | 'defi' | 'institutions' | 'consumer' | 'developers' | 'ecosystem'
   ) => {
@@ -256,7 +343,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     });
   };
 
-  const currentPromo = HERO_PROMOS[promoIndex];
   const currentTerminalItems: TerminalItem[] =
     liveTerminalFeed[selectedCategory] || TERMINAL_DATA[selectedCategory] || [];
 
@@ -272,42 +358,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         className="fixed top-0 left-0 right-0 w-full z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl backdrop-saturate-150"
         onMouseLeave={() => setOpenMenuId(null)}
       >
-        <div className="w-full max-w-[1440px] mx-auto px-[20px] md:px-[32px] xl:px-[40px] h-14 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1440px] mx-auto px-[20px] md:px-[32px] xl:px-[40px] h-16 flex items-center justify-between gap-4">
           {/* Left: Official ArchiBot Logo + Desktop Navigation */}
           <div className="flex items-center gap-6 xl:gap-8">
             <a
               href="#top"
-              aria-label="ArchiBot"
+              aria-label="ARCHIBOT"
               className="inline-flex items-center gap-3 shrink-0 focus:outline-none !no-underline"
             >
-              <div className="relative size-8 rounded-xl bg-gradient-to-tr from-[#5865F2] via-[#9945FF] to-[#19FB9B] p-[1.5px] shadow-lg shadow-indigo-500/20">
-                <div className="w-full h-full bg-[#08070B] rounded-[10px] flex items-center justify-center">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12 2V5M12 5C7.58172 5 4 8.58172 4 13V18C4 19.6569 5.34315 21 7 21H17C18.6569 21 20 19.6569 20 18V13C20 8.58172 16.4183 5 12 5ZM9 12H9.01M15 12H15.01M9 16C10 17 14 17 15 16"
-                      stroke="url(#archibot_header_grad)"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <defs>
-                      <linearGradient id="archibot_header_grad" x1="4" y1="5" x2="20" y2="21" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#5865F2" />
-                        <stop offset="0.5" stopColor="#9945FF" />
-                        <stop offset="1" stopColor="#19FB9B" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
+              {botAvatar && !botAvatarError ? (
+                <img
+                  src={botAvatar}
+                  alt="ARCHIBOT"
+                  onError={() => setBotAvatarError(true)}
+                  className="w-9 h-9 rounded-lg object-cover border border-discord-border shrink-0 shadow-sm"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-discord-blurple flex items-center justify-center text-discord-white shrink-0 shadow-sm">
+                  <DiscordMark className="w-5 h-5" />
                 </div>
-              </div>
-              <span className="font-brand font-bold text-[18px] tracking-[0.06em] text-white">
-                ARCHI<span className="bg-gradient-to-r from-[#9945FF] to-[#19FB9B] bg-clip-text text-transparent">BOT</span>
+              )}
+              <span className="font-normal tracking-wider text-base uppercase text-discord-white">
+                ARCHIBOT
               </span>
             </a>
 
@@ -430,14 +502,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               )}
             </div>
 
-            {/* ArchiBot Dashboard / Login CTA */}
-            <Link
-              to={user ? '/servers' : '/login'}
-              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-white text-black hover:bg-white/90 text-xs font-medium tracking-tight transition-colors shrink-0 !no-underline"
-            >
-              <span>{user ? 'Buka Dashboard' : 'Masuk Dashboard'}</span>
-              <ArrowUpRightIcon className="size-3.5" />
-            </Link>
+            {/* ArchiBot Dashboard / Sign In CTA */}
+            {user ? (
+              <Link
+                to="/servers"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-white text-black hover:bg-white/90 text-xs font-semibold tracking-tight transition-colors shrink-0 !no-underline shadow-sm"
+              >
+                <span>Buka Dashboard</span>
+                <ArrowUpRightIcon className="size-3.5" />
+              </Link>
+            ) : (
+              <a
+                href="/api/auth/login"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-white text-black hover:bg-white/90 text-xs font-semibold tracking-tight transition-colors shrink-0 !no-underline shadow-sm"
+              >
+                <span>Sign In</span>
+                <ArrowUpRightIcon className="size-3.5" />
+              </a>
+            )}
 
             {/* Mobile Hamburger Button */}
             <button
@@ -544,7 +626,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
         {/* Mobile Drawer Navigation */}
         {mobileMenuOpen && (
-          <div className="xl:hidden border-t border-white/10 bg-[#08070B] px-5 py-6 max-h-[calc(100vh-56px)] overflow-y-auto space-y-6">
+          <div className="xl:hidden border-t border-white/10 bg-[#08070B] px-5 py-6 max-h-[calc(100vh-64px)] overflow-y-auto space-y-6">
+            <div className="pb-4 border-b border-white/10">
+              {user ? (
+                <Link
+                  to="/servers"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-full bg-white text-black font-semibold text-sm !no-underline shadow-sm"
+                >
+                  <span>Buka Dashboard</span>
+                  <ArrowUpRightIcon className="size-4" />
+                </Link>
+              ) : (
+                <a
+                  href="/api/auth/login"
+                  className="w-full inline-flex items-center justify-center gap-2 h-10 rounded-full bg-white text-black font-semibold text-sm !no-underline shadow-sm"
+                >
+                  <span>Sign In</span>
+                  <ArrowUpRightIcon className="size-4" />
+                </a>
+              )}
+            </div>
             {HEADER_MEGA_MENUS.map((menu) => (
               <div key={menu.id} className="space-y-3 border-b border-white/10 pb-5 last:border-none">
                 <div className="font-brand-mono text-xs uppercase tracking-wider text-white/50">
@@ -579,10 +681,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           ===================================================================== */}
       <section
         id="top"
-        className="relative overflow-hidden bg-nd-bg text-nd-high-em-text pt-14"
+        className="relative h-screen min-h-[600px] h-[100dvh] flex flex-col justify-center overflow-hidden bg-nd-bg text-nd-high-em-text pt-16"
       >
         {/* Background Image + Interactive WebGL UnicornScene */}
-        <div className="absolute left-0 top-0 bottom-14 md:bottom-0 w-full overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 w-full overflow-hidden pointer-events-none">
           <img
             src="/src/img/index/hero-bg.webp"
             alt=""
@@ -611,9 +713,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           />
         </div>
 
-        {/* Main Hero Container */}
-        <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[48px] md:pt-[96px] xl:pt-[108px] min-h-[calc(100vh-56px-73px)] xl:min-h-[calc(100vh-56px-123px)] relative z-10">
-          <div className="px-[20px] md:px-[32px] xl:px-[40px] max-w-[1024px]">
+        {/* Main Hero Container - Centered Vertically */}
+        <div className="w-full flex flex-col justify-center max-w-[1440px] mx-auto my-auto px-[20px] md:px-[32px] xl:px-[40px] relative z-10">
+          <div className="max-w-[1024px]">
             <h1 className="nd-heading-2xl text-nd-high-em-text tracking-tight">
               Arsitektur server
               <br />
@@ -637,88 +739,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               </button>
             </div>
           </div>
-
-          {/* Bottom Promo Banner Card (Samsung Wallet / Breakpoint 2026) */}
-          <div className="md:px-[32px] xl:px-[40px] md:pb-[32px] xl:pb-[40px] flex flex-row justify-end mt-12">
-            <a
-              href={currentPromo.href}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-[#DFCDF5] text-black md:rounded-xl p-5 md:p-6 flex flex-row items-stretch gap-5 w-full md:w-[504px] group relative overflow-hidden !no-underline"
-            >
-              <div className="flex flex-col items-start justify-between gap-2 grow">
-                <div>
-                  <div className="text-[18px] xl:text-[20px] leading-[1.33] xl:leading-[1.2] font-medium tracking-[-0.18px]">
-                    {currentPromo.title}
-                  </div>
-                  <p className="text-[14px] xl:text-[16px] leading-[1.28] xl:leading-[1.25] text-black/70 mt-1">
-                    {currentPromo.description}
-                  </p>
-                </div>
-
-                {/* Progress dots */}
-                <div className="flex flex-row gap-1 pt-1">
-                  {HERO_PROMOS.map((item, idx) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setPromoIndex(idx);
-                      }}
-                      className={`h-1 rounded-full transition-all cursor-pointer ${
-                        idx === promoIndex ? 'w-6 bg-black' : 'w-2 bg-black/25'
-                      }`}
-                      aria-label={item.title}
-                    />
-                  ))}
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 text-[14px] xl:text-[16px] font-medium mt-2">
-                  <span>{currentPromo.cta}</span>
-                  <ArrowUpRightIcon className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </div>
-              </div>
-
-              <div className="w-[100px] md:w-[138px] shrink-0 relative flex items-center justify-center">
-                <img
-                  src={currentPromo.image}
-                  alt={currentPromo.title}
-                  decoding="async"
-                  className="w-full h-auto max-h-[112px] object-contain select-none"
-                />
-              </div>
-            </a>
-          </div>
-        </div>
-
-        {/* ===================================================================
-            3. PARTNER LOGOS BAR (Western Union, Visa, Worldpay, Circle, PayPal, Fiserv)
-            =================================================================== */}
-        <div className="border-t border-nd-border-light relative z-10 bg-black/60 backdrop-blur-sm">
-          <div className="max-w-[1440px] mx-auto px-[20px] md:px-[32px] xl:px-[40px]">
-            <div className="grid grid-cols-3 md:grid-cols-6 divide-x divide-nd-border-light border-x border-nd-border-light">
-              {HERO_LOGOS.map((logo, idx) => (
-                <div
-                  key={logo.alt}
-                  className={`flex items-center justify-center h-[73px] xl:h-[123px] p-4 ${
-                    idx < 3 ? 'max-md:border-b max-md:border-nd-border-light' : ''
-                  }`}
-                >
-                  <img
-                    src={logo.src}
-                    alt={logo.alt}
-                    width={logo.width}
-                    height={logo.height}
-                    decoding="async"
-                    loading="lazy"
-                    className="max-h-full max-w-full object-contain opacity-90 hover:opacity-100 transition-opacity"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
@@ -729,16 +749,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <div className="max-w-[1440px] mx-auto py-[56px] md:py-[112px] xl:py-[160px] px-[20px] md:px-[32px] xl:px-[40px]">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 md:mb-11 xl:mb-12 gap-6">
             <h2 className="nd-heading-xl">
-              Temui ArchiBot secara langsung.
+              Server yang menggunakan ArchiBot.
               <br />
-              <span className="font-light">Bangun koneksi.</span>
+              <span className="font-light">Komunitas terhubung.</span>
             </h2>
 
             <div className="flex items-center gap-2 shrink-0">
               <a
-                href="https://solana.com/id/events"
-                target="_blank"
-                rel="noreferrer"
+                href="/servers"
                 className="group inline-flex items-center rounded-full font-medium transition-colors bg-nd-cta text-nd-inverse hover:bg-nd-cta/90 text-sm md:text-base px-4 py-2 md:py-2.5 !no-underline"
               >
                 <span>Lihat semua</span>
@@ -787,13 +805,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/15 font-brand-mono text-[11px] uppercase tracking-wider text-white">
-                      {evt.dateFormatted}
-                    </span>
-                    {evt.location && (
-                      <span className="px-2.5 py-1 rounded-md bg-black/70 backdrop-blur-md border border-white/15 text-xs text-white/85 truncate">
-                        {evt.location}
+                  {/* Badges: Kategori & Total Member Aktif */}
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10 pointer-events-none">
+                    {evt.category && (
+                      <span className="px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-md text-xs font-medium text-white">
+                        {evt.category}
+                      </span>
+                    )}
+                    {evt.memberCount && (
+                      <span className="px-2.5 py-1 rounded-md bg-black/40 backdrop-blur-md text-xs font-medium text-white truncate">
+                        {evt.memberCount}
                       </span>
                     )}
                   </div>
@@ -840,42 +861,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         </div>
 
         <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[56px] md:pt-[112px] xl:pt-[160px] relative z-10">
-          {/* Top Heading + Live Counters */}
+          {/* Top Heading + Key Value Metrics */}
           <div className="px-[20px] md:px-[32px] xl:px-[40px] grid grid-cols-1 xl:grid-cols-12 gap-10 pb-[80px] md:pb-[160px] xl:pb-[248px]">
             <div className="xl:col-span-8">
               <h2 className="nd-heading-xl">
-                Platform manajemen server
+                Arsitektur server instan.
                 <br />
                 <span className="font-light">
-                  terkemuka dengan pertumbuhan tercepat
+                  Dibangun dalam hitungan detik.
                 </span>
               </h2>
               <p className="nd-body-xl text-nd-mid-em-text max-w-[660px] mt-4 xl:mt-6 font-normal">
-                Platform nomor satu untuk komunitas dan server Discord, dengan
-                pengguna terbanyak, modul arsitektur terlengkap, aktivitas otomasi
-                tertinggi, dan latensi terendah.
+                Lupakan berjam-jam membuat channel dan mengatur permission secara manual. ArchiBot
+                menata seluruh kategori, modul Lego, hingga sistem keamanan server Anda secara
+                otomatis.
               </p>
             </div>
 
-            {/* Live Counters on Right */}
+            {/* Key Value Metrics on Right */}
             <div className="xl:col-span-4 flex flex-col gap-6 xl:items-end justify-end">
               <div className="flex flex-row gap-5 items-stretch xl:w-[340px]">
                 <div className="w-1.5 rounded-full bg-gradient-to-b from-[#D884F0] to-[#44EBA6] shrink-0" />
                 <div className="flex flex-col gap-6">
                   <div>
                     <div className="text-[28px] md:text-[36px] leading-[1.11] font-brand-mono font-medium tracking-tight text-white tabular-nums">
-                      <LiveTotalTxCounter />
+                      &lt; 3 Detik
                     </div>
                     <div className="text-xs md:text-sm text-nd-mid-em-text-alpha mt-1">
-                      Total otomasi hingga saat ini
+                      Waktu deployment server instan
                     </div>
                   </div>
                   <div>
                     <div className="text-[28px] md:text-[36px] leading-[1.11] font-brand-mono font-medium tracking-tight text-white tabular-nums">
-                      <LiveTpsCounter />
+                      12 Modul Lego
                     </div>
                     <div className="text-xs md:text-sm text-nd-mid-em-text-alpha mt-1">
-                      Eksekusi per detik
+                      Preset fitur siap pasang
                     </div>
                   </div>
                 </div>
@@ -887,24 +908,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="border-t border-nd-border-light bg-black/35 backdrop-blur-sm">
             <div className="px-[20px] md:px-[32px] xl:px-[40px]">
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-nd-border-light border-x border-nd-border-light">
-                {PERFORMANCE_STATS.map((stat, i) => (
-                  <div
-                    key={stat.id}
-                    className={`p-6 md:p-8 xl:p-10 flex flex-col justify-between gap-6 ${
-                      i < 2 ? 'md:max-xl:border-b md:max-xl:border-nd-border-light' : ''
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="nd-body-l text-nd-mid-em-text">
-                        {stat.label}
-                      </span>
-                      <SolanaMonoIcon className={`w-4 h-3.5 ${stat.color}`} />
+                {PERFORMANCE_STATS.map((stat, i) => {
+                  const rawVal = stat.apiKey && liveStats ? liveStats[stat.apiKey] : undefined;
+                  const displayValue =
+                    typeof rawVal === 'number'
+                      ? rawVal.toLocaleString('en-US')
+                      : typeof rawVal === 'string'
+                        ? rawVal
+                        : stat.value;
+
+                  return (
+                    <div
+                      key={stat.id}
+                      className={`p-6 md:p-8 xl:p-10 flex flex-col justify-between gap-6 ${
+                        i < 2 ? 'md:max-xl:border-b md:max-xl:border-nd-border-light' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="nd-body-l text-nd-mid-em-text">
+                          {stat.label}
+                        </span>
+                        <SolanaMonoIcon className={`w-4 h-3.5 ${stat.color}`} />
+                      </div>
+                      <div className="text-[36px] sm:text-[44px] md:text-[54px] xl:text-[64px] leading-none font-light tracking-[-0.03em] text-white truncate">
+                        {displayValue}
+                      </div>
                     </div>
-                    <div className="text-[48px] md:text-[64px] xl:text-[72px] leading-none font-light tracking-[-0.04em] text-white">
-                      {stat.value}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -919,15 +950,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           {/* Section Title + CTA */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-11 xl:mb-12 gap-6">
             <h2 className="nd-heading-xl">
-              Apa yang terjadi
+              Kemampuan lengkap
               <br />
-              <span className="font-light">di ArchiBot saat ini</span>
+              <span className="font-light">siap kelola server 24/7</span>
             </h2>
             <a
               href="/servers"
               className="group inline-flex items-center rounded-full font-medium transition-colors bg-nd-cta text-nd-inverse hover:bg-nd-cta/90 text-sm md:text-base px-4 py-2 md:py-2.5 !no-underline"
             >
-              <span>Lihat semua</span>
+              <span>Jelajahi fitur</span>
               <span className="ml-2 -mr-1 rounded-full size-5 p-1 inline-flex items-center justify-center bg-nd-inverse text-nd-cta">
                 <ArrowUpRightIcon className="size-3.5" />
               </span>
@@ -1085,164 +1116,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       </section>
 
       {/* =====================================================================
-          7. PROJECTS / INSTITUTIONS SECTION (apps/web/src/components/index/projects.tsx)
-          ===================================================================== */}
-      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
-        <div className="flex flex-col justify-between max-w-[1440px] mx-auto pt-[56px] md:pt-[112px] xl:pt-[160px]">
-          <div className="px-[20px] md:px-[32px] xl:px-[40px] flex flex-col md:flex-row justify-between items-start md:items-end mb-6 md:mb-11 xl:mb-12 gap-6">
-            <h2 className="nd-heading-xl max-w-[920px]">
-              Komunitas dan server Discord terbesar{' '}
-              <br className="max-md:hidden" />
-              <span className="font-light">sedang membangun di ArchiBot.</span>
-            </h2>
-            <a
-              href="/servers"
-              className="group inline-flex items-center rounded-full font-medium transition-colors bg-nd-cta text-nd-inverse hover:bg-nd-cta/90 text-sm md:text-base px-4 py-2 md:py-2.5 shrink-0 !no-underline"
-            >
-              <span>Lihat semua</span>
-              <span className="ml-2 -mr-1 rounded-full size-5 p-1 inline-flex items-center justify-center bg-nd-inverse text-nd-cta">
-                <ArrowUpRightIcon className="size-3.5" />
-              </span>
-            </a>
-          </div>
-
-          {/* 6 Institution Cards Grid with Parallelogram Overlays */}
-          <div className="border-t border-nd-border-light relative">
-            <img
-              src="/src/img/index/pattern-parallelogram-r.svg"
-              alt=""
-              width={716}
-              height={160}
-              className="max-xl:hidden absolute right-[40px] top-0 -translate-y-full pointer-events-none select-none"
-            />
-            <div className="max-w-[1440px] mx-auto px-[20px] md:px-[32px] xl:px-[40px] relative">
-              <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-nd-border-light border-x border-nd-border-light relative">
-                {PROJECTS_CARDS.map((project, index) => (
-                  <a
-                    key={project.key}
-                    href={project.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`group relative overflow-hidden p-6 md:p-8 xl:p-10 min-h-[260px] xl:min-h-[340px] flex flex-col justify-between !no-underline text-white ${
-                      index < 3 ? 'md:border-b md:border-nd-border-light' : ''
-                    }`}
-                  >
-                    {/* Blurred projects-bg slice */}
-                    <div
-                      className={`absolute inset-0 opacity-65 group-hover:opacity-95 transition-opacity duration-500 pointer-events-none ${project.bgClassName}`}
-                      style={{
-                        backgroundImage: 'url(/src/img/index/projects-bg.webp)',
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/35 group-hover:bg-black/15 transition-colors duration-300 pointer-events-none" />
-
-                    {/* Top: Logo + External Arrow */}
-                    <div className="relative z-10 flex items-center justify-between gap-4">
-                      <img
-                        src={project.logo}
-                        alt={project.name}
-                        loading="lazy"
-                        decoding="async"
-                        className={`${project.logoClassName} w-auto object-contain`}
-                      />
-                      <span className="size-8 rounded-full border border-white/20 bg-black/30 inline-flex items-center justify-center text-white/80 group-hover:bg-white group-hover:text-black transition-colors">
-                        <ArrowUpRightIcon className="size-4" />
-                      </span>
-                    </div>
-
-                    {/* Bottom: Stat Value + Stat Label */}
-                    <div className="relative z-10 mt-12">
-                      <div
-                        className={`text-[40px] md:text-[48px] xl:text-[64px] leading-none font-light tracking-[-0.03em] ${project.color}`}
-                      >
-                        {project.statValue}
-                      </div>
-                      <div className="nd-body-m text-nd-mid-em-text mt-2">
-                        {project.statLabel}
-                      </div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-              <img
-                src="/src/img/index/pattern-parallelogram-l.svg"
-                alt=""
-                width={716}
-                height={160}
-                className="max-xl:hidden absolute left-[40px] bottom-0 translate-y-full pointer-events-none z-20 select-none"
-              />
-            </div>
-          </div>
-
-          {/* Secondary Institutional Logos Bar */}
-          <div className="border-t border-nd-border-light">
-            <div className="max-w-[1440px] mx-auto px-[20px] md:px-[32px] xl:px-[40px]">
-              <div className="grid grid-cols-1 md:grid-cols-6 divide-x divide-nd-border-light border-x border-nd-border-light">
-                <div className="col-span-2 hidden xl:block" />
-                <div className="col-span-1 md:col-span-6 xl:col-span-4 grid grid-cols-2 md:grid-cols-5 divide-x divide-nd-border-light">
-                  {PROJECTS_LOGOS.map((logo, index) => (
-                    <div
-                      key={logo.alt}
-                      className={`flex items-center justify-center h-[88px] md:h-[92px] xl:h-[160px] p-3 ${
-                        index < 3
-                          ? 'max-md:border-b max-md:border-nd-border-light'
-                          : ''
-                      } ${index === 4 ? 'max-md:col-span-2' : ''}`}
-                    >
-                      <img
-                        src={logo.src}
-                        alt={logo.alt}
-                        loading="lazy"
-                        decoding="async"
-                        style={{ height: `${logo.height}px` }}
-                        className="w-auto max-w-full object-contain opacity-90 hover:opacity-100 transition-opacity"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================================
-          8. DECOR DIVIDER (apps/web/src/components/index/decor.tsx)
-          ===================================================================== */}
-      <div className="relative overflow-hidden bg-nd-bg border-t border-nd-border-light">
-        <div
-          className="h-[180px] md:h-[260px] xl:h-[380px] relative select-none pointer-events-none"
-          style={{
-            backgroundImage:
-              'url(/src/img/index/decor-bg.webp), url(/src/img/index/decor-bg.webp)',
-            backgroundPosition: 'left bottom, right top',
-            backgroundSize: '52% 100%, 52% 100%',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
-          <img
-            src="/src/img/index/decor-part-top.webp"
-            alt=""
-            width={620}
-            height={280}
-            loading="lazy"
-            decoding="async"
-            className="absolute right-[50%] top-0 translate-x-[48.7%] h-[74%] w-auto mix-blend-plus-lighter"
-          />
-          <img
-            src="/src/img/index/decor-part-bottom.webp"
-            alt=""
-            width={630}
-            height={302}
-            loading="lazy"
-            decoding="async"
-            className="absolute left-[50%] bottom-0 -translate-x-[56.8%] h-[79.5%] w-auto mix-blend-plus-lighter"
-          />
-        </div>
-      </div>
-
-      {/* =====================================================================
-          9. NEWS CAROUSEL SECTION (Ikuti perkembangan terbaru Solana)
+          9. NEWS CAROUSEL SECTION (Ikuti perkembangan terbaru ArchiBot)
           ===================================================================== */}
       <section className="border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
         <div className="max-w-[1440px] mx-auto py-[56px] md:py-[112px] xl:py-[160px] px-[20px] md:px-[32px] xl:px-[40px]">
@@ -1281,9 +1155,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             {NEWS_POSTS.map((post) => (
               <a
                 key={post.id}
-                href={`https://solana.com${post.url}`}
-                target="_blank"
-                rel="noreferrer"
+                href={post.url}
                 className="snap-start shrink-0 w-[300px] sm:w-[540px] md:w-[704px] xl:w-[1280px] rounded-xl overflow-hidden border border-nd-border-light flex flex-col md:flex-row bg-[#0D0C11] group !no-underline text-white"
               >
                 {/* Left 2/3 Hero Image */}
@@ -1423,7 +1295,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       {/* =====================================================================
           11. COMMUNITY SECTION + WIREFRAME EARTH GLOBE (community.tsx)
           ===================================================================== */}
-      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-scroll-reveal solana-section-contained">
+      <section className="relative overflow-hidden bg-nd-bg text-nd-high-em-text border-t border-nd-border-light solana-section-contained">
         {/* WebGL Background + Interactive Wireframe EarthAnimation */}
         <div className="absolute inset-0 pointer-events-none">
           <SafeUnicornScene
@@ -1431,9 +1303,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             jsonFilePath="/src/img/index/community-bg.json"
             width="100%"
             height="100%"
-            scale={0.75}
+            scale={0.5}
             dpi={1}
-            fps={30}
+            fps={24}
             lazyLoad={true}
             production={true}
             className="!absolute inset-0"
@@ -1442,25 +1314,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
         <div className="max-w-[1440px] mx-auto pt-[56px] md:pt-[112px] xl:pt-[160px] pb-[64px] md:pb-[120px] px-[20px] md:px-[32px] xl:px-[40px] relative z-10">
           {/* Centered Heading */}
-          <div className="text-center max-w-[760px] mx-auto">
-            <h2 className="nd-heading-2xl">
+          <div className="text-center max-w-[1024px] xl:max-w-[1150px] mx-auto">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-medium tracking-tight leading-[1.08]">
               Bangun bersama
               <br />
-              <span className="font-light">komunitas global ArchiBot.</span>
+              <span className="font-light whitespace-normal md:whitespace-nowrap">
+                komunitas global ArchiBot.
+              </span>
             </h2>
-            <p className="nd-body-xl text-nd-mid-em-text mt-4 md:mt-6 max-w-[540px] mx-auto">
-              Baik Anda seorang pemilik server, moderator, kreator template, atau pengembang,
-              ada tempat bagi Anda untuk berkontribusi.
+            <p className="nd-body-xl text-nd-mid-em-text mt-3 md:mt-5 max-w-[850px] mx-auto leading-relaxed">
+              Baik Anda seorang pemilik server, moderator, kreator template,
+              <br className="hidden sm:inline" />
+              {' '}atau pengembang, ada tempat bagi Anda untuk berkontribusi.
             </p>
           </div>
 
           {/* Interactive SVG Wireframe Earth Globe */}
-          <div className="-mt-4 md:-mt-12 xl:-mt-20 mb-8 md:mb-12">
+          <div className="mt-3 md:mt-4 mb-0">
             <EarthAnimation className="w-full max-w-[1360px] mx-auto" />
           </div>
 
           {/* 5 Community Action Cards (3 top + 2 bottom in 6-col grid) */}
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 md:gap-4 relative z-20 -mt-12 md:-mt-28 xl:-mt-40">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 md:gap-4 relative z-20 -mt-44 md:-mt-72 xl:-mt-[360px]">
             {COMMUNITY_CARDS.map((card) => (
               <a
                 key={card.id}
@@ -1505,51 +1380,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           }}
         />
 
-        <div
-          className="w-full max-w-[1440px] px-5 md:px-8 xl:px-[72px] pt-16 md:pt-20 xl:pt-24 pb-[136px] md:pb-[164px] xl:pb-[300px] mx-auto bg-[length:100%_auto] bg-bottom bg-no-repeat relative z-10"
-          style={{ backgroundImage: 'url(/src/img/solana-bg.svg)' }}
-        >
+        <div className="w-full max-w-[1440px] px-5 md:px-8 xl:px-[72px] pt-16 md:pt-20 xl:pt-24 pb-12 md:pb-16 xl:pb-20 mx-auto relative z-10">
           {/* Top Bar: ArchiBot Logo + Language Selector */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-10 md:pb-14 xl:pb-16 border-b border-white/[0.08]">
             <a
               href="#top"
-              aria-label="ArchiBot"
-              className="!no-underline !text-white inline-flex items-center gap-3.5"
+              aria-label="ARCHIBOT"
+              className="!no-underline !text-white inline-flex items-center gap-3"
             >
-              <div className="relative size-10 rounded-2xl bg-gradient-to-tr from-[#5865F2] via-[#9945FF] to-[#19FB9B] p-[2px] shadow-xl">
-                <div className="w-full h-full bg-[#08070B] rounded-[14px] flex items-center justify-center">
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M12 2V5M12 5C7.58172 5 4 8.58172 4 13V18C4 19.6569 5.34315 21 7 21H17C18.6569 21 20 19.6569 20 18V13C20 8.58172 16.4183 5 12 5ZM9 12H9.01M15 12H15.01M9 16C10 17 14 17 15 16"
-                      stroke="url(#archibot_footer_grad)"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <defs>
-                      <linearGradient id="archibot_footer_grad" x1="4" y1="5" x2="20" y2="21" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#5865F2" />
-                        <stop offset="0.5" stopColor="#9945FF" />
-                        <stop offset="1" stopColor="#19FB9B" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
+              {botAvatar && !botAvatarError ? (
+                <img
+                  src={botAvatar}
+                  alt="ARCHIBOT"
+                  onError={() => setBotAvatarError(true)}
+                  className="w-10 h-10 rounded-lg object-cover border border-discord-border shrink-0 shadow-md"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-discord-blurple flex items-center justify-center text-discord-white shrink-0 shadow-md">
+                  <DiscordMark className="w-5 h-5" />
                 </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-brand font-bold text-xl tracking-[0.06em] text-white">
-                  ARCHI<span className="bg-gradient-to-r from-[#9945FF] to-[#19FB9B] bg-clip-text text-transparent">BOT</span>
-                </span>
-                <span className="font-brand-mono text-[10px] uppercase tracking-[0.16em] text-white/50">
-                  Discord Architecture Platform
-                </span>
-              </div>
+              )}
+              <span className="font-normal tracking-wider text-base uppercase text-discord-white">
+                ARCHIBOT
+              </span>
             </a>
 
             {/* Footer Language Selector */}
@@ -1610,8 +1463,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* 6 Footer Columns */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-12 md:gap-y-14 pt-10 md:pt-14 xl:pt-16">
+          {/* 3 Footer Columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-12 xl:gap-x-24 gap-y-10 md:gap-y-12 pt-10 md:pt-14 xl:pt-16 max-w-[1100px]">
             {FOOTER_COLUMNS.map((col) => (
               <div key={col.heading} className="col-span-1">
                 <div className="mb-5 md:mb-6 font-brand-mono text-[11px] uppercase tracking-[0.16em] text-white/55">
@@ -1635,28 +1488,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             ))}
           </div>
 
-          {/* Meta Links + Social Icons + Copyright */}
+          {/* Copyright + Social Icons */}
           <div className="mt-14 md:mt-20 xl:mt-24 pt-6 border-t border-white/[0.08]">
             <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-x-8 gap-y-5">
-              <ul className="list-none m-0 p-0 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
-                {FOOTER_META_LINKS.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="!no-underline text-white/55 hover:text-white transition-colors duration-200 whitespace-nowrap"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <span className="text-white/45 text-xs leading-relaxed">
+                © {new Date().getFullYear()} ArchiBot. Semua hak dilindungi.
+              </span>
 
               {/* Social Icons */}
               <div className="flex flex-wrap items-center -ml-2.5">
                 <a
-                  href="https://solana.com/youtube"
+                  href="https://youtube.com"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="YouTube"
@@ -1667,7 +1509,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   </svg>
                 </a>
                 <a
-                  href="https://solana.com/twitter"
+                  href="https://x.com"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="X / Twitter"
@@ -1678,7 +1520,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   </svg>
                 </a>
                 <a
-                  href="https://solana.com/discord"
+                  href="https://discord.gg"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Discord"
@@ -1689,7 +1531,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   </svg>
                 </a>
                 <a
-                  href="https://solana.com/reddit"
+                  href="https://reddit.com"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Reddit"
@@ -1704,7 +1546,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   </svg>
                 </a>
                 <a
-                  href="https://solana.com/github"
+                  href="https://github.com/Rafifdev/ArchiBot"
                   target="_blank"
                   rel="noreferrer"
                   aria-label="GitHub"
@@ -1719,12 +1561,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   </svg>
                 </a>
               </div>
-            </div>
-
-            <div className="mt-5">
-              <span className="text-white/45 text-xs leading-relaxed">
-                © {new Date().getFullYear()} ArchiBot. Semua hak dilindungi.
-              </span>
             </div>
           </div>
         </div>

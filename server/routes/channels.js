@@ -33,9 +33,10 @@ router.get('/:guildId/channels', verifyGuildAccess, async (req, res) => {
     .sort((a, b) => a.rawPosition - b.rawPosition)
     .map((ch) => {
       const everyoneOverwrite = ch.permissionOverwrites.cache.get(guild.roles.everyone.id);
-      const isLocked =
-        everyoneOverwrite?.deny?.has(PermissionFlagsBits.SendMessages) ||
-        everyoneOverwrite?.deny?.has(PermissionFlagsBits.Connect);
+      const isVoice = ch.isVoiceBased?.() || ch.type === 2 || ch.type === 13;
+      const isLocked = isVoice
+        ? Boolean(everyoneOverwrite?.deny?.has(PermissionFlagsBits.Connect))
+        : Boolean(everyoneOverwrite?.deny?.has(PermissionFlagsBits.SendMessages));
 
       return {
         id: ch.id,
@@ -153,31 +154,111 @@ router.patch('/:guildId/channels/:channelId', verifyGuildAccess, async (req, res
   }
 });
 
+const pendingChannelLocks = new Set();
+
 router.post('/:guildId/channels/:channelId/lock', verifyGuildAccess, async (req, res) => {
-  const channel = req.guild.channels.cache.get(req.params.channelId);
+  const channelId = req.params.channelId;
+
+  // Prevent concurrent duplicate lock executions for the exact same channel
+  if (pendingChannelLocks.has(channelId)) {
+    return res.status(429).json({ error: 'Operasi lock sedang berjalan untuk channel ini. Harap tunggu.' });
+  }
+
+  const channel = req.guild.channels.cache.get(channelId);
   if (!channel) {
     return res.status(404).json({ error: 'Channel not found.' });
   }
 
+  pendingChannelLocks.add(channelId);
+
   const everyoneRole = req.guild.roles.everyone;
   const current = channel.permissionOverwrites.cache.get(everyoneRole.id);
+  const guildCfg = state.guilds?.[req.guild.id] || {};
+  const memberRoleIds = [guildCfg.memberRoleId, guildCfg.verifiedRoleId].filter(Boolean);
+
+  // If explicit target state `locked: boolean` was supplied by client, use it; otherwise toggle
+  const desiredLocked = typeof req.body?.locked === 'boolean' ? req.body.locked : undefined;
 
   try {
-    if (channel.isVoiceBased?.()) {
-      const isLocked = current?.deny?.has(PermissionFlagsBits.Connect);
+    const isVoice = channel.isVoiceBased?.() || channel.type === 2 || channel.type === 13;
+
+    if (isVoice) {
+      const isLocked = Boolean(current?.deny?.has(PermissionFlagsBits.Connect));
+      const nextLocked = desiredLocked !== undefined ? desiredLocked : !isLocked;
+
+      // Idempotency: if already in desired state, return success immediately
+      if (desiredLocked !== undefined && isLocked === desiredLocked) {
+        return res.json({
+          success: true,
+          locked: nextLocked,
+          message: nextLocked ? `Voice channel #${channel.name} sudah terkunci.` : `Voice channel #${channel.name} sudah terbuka.`,
+        });
+      }
+
       await channel.permissionOverwrites.edit(everyoneRole.id, {
-        Connect: isLocked ? null : false,
+        Connect: nextLocked ? false : null,
+        SendMessages: nextLocked ? false : null,
       });
-      return res.json({ success: true, locked: !isLocked });
+
+      for (const roleId of memberRoleIds) {
+        if (channel.permissionOverwrites.cache.has(roleId)) {
+          await channel.permissionOverwrites.edit(roleId, {
+            Connect: nextLocked ? false : null,
+            SendMessages: nextLocked ? false : null,
+          }).catch(() => {});
+        }
+      }
+
+      return res.json({
+        success: true,
+        locked: nextLocked,
+        message: nextLocked ? `Voice channel #${channel.name} berhasil dikunci.` : `Voice channel #${channel.name} berhasil dibuka.`,
+      });
     }
 
-    const isLocked = current?.deny?.has(PermissionFlagsBits.SendMessages);
+    const isLocked = Boolean(current?.deny?.has(PermissionFlagsBits.SendMessages));
+    const nextLocked = desiredLocked !== undefined ? desiredLocked : !isLocked;
+
+    // Idempotency: if already in desired state, return success immediately
+    if (desiredLocked !== undefined && isLocked === desiredLocked) {
+      return res.json({
+        success: true,
+        locked: nextLocked,
+        message: nextLocked ? `Channel #${channel.name} sudah terkunci.` : `Channel #${channel.name} sudah terbuka.`,
+      });
+    }
+
     await channel.permissionOverwrites.edit(everyoneRole.id, {
-      SendMessages: isLocked ? null : false,
+      SendMessages: nextLocked ? false : null,
+      SendMessagesInThreads: nextLocked ? false : null,
+      CreatePublicThreads: nextLocked ? false : null,
+      CreatePrivateThreads: nextLocked ? false : null,
+      AddReactions: nextLocked ? false : null,
     });
-    return res.json({ success: true, locked: !isLocked });
+
+    for (const roleId of memberRoleIds) {
+      const roleOw = channel.permissionOverwrites.cache.get(roleId);
+      if (roleOw) {
+        await channel.permissionOverwrites.edit(roleId, {
+          SendMessages: nextLocked ? false : null,
+          SendMessagesInThreads: nextLocked ? false : null,
+          CreatePublicThreads: nextLocked ? false : null,
+          CreatePrivateThreads: nextLocked ? false : null,
+          AddReactions: nextLocked ? false : null,
+        }).catch(() => {});
+      }
+    }
+
+    return res.json({
+      success: true,
+      locked: nextLocked,
+      message: nextLocked ? `Channel #${channel.name} berhasil dikunci.` : `Channel #${channel.name} berhasil dibuka.`,
+    });
   } catch (err) {
-    return res.status(500).json({ error: `Failed to toggle lock: ${err.message}` });
+    console.error('Channel lock toggle error:', err);
+    return res.status(500).json({ error: `Gagal mengubah status lock: ${err.message}` });
+  } finally {
+    pendingChannelLocks.delete(channelId);
   }
 });
 
@@ -215,6 +296,53 @@ router.delete('/:guildId/channels/:channelId', verifyGuildAccess, async (req, re
     return res.json({ success: true, message: 'Channel deleted successfully.' });
   } catch (err) {
     return res.status(500).json({ error: `Failed to delete channel: ${err.message}` });
+  }
+});
+
+router.put('/:guildId/channels/positions', verifyGuildAccess, async (req, res) => {
+  const { updates } = req.body;
+  if (!Array.isArray(updates) || updates.length === 0) {
+    return res.status(400).json({ error: 'Array of channel updates is required.' });
+  }
+
+  const guild = req.guild;
+
+  // Discord REST API restriction: "Only one channel can have a parent_id modified at a time"
+  // Filter out `parent` from items where parentId is unchanged compared to current Discord state.
+  let parentChangeCount = 0;
+  const validUpdates = updates
+    .filter((u) => u && u.id && guild.channels.cache.has(u.id))
+    .map((u) => {
+      const existingChannel = guild.channels.cache.get(u.id);
+      const existingParent = existingChannel?.parentId || null;
+      const requestedParent = u.parentId !== undefined ? (u.parentId || null) : undefined;
+      const isParentModified = requestedParent !== undefined && requestedParent !== existingParent;
+
+      const item = {
+        channel: u.id,
+        position: typeof u.position === 'number' ? u.position : undefined,
+      };
+
+      // Only pass `parent` and `lockPermissions` if parent actually changed and we haven't already assigned one
+      if (isParentModified && parentChangeCount === 0) {
+        item.parent = requestedParent;
+        item.lockPermissions = Boolean(u.lockPermissions);
+        parentChangeCount++;
+      }
+
+      return item;
+    });
+
+  if (validUpdates.length === 0) {
+    return res.status(400).json({ error: 'No valid channels found in updates array.' });
+  }
+
+  try {
+    await guild.channels.setPositions(validUpdates);
+    return res.json({ success: true, message: 'Channel positions updated successfully.' });
+  } catch (err) {
+    console.error('Failed to set channel positions:', err);
+    return res.status(500).json({ error: `Failed to update positions: ${err.message}` });
   }
 });
 

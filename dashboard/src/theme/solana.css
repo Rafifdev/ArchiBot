@@ -60,6 +60,10 @@
 /* ==========================================================================
    SOLANA.COM DESIGN TOKENS & TYPOGRAPHY SYSTEM (packages/tailwind/index.ts)
    ========================================================================== */
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --font-brand: 'Diatype', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-brand-mono: 'DSemi', monospace;

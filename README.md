@@ -108,7 +108,7 @@ DISCORD_TOKEN=your_bot_token_here
 
 ### 4. Run the Bot & Web Dashboard
 ```bash
-# Starts both ArchiBot and the Web Dashboard at http://localhost:3001
+# Starts both ArchiBot and the Web Dashboard at http://localhost:3000
 npm start
 ```
 
@@ -119,7 +119,7 @@ cd dashboard
 npm run dev
 ```
 
-Open `http://localhost:3001` (or `http://localhost:5173` in Vite dev mode) in your browser.
+Open `http://localhost:3000` (or `http://localhost:5173` in Vite dev mode) in your browser.
 - **Log in with Discord OAuth2** or use **Quick Login as Bot Owner (Localhost)**.
 - Manage literally the entire server: Channels, Roles, Members, Lego Builder, Dynamic Voice, Rich Embeds, Backups, and Automod.
 

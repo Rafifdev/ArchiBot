@@ -1,4 +1,4 @@
-// Auto-generated 1:1 data for https://solana.com/id
+// Data Umpan Langsung & Berita Resmi ArchiBot
 export interface TerminalItem {
   id: string;
   index: number;
@@ -30,1164 +30,794 @@ export interface NewsPostItem {
   cursor: string;
 }
 
-export const TERMINAL_DATA: Record<'all' | 'defi' | 'institutions' | 'consumer' | 'developers' | 'ecosystem', TerminalItem[]> = {
-  "all": [
+export const TERMINAL_DATA: Record<
+  'all' | 'developers' | 'defi' | 'consumer' | 'institutions' | 'ecosystem',
+  TerminalItem[]
+> = {
+  all: [
     {
-      "id": "jp-morgan-am-s-tokenized-money-market-funds-went-live-on-solana",
-      "index": 1,
-      "title": "JP Morgan AM's tokenized money market funds went live on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-23T23:07",
-      "url": "https://www.prnewswire.com/news-releases/jp-morgan-asset-management-expands-access-to-its-tokenized-money-market-funds-on-solana-302917188.html",
-      "source": "JPM",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-setup',
+      index: 1,
+      title: '/setup — Deploy template arsitektur server lengkap (Gaming, Study, Komunitas, Custom)',
+      categoryId: 'developers',
+      date: '2026-10-30T10:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "reflect-create-went-live-allowing-users-to-deploy-a-custom-yield-bearing-stablecoin-on-solana",
-      "index": 2,
-      "title": "Reflect Create went live allowing users to deploy a custom yield-bearing stablecoin on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-22T23:02",
-      "url": "https://x.com/reflectmoney/status/2113332492505927746",
-      "source": "x",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-auto-voice',
+      index: 2,
+      title: '/auto-voice — Join-to-Create voice generator dengan panel kontrol ruang interaktif',
+      categoryId: 'defi',
+      date: '2026-10-30T09:45',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "solana-mobile-crossed-1-500-d-apps-in-the-d-app-store",
-      "index": 3,
-      "title": "Solana mobile crossed 1,500 dApps in the dApp Store",
-      "categoryId": "ecosystem",
-      "date": "2026-10-22T22:01",
-      "url": "https://x.com/solanamobile/status/2113309691329585595",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-verify-panel',
+      index: 3,
+      title: '/verify-panel — Sistem verifikasi CAPTCHA anti-raid dengan pemberian role Verified otomatis',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "alpenglow-by-anza-is-now-live-on-solana-finality-reduced-to-150ms",
-      "index": 4,
-      "title": "Alpenglow by Anza is now live on Solana, finality reduced to ~150ms",
-      "categoryId": "ecosystem",
-      "date": "2026-10-22T02:01",
-      "url": "https://x.com/anza_xyz/status/2112905478921736411",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-role-panel',
+      index: 4,
+      title: '/role-panel — Panel pemilihan peran mandiri dengan tombol warna-warni & menu dropdown',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:15',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "solana-tokenized-equity-holders-crossed-an-ath-of-1-5-m-unique-addresses",
-      "index": 5,
-      "title": "Solana tokenized equity holders crossed an ATH of 1.5M unique addresses",
-      "categoryId": "ecosystem",
-      "date": "2026-10-22T01:59",
-      "url": "https://app.blockworks.com/projects/solana/analytics/solana-tokenized-equities",
-      "source": "Blockworks",
-      "linkType": "other",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-backup',
+      index: 5,
+      title: '/backup save & load — Snapshot cadangan susunan kategori server dan pulihkan kapan saja',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "ondo-surpasses-500-m-in-tokenized-rw-as-on-solana",
-      "index": 6,
-      "title": "Ondo surpasses $500M in tokenized RWAs on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-21T01:59",
-      "url": "https://x.com/capitalmarkets/status/2110987907423236565",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-ticket-panel',
+      index: 6,
+      title: '/ticket-panel — Ruang tiket bantuan privat anggota server dengan tim moderator',
+      categoryId: 'consumer',
+      date: '2026-10-30T08:45',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "x-stocks-crossed-7-5-b-in-cumulative-trading-volume-on-solana",
-      "index": 7,
-      "title": "xStocks crossed $7.5B in cumulative trading volume on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-21T01:58",
-      "url": "https://x.com/xStocksFi/status/2109605057801118122",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-milestone',
+      index: 7,
+      title: '/milestone — Pelacak & kartu grafis selebrasi pencapaian target member otomatis',
+      categoryId: 'institutions',
+      date: '2026-10-30T08:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "solana-mobile-named-ledger-its-first-hardware-partner",
-      "index": 8,
-      "title": "Solana mobile named Ledger its first hardware partner",
-      "categoryId": "ecosystem",
-      "date": "2026-10-21T01:57",
-      "url": "https://solanamobile.com/blog/solana-mobile-announces-ledger-as-its-first-hardware-expansion-partner",
-      "source": "Solana mobile",
-      "linkType": "article",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-create-channel',
+      index: 8,
+      title: '/create-channel — Buat kategori & channel instan tanpa membuka Discord Server Settings',
+      categoryId: 'developers',
+      date: '2026-10-30T08:15',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "pando-solana-etf-launched-on-hkex-becoming-hong-kong-s-second-spot-sol-etf",
-      "index": 9,
-      "title": "Pando Solana ETF launched on HKEX, becoming Hong Kong’s second spot SOL ETF",
-      "categoryId": "institutions",
-      "date": "2026-10-21T01:55",
-      "url": "https://inews.hket.com/article/4206762",
-      "source": "HKET",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'all-lego-modules',
+      index: 9,
+      title: '12 Modul Lego — Kustomisasi blok server: Gaming, Event, Lofi Radio, & Minigame bots',
+      categoryId: 'developers',
+      date: '2026-10-30T08:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "samsung-partners-with-solana-to-bring-cross-border-payments-via-samsung-wallet",
-      "index": 10,
-      "title": "Samsung partners with Solana to bring cross-border payments via Samsung Wallet",
-      "categoryId": "consumer",
-      "date": "2026-10-11T05:33",
-      "url": "https://x.com/solana/status/2107994265104339166",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
-    }
+      id: 'all-server-stats',
+      index: 10,
+      title: 'Server Stats Live — Channel suara dinamis penampil tanggal, status online, dan total member',
+      categoryId: 'institutions',
+      date: '2026-10-30T07:45',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
+    },
   ],
-  "defi": [
+  developers: [
     {
-      "id": "meteora-ag-unveils-dlmm-pro-giving-token-launches-a-fully-configurable-market",
-      "index": 1,
-      "title": "MeteoraAG unveils DLMM Pro, giving token launches a fully configurable market",
-      "categoryId": "defi",
-      "date": "2026-10-06T15:38",
-      "url": "https://x.com/solana/status/2107399659727868027",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-setup',
+      index: 1,
+      title: '/setup — Template arsitektur 1-klik untuk Gaming, Komunitas, Ruang Belajar, atau Custom',
+      categoryId: 'developers',
+      date: '2026-10-30T10:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "open-standard-s-ousd-launched-with-reserves-at-black-rock-lead-bank-and-bny",
-      "index": 2,
-      "title": "Open standard’s OUSD launched, with reserves at BlackRock, Lead Bank, and BNY",
-      "categoryId": "defi",
-      "date": "2026-10-04T03:43",
-      "url": "https://solana.com/news/open-usd-is-live-on-solana",
-      "source": "Solana",
-      "linkType": "article",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-lego-builder',
+      index: 2,
+      title: '12 Modul Lego Modular — Aktifkan atau nonaktifkan modul fitur via tombol interaktif Discord',
+      categoryId: 'developers',
+      date: '2026-10-30T09:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "x-stocks-crossed-6-b-in-volume-on-solana",
-      "index": 3,
-      "title": "xStocks crossed $6B in volume on Solana.",
-      "categoryId": "defi",
-      "date": "2026-09-23T07:18",
-      "url": "https://x.com/xStocksFi/status/2100892511057166681",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-create-channel',
+      index: 3,
+      title: '/create-channel — Generator text channel, voice room, stage, dan category divider instan',
+      categoryId: 'developers',
+      date: '2026-10-30T09:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "huma-pst-surpassed-300-m-in-market-cap",
-      "index": 4,
-      "title": "Huma PST surpassed $300M in market cap",
-      "categoryId": "defi",
-      "date": "2026-09-23T07:15",
-      "url": "https://x.com/humafinance/status/2099498652800881070",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-custom-modal',
+      index: 4,
+      title: 'Custom Items Modal — Form modal 3-field untuk menambahkan channel khusus tanpa sintaks',
+      categoryId: 'developers',
+      date: '2026-10-30T09:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "raydium-crossed-5-b-in-cumulative-tokenized-stock-volume",
-      "index": 5,
-      "title": "Raydium crossed $5B in cumulative tokenized stock volume",
-      "categoryId": "defi",
-      "date": "2026-09-23T07:14",
-      "url": "https://x.com/Raydium/status/2100935136015462403",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-clear',
+      index: 5,
+      title: '/clear-channels — Bersihkan seluruh channel server lama dengan konfirmasi dialog aman',
+      categoryId: 'developers',
+      date: '2026-10-30T09:20',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "raydium-crossed-4-b-in-cumulative-tokenized-stock-volume",
-      "index": 6,
-      "title": "Raydium crossed $4B in cumulative tokenized stock volume",
-      "categoryId": "defi",
-      "date": "2026-08-26T15:06",
-      "url": "https://x.com/Raydium/status/2090139223231737930",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-auto-perms',
+      index: 6,
+      title: 'Sinkronisasi Permission Otomatis — Mengunci hak akses rahasia per kategori tanpa bocor',
+      categoryId: 'developers',
+      date: '2026-10-30T09:10',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "silv-launched-via-sunrise-backed-by-dominion-s-physical-silver-reserves",
-      "index": 7,
-      "title": "$SILV launched via Sunrise, backed by Dominion’s physical silver reserves",
-      "categoryId": "defi",
-      "date": "2026-08-17T02:15",
-      "url": "https://x.com/sunrise/status/2087903084907262240",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-dividers',
+      index: 7,
+      title: 'Category Dividers — Garis pembatas kategori dengan simbol rapi & terstruktur estetis',
+      categoryId: 'developers',
+      date: '2026-10-30T09:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "re-s-re-usd-went-live-on-solana",
-      "index": 8,
-      "title": "Re’s reUSD went live on Solana",
-      "categoryId": "defi",
-      "date": "2026-08-17T02:09",
-      "url": "https://x.com/re/status/2087194906355961857",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-fast-deploy',
+      index: 8,
+      title: 'Deployment Instan < 3 Detik — Seluruh kategori & channel langsung aktif tanpa proses manual',
+      categoryId: 'developers',
+      date: '2026-10-30T08:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "jupiter-launches-lend-v2-with-smart-vaults",
-      "index": 9,
-      "title": "Jupiter launches Lend v2 with Smart Vaults",
-      "categoryId": "defi",
-      "date": "2026-08-17T02:03",
-      "url": "https://x.com/JupiterExchange/status/2086829920378814794",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'dev-role-pos',
+      index: 9,
+      title: 'Hierarki Peran Tertata — Penataan otomatis posisi role bot & peran admin secara presisi',
+      categoryId: 'developers',
+      date: '2026-10-30T08:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "credible-settled-611-m-on-solana-representing-65-2-of-its-total-payment-volume",
-      "index": 10,
-      "title": "Credible settled ~$611M on Solana, representing 65.2% of its total payment volume",
-      "categoryId": "defi",
-      "date": "2026-08-04T05:41",
-      "url": "https://x.com/crediblefin/status/2083192533207666750",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "defi"
-      ],
-      "tags": [],
-      "description": ""
-    }
+      id: 'dev-layout-sync',
+      index: 10,
+      title: 'Sinkronisasi Layout Web Dashboard — Pratinjau susunan channel server secara real-time',
+      categoryId: 'developers',
+      date: '2026-10-30T08:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
+    },
   ],
-  "institutions": [
+  defi: [
     {
-      "id": "jp-morgan-am-s-tokenized-money-market-funds-went-live-on-solana",
-      "index": 1,
-      "title": "JP Morgan AM's tokenized money market funds went live on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-23T23:07",
-      "url": "https://www.prnewswire.com/news-releases/jp-morgan-asset-management-expands-access-to-its-tokenized-money-market-funds-on-solana-302917188.html",
-      "source": "JPM",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-auto-hub',
+      index: 1,
+      title: '/auto-voice — Hub Join-to-Create pembuat ruang suara dinamis otomatis saat user masuk',
+      categoryId: 'defi',
+      date: '2026-10-30T10:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "reflect-create-went-live-allowing-users-to-deploy-a-custom-yield-bearing-stablecoin-on-solana",
-      "index": 2,
-      "title": "Reflect Create went live allowing users to deploy a custom yield-bearing stablecoin on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-22T23:02",
-      "url": "https://x.com/reflectmoney/status/2113332492505927746",
-      "source": "x",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-interface',
+      index: 2,
+      title: '/voice interface — Panel kontrol interaktif: Rename, Limit, Lock, Kick, & Bitrate',
+      categoryId: 'defi',
+      date: '2026-10-30T09:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "ondo-surpasses-500-m-in-tokenized-rw-as-on-solana",
-      "index": 3,
-      "title": "Ondo surpasses $500M in tokenized RWAs on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-21T01:59",
-      "url": "https://x.com/capitalmarkets/status/2110987907423236565",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-lock',
+      index: 3,
+      title: '/voice lock & unlock — Kunci ruang suara pribadi agar tidak sembarang orang bisa masuk',
+      categoryId: 'defi',
+      date: '2026-10-30T09:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "x-stocks-crossed-7-5-b-in-cumulative-trading-volume-on-solana",
-      "index": 4,
-      "title": "xStocks crossed $7.5B in cumulative trading volume on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-21T01:58",
-      "url": "https://x.com/xStocksFi/status/2109605057801118122",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-limit',
+      index: 4,
+      title: '/voice limit — Batasi jumlah kapasitas maksimal peserta di ruang suara sementara Anda',
+      categoryId: 'defi',
+      date: '2026-10-30T09:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "pando-solana-etf-launched-on-hkex-becoming-hong-kong-s-second-spot-sol-etf",
-      "index": 5,
-      "title": "Pando Solana ETF launched on HKEX, becoming Hong Kong’s second spot SOL ETF",
-      "categoryId": "institutions",
-      "date": "2026-10-21T01:55",
-      "url": "https://inews.hket.com/article/4206762",
-      "source": "HKET",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-rename',
+      index: 5,
+      title: '/voice rename — Ubah nama room suara pribadi sesuai aktivitas mabar atau game Anda',
+      categoryId: 'defi',
+      date: '2026-10-30T09:20',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "bny-expands-its-digital-asset-custody-to-eu-under-mi-ca-offering-sol-custody",
-      "index": 6,
-      "title": "BNY expands its digital asset custody to EU under MiCA, offering SOL custody",
-      "categoryId": "institutions",
-      "date": "2026-10-11T05:29",
-      "url": "https://www.bny.com/corporate/global/en/about-us/newsroom/press-release/bny-expands-digital-asset-custody-platform-in-europe.html",
-      "source": "bny",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-claim',
+      index: 6,
+      title: '/voice claim & transfer — Alihkan kepemilikan ruang jika pemilik awal keluar channel',
+      categoryId: 'defi',
+      date: '2026-10-30T09:10',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "securitize-launches-stocks-on-solana-bringing-1-1-share-backed-u-s-equities-onchain",
-      "index": 7,
-      "title": "Securitize launches Stocks on Solana, bringing 1:1 share-backed U.S. equities onchain",
-      "categoryId": "institutions",
-      "date": "2026-10-11T05:22",
-      "url": "https://x.com/Securitize/article/2108180783827411451",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-cleanup',
+      index: 7,
+      title: 'Auto-Cleanup Voice — Penghapusan channel otomatis seketika saat ruangan kosong tanpa residu',
+      categoryId: 'defi',
+      date: '2026-10-30T09:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "solana-foundation-launches-solana-dv-p-built-with-input-from-j-p-morgan",
-      "index": 8,
-      "title": "Solana Foundation launches Solana DvP, built with input from J.P. Morgan",
-      "categoryId": "institutions",
-      "date": "2026-10-11T05:21",
-      "url": "https://solana.com/news/solana-foundation-launches-solana-dv-p-an-atomic-settlement-program-built-for-financial-institutions",
-      "source": "Solana",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-lofi',
+      index: 8,
+      title: 'Lofi Radio Voice Hub — Ruang suara musik santai 24/7 untuk belajar, santai, & fokus',
+      categoryId: 'defi',
+      date: '2026-10-30T08:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "fiserv-s-digital-asset-platform-launched-on-solana",
-      "index": 9,
-      "title": "Fiserv’s digital asset platform launched on Solana",
-      "categoryId": "institutions",
-      "date": "2026-10-04T03:51",
-      "url": "https://investors.fiserv.com/news-releases/news-release-details/fiserv-digital-asset-platform-goes-live-financial-institution",
-      "source": "fiserv",
-      "linkType": "article",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'voice-bitrate',
+      index: 9,
+      title: 'Audio High Bitrate — Pengaturan kualitas audio suara jernih hingga 384kbps untuk server',
+      categoryId: 'defi',
+      date: '2026-10-30T08:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "tokenized-powerus-pusa-shares-did-more-volume-on-solana-debut-day-than-on-nasdaq",
-      "index": 10,
-      "title": "Tokenized Powerus ($PUSA) shares did more volume on Solana debut day than on Nasdaq",
-      "categoryId": "institutions",
-      "date": "2026-10-04T03:50",
-      "url": "https://x.com/sunrise/status/2106361935122047201",
-      "source": "twitter",
-      "linkType": "tweet",
-      "categories": [
-        "institutions"
-      ],
-      "tags": [],
-      "description": ""
-    }
+      id: 'voice-stage',
+      index: 10,
+      title: 'Dynamic Stage Voice — Ruang panggung suara terstruktur untuk sesi podcast, AMA, & event',
+      categoryId: 'defi',
+      date: '2026-10-30T08:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
+    },
   ],
-  "consumer": [
+  consumer: [
     {
-      "id": "samsung-partners-with-solana-to-bring-cross-border-payments-via-samsung-wallet",
-      "index": 1,
-      "title": "Samsung partners with Solana to bring cross-border payments via Samsung Wallet",
-      "categoryId": "consumer",
-      "date": "2026-10-11T05:33",
-      "url": "https://x.com/solana/status/2107994265104339166",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-verify-panel',
+      index: 1,
+      title: '/verify-panel — Panel verifikasi gambar CAPTCHA terdistorsi anti-bot sebelum membuka server',
+      categoryId: 'consumer',
+      date: '2026-10-30T10:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "solflare-perps-cleared-65-m-in-volume-within-three-weeks-of-launch",
-      "index": 2,
-      "title": "Solflare perps cleared $65M in volume within three weeks of launch",
-      "categoryId": "consumer",
-      "date": "2026-09-23T07:17",
-      "url": "https://x.com/solflare/status/2100219191773278439",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-account-age',
+      index: 2,
+      title: 'Proteksi Umur Akun — Batas minimal umur akun Discord sebelum diizinkan mengakses verifikasi',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "mercuryo-reported-89-ytd-on-ramp-growth-with-85-of-volume-flowing-into-sol",
-      "index": 3,
-      "title": "Mercuryo reported 89% YTD on-ramp growth, with 85% of volume flowing into $SOL",
-      "categoryId": "consumer",
-      "date": "2026-09-23T07:16",
-      "url": "https://x.com/Mercuryo_io/status/2100600732919509487",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-member-gate',
+      index: 3,
+      title: 'Gateway Anti-Raid Gate — Isolasi channel utama sampai user menyelesaikan verifikasi dengan role',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "phygitals-surpassed-500-m-in-cumulative-gmv",
-      "index": 4,
-      "title": "Phygitals surpassed $500M in cumulative GMV",
-      "categoryId": "consumer",
-      "date": "2026-09-15T07:28",
-      "url": "https://x.com/phygitals/status/2098522671004659774",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-ticket-panel',
+      index: 4,
+      title: '/ticket-panel — Tombol pembuka ruang bantuan dukungan privat anggota server dengan tim staf',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "world-xyz-launched-its-prediction-market-platform",
-      "index": 5,
-      "title": "World.xyz launched its prediction market platform",
-      "categoryId": "consumer",
-      "date": "2026-09-15T07:26",
-      "url": "https://world.xyz/",
-      "source": "Website",
-      "linkType": "other",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-ticket-close',
+      index: 5,
+      title: 'Ticket Close & Auto-Delete — Penutupan tiket otomatis disertai pembersihan channel secara aman',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:20',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "beezie-partnered-with-the-luxury-closet-to-bring-authenticated-birkins-onchain",
-      "index": 6,
-      "title": "Beezie partnered with The Luxury Closet to bring authenticated Birkins onchain",
-      "categoryId": "consumer",
-      "date": "2026-09-06T01:40",
-      "url": "https://x.com/Beezie/status/2095490922465185803",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-mod-isolation',
+      index: 6,
+      title: 'Isolasi Hak Akses Tiket — Hanya pembuat tiket & pemilik role moderator yang dapat melihat isi obrolan',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:10',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "opensea-expanded-its-marketplace-to-include-solana-nf-ts",
-      "index": 7,
-      "title": "Opensea expanded its marketplace to include Solana NFTs",
-      "categoryId": "consumer",
-      "date": "2026-09-06T01:25",
-      "url": "https://x.com/opensea/status/2094547650502631836",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-anti-spam',
+      index: 7,
+      title: 'Pencegahan Spam Massal — Proteksi dari serangan bot luar, token grabber, dan spam link mencurigakan',
+      categoryId: 'consumer',
+      date: '2026-10-30T09:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "fomo-climbed-into-the-top-3-finance-apps-in-the-u-s-app-store",
-      "index": 8,
-      "title": "Fomo climbed into the Top 3 Finance apps in the U.S. App Store",
-      "categoryId": "consumer",
-      "date": "2026-08-26T15:06",
-      "url": "https://x.com/SolanaFloor/status/2090990004818657306",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-dangerous-audit',
+      index: 8,
+      title: 'Audit Permission Bahaya — Deteksi dini izin administrator berlebih pada peran yang tidak semestinya',
+      categoryId: 'consumer',
+      date: '2026-10-30T08:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "moonpay-added-cash-app-pay-for-eligible-us-users",
-      "index": 9,
-      "title": "Moonpay added Cash App Pay for eligible US users",
-      "categoryId": "consumer",
-      "date": "2026-08-26T15:02",
-      "url": "https://x.com/moonpay/status/2089698690034287097",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'sec-confirm-dialog',
+      index: 9,
+      title: 'Dialog Konfirmasi Aksi Kritis — Mencegah ketidaksengajaan reset atau hapus data server',
+      categoryId: 'consumer',
+      date: '2026-10-30T08:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "collector-crypt-crosses-1-b-in-cumulative-gross-revenue",
-      "index": 10,
-      "title": "Collector Crypt crosses $1B in cumulative gross revenue",
-      "categoryId": "consumer",
-      "date": "2026-08-17T02:19",
-      "url": "https://x.com/Collector_Crypt/status/2087886968080208190",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "consumer"
-      ],
-      "tags": [],
-      "description": ""
-    }
+      id: 'sec-encrypted-session',
+      index: 10,
+      title: 'Enkripsi Sesi Discord OAuth2 — Akses Web Dashboard aman khusus bagi pemilik & admin terverifikasi',
+      categoryId: 'consumer',
+      date: '2026-10-30T08:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
+    },
   ],
-  "developers": [
+  institutions: [
     {
-      "id": "moonpay-paybox-ai-agent-wallet-solana-x402",
-      "index": 1,
-      "title": "MoonPay PayBox Turns Claude and ChatGPT Prompts Into Solana Trades and Real Payments",
-      "categoryId": "developers",
-      "date": "2026-07-29T14:48",
-      "url": "https://genfinity.io/2026/07/29/moonpay-paybox-ai-agent-wallet-solana-x402/",
-      "source": "Genfinity",
-      "linkType": "article",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments"
-      ],
-      "description": ""
+      id: 'com-milestone-set',
+      index: 1,
+      title: '/milestone set — Tentukan target member perayaan server (10, 25, 50, 100, dst)',
+      categoryId: 'institutions',
+      date: '2026-10-30T10:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "money-gram-joined-the-solana-developer-platform-as-an-infrastructure-partner",
-      "index": 2,
-      "title": "MoneyGram joined the Solana Developer Platform as an infrastructure partner",
-      "categoryId": "developers",
-      "date": "2026-07-02T04:34",
-      "url": "https://solana.com/news/money-gram-joins-solana-developer-platform",
-      "source": "Article",
-      "linkType": "article",
-      "categories": [
-        "developers"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'com-milestone-check',
+      index: 2,
+      title: '/milestone check — Pantau progress jumlah member dan target selebrasi berikutnya',
+      categoryId: 'institutions',
+      date: '2026-10-30T09:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "aws-enables-publishers-to-monetize-ai-traffic-via-x402-on-solana",
-      "index": 3,
-      "title": "AWS enables publishers to monetize AI traffic via x402 on Solana",
-      "categoryId": "developers",
-      "date": "2026-06-20T07:35",
-      "url": "https://aws.amazon.com/blogs/aws/aws-waf-adds-ai-traffic-monetization-capability-to-help-content-owners-charge-ai-bots-for-content-access/?sc_channel=sm&sc_publisher=TWITTER&sc_country=global&sc_geo=GLOBAL&sc_outcome=awareness&trk=NA&linkId=962084708",
-      "source": "X",
-      "linkType": "article",
-      "categories": [
-        "developers"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'com-milestone-card',
+      index: 3,
+      title: 'Kartu Grafis Selebrasi — Kirim ucapan selamat otomatis saat milestone member tercapai',
+      categoryId: 'institutions',
+      date: '2026-10-30T09:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "aws-stablecoin-payments-ai-traffic",
-      "index": 4,
-      "title": "AWS Cloud Introduces Solana Stablecoin Payments for AI Traffic Monetization",
-      "categoryId": "developers",
-      "date": "2026-06-18T16:14",
-      "url": "https://solanafloor.com/news/aws-cloud-introduces-solana-stablecoin-payments",
-      "source": "SolanaFloor",
-      "linkType": "article",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments"
-      ],
-      "description": ""
+      id: 'com-server-stats',
+      index: 4,
+      title: 'Counter Statistik Live — Channel suara dinamis penampil Tanggal, Online, & Total Member',
+      categoryId: 'institutions',
+      date: '2026-10-30T09:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "mastercard-agent-micropayments-fortune",
-      "index": 5,
-      "title": "Exclusive: Mastercard launches protocol to let AI agents pay each other, send micropayments",
-      "categoryId": "developers",
-      "date": "2026-06-10T12:00",
-      "url": "https://fortune.com/2026/06/10/mastercard-ai-payments-protocol-launch-agentic-finance/",
-      "source": "Fortune",
-      "linkType": "article",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments"
-      ],
-      "description": ""
+      id: 'com-invite-logs',
+      index: 5,
+      title: 'Invite Tracking Logs — Catat dan pantau siapa yang mengundang member baru ke server Anda',
+      categoryId: 'institutions',
+      date: '2026-10-30T09:20',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "solana-native-subscriptions-allowances-payments-rail",
-      "index": 6,
-      "title": "Solana Ships Native Payments Rail for Subscriptions and Allowances",
-      "categoryId": "developers",
-      "date": "2026-06-02T12:00",
-      "url": "https://thedefiant.io/converge/blockchains/solana-ships-native-payments-rail-for-subscriptions-and-allowances",
-      "source": "The Defiant",
-      "linkType": "article",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments"
-      ],
-      "description": ""
+      id: 'com-booster-logs',
+      index: 6,
+      title: 'Booster Recognition Logs — Pengumuman apresiasi otomatis saat ada member yang boost server',
+      categoryId: 'institutions',
+      date: '2026-10-30T09:10',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "accelerate-ai-moonpay-x-pay-skills",
-      "index": 7,
-      "title": "Accelerate AI: MoonPay x Pay Skills",
-      "categoryId": "developers",
-      "date": "2026-05-15T11:08",
-      "url": "https://www.youtube.com/watch?v=Vz0bNlW9cvE",
-      "source": "YouTube",
-      "linkType": "video",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments",
-        "Produced by Solana"
-      ],
-      "description": ""
+      id: 'com-welcome-goodbye',
+      index: 7,
+      title: 'Welcome & Goodbye Hub — Sambutan hangat pendatang baru dan log pemantauan anggota keluar',
+      categoryId: 'institutions',
+      date: '2026-10-30T09:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "accelerate-ai-why-open-standards-matter-for-agentic-commerce",
-      "index": 8,
-      "title": "Accelerate AI: Why open standards matter for agentic commerce with Erik Reppel, Founder of x402",
-      "categoryId": "developers",
-      "date": "2026-05-15T11:07",
-      "url": "https://www.youtube.com/watch?v=6Dy9tPKone0",
-      "source": "YouTube",
-      "linkType": "video",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments",
-        "Produced by Solana"
-      ],
-      "description": ""
+      id: 'com-rules-hub',
+      index: 8,
+      title: 'Rules & Guidelines Hub — Channel tata tertib komunitas dengan tombol persetujuan interaktif',
+      categoryId: 'institutions',
+      date: '2026-10-30T08:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "p-token-by-anza-goes-live-on-mainnet-cuts-compute-96-frees-12-13-block-space",
-      "index": 9,
-      "title": "P-Token by Anza goes live on mainnet, cuts compute 96%, frees 12-13% block space",
-      "categoryId": "developers",
-      "date": "2026-05-15T03:19",
-      "url": "https://x.com/anza_xyz/status/2054539698597503127",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "developers"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'com-events-module',
+      index: 9,
+      title: 'Event & Giveaway Area — Modul panggung acara, bagi-bagi hadiah giveaway, dan ruang diskusi',
+      categoryId: 'institutions',
+      date: '2026-10-30T08:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "accelerate-ai-eternal-agents-institutional-x402",
-      "index": 10,
-      "title": "Accelerate AI: How we built Eternal Agents & Institutional x402",
-      "categoryId": "developers",
-      "date": "2026-05-14T16:56",
-      "url": "https://www.youtube.com/watch?v=_buvMvf2JXg",
-      "source": "YouTube",
-      "linkType": "video",
-      "categories": [
-        "developers"
-      ],
-      "tags": [
-        "Payments",
-        "Produced by Solana"
-      ],
-      "description": ""
-    }
+      id: 'com-gallery-module',
+      index: 10,
+      title: 'Member Showcase Gallery — Ruang pameran foto setup, karya seni kreatif, dan hewan peliharaan',
+      categoryId: 'institutions',
+      date: '2026-10-30T08:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
+    },
   ],
-  "ecosystem": [
+  ecosystem: [
     {
-      "id": "solana-mobile-crossed-1-500-d-apps-in-the-d-app-store",
-      "index": 1,
-      "title": "Solana mobile crossed 1,500 dApps in the dApp Store",
-      "categoryId": "ecosystem",
-      "date": "2026-10-22T22:01",
-      "url": "https://x.com/solanamobile/status/2113309691329585595",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-role-panel',
+      index: 1,
+      title: '/role-panel — Panel pemilihan peran interaktif dengan tombol sekali klik & dropdown menu',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T10:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "alpenglow-by-anza-is-now-live-on-solana-finality-reduced-to-150ms",
-      "index": 2,
-      "title": "Alpenglow by Anza is now live on Solana, finality reduced to ~150ms",
-      "categoryId": "ecosystem",
-      "date": "2026-10-22T02:01",
-      "url": "https://x.com/anza_xyz/status/2112905478921736411",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-gender-roles',
+      index: 2,
+      title: 'Gender & Pronouns Picker — Pemilihan peran identitas dengan 1 klik tanpa perlu spam command bot',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "solana-tokenized-equity-holders-crossed-an-ath-of-1-5-m-unique-addresses",
-      "index": 3,
-      "title": "Solana tokenized equity holders crossed an ATH of 1.5M unique addresses",
-      "categoryId": "ecosystem",
-      "date": "2026-10-22T01:59",
-      "url": "https://app.blockworks.com/projects/solana/analytics/solana-tokenized-equities",
-      "source": "Blockworks",
-      "linkType": "other",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-game-roles',
+      index: 3,
+      title: 'Game Interest Roles — Role penanda game favorit agar member dapat saling tag saat mabar',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "solana-mobile-named-ledger-its-first-hardware-partner",
-      "index": 4,
-      "title": "Solana mobile named Ledger its first hardware partner",
-      "categoryId": "ecosystem",
-      "date": "2026-10-21T01:57",
-      "url": "https://solanamobile.com/blog/solana-mobile-announces-ledger-as-its-first-hardware-expansion-partner",
-      "source": "Solana mobile",
-      "linkType": "article",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-backup-save',
+      index: 4,
+      title: '/backup save — Simpan snapshot lengkap struktur kategori, channel teks, suara, dan perizinan',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "200ms-slot-targets-went-live-completing-anza-s-simd-0525-rollout",
-      "index": 5,
-      "title": "200ms slot targets went live, completing Anza’s SIMD-0525 rollout",
-      "categoryId": "ecosystem",
-      "date": "2026-10-11T05:31",
-      "url": "https://x.com/anza_xyz/status/2108568843178422694",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-backup-load',
+      index: 5,
+      title: '/backup load — Pulihkan seluruh susunan server dari snapshot cadangan dalam hitungan detik',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:20',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "stablecoin-holders-on-solana-hit-a-record-14-m",
-      "index": 6,
-      "title": "Stablecoin holders on Solana hit a record 14M+",
-      "categoryId": "ecosystem",
-      "date": "2026-10-06T15:40",
-      "url": "https://x.com/solana/status/2107752110133825546",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-backup-list',
+      index: 6,
+      title: '/backup list & delete — Kelola seluruh daftar arsip snapshot cadangan server yang tersimpan',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:10',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'command',
     },
     {
-      "id": "solana-led-app-revenue-for-the-10th-consecutive-quarter-365-m-in-q3",
-      "index": 7,
-      "title": "Solana led app revenue for the 10th consecutive quarter, $365M in Q3",
-      "categoryId": "ecosystem",
-      "date": "2026-10-04T03:46",
-      "url": "https://defillama.com/app-revenue/chains?groupBy=quarterly",
-      "source": "defillama",
-      "linkType": "other",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-minigames-hub',
+      index: 7,
+      title: 'Minigames Bot Area — Channel terisolasi khusus untuk bot game OwO, Mudae, Karuta, & Poketwo',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T09:00',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "anza-shipped-250ms-slot-times-to-mainnet-beta-completing-3-of-4-planned-reductions",
-      "index": 8,
-      "title": "Anza shipped 250ms slot times to mainnet-beta, completing 3 of 4 planned reductions",
-      "categoryId": "ecosystem",
-      "date": "2026-09-23T07:19",
-      "url": "https://x.com/anza_xyz/status/2100813567037739169",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-music-hub',
+      index: 8,
+      title: 'Music Area & Request Panel — Integrasi pemutar musik Spotify & Jockie Music bot siap pakai',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T08:50',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "pre-stocks-crossed-100-k-holders-for-pre-ipo-equities",
-      "index": 9,
-      "title": "PreStocks crossed 100K holders for pre-IPO equities",
-      "categoryId": "ecosystem",
-      "date": "2026-09-15T07:20",
-      "url": "https://x.com/PreStocks/status/2098372906145476632",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
+      id: 'mgmt-sync-stats',
+      index: 9,
+      title: 'Sinkronisasi Statistik Manual — Update instan data jumlah member & kanal server via dashboard',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T08:40',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
     },
     {
-      "id": "solana-payment-channels-went-live-enabling-1-m-agent-payments-sec",
-      "index": 10,
-      "title": "Solana Payment Channels went live, enabling 1M agent payments/sec",
-      "categoryId": "ecosystem",
-      "date": "2026-09-06T01:22",
-      "url": "https://x.com/solana/status/2095585115250585952",
-      "source": "X",
-      "linkType": "tweet",
-      "categories": [
-        "ecosystem"
-      ],
-      "tags": [],
-      "description": ""
-    }
-  ]
+      id: 'mgmt-web-dashboard',
+      index: 10,
+      title: 'Web Dashboard ArchiBot — Kendalikan seluruh arsitektur dan otomasi server via browser modern',
+      categoryId: 'ecosystem',
+      date: '2026-10-30T08:30',
+      url: '/servers',
+      source: 'ArchiBot',
+      linkType: 'feature',
+    },
+  ],
 };
 
 export const NEWS_POSTS: NewsPostItem[] = [
   {
-    "id": "breakpoint-london-lineup",
-    "published": "Oct 26, 2026",
-    "publishedAt": "2026-10-26T10:00",
-    "title": "Solana Breakpoint 2026 Adds Revolut Chair, Former Prime Minister, Former Chancellor and City Leaders to London Lineup",
-    "tags": [
-      "Breakpoint",
-      "Events",
-      "Announcements",
-      "Finance",
-      "Payments",
-      "Stablecoins",
-      "AI"
-    ],
-    "categories": [
-      "Breakpoint"
-    ],
-    "url": "/news/breakpoint-london-lineup",
-    "description": "Breakpoint 2026 adds leaders from Revolut, Westminster, Zelle, DTCC, Mastercard, Backpack, and Bitwise to its London lineup.",
-    "heroImage": "/uploads/posts/breakpoint-london-lineup/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'archibot-summit-2026-lineup',
+    published: '26 Okt 2026',
+    publishedAt: '2026-10-26T10:00',
+    title:
+      'ArchiBot Summit 2026 Menghadirkan Arsitektur AI Generasi Baru, Sistem Lego v3, dan Otomasi Komunitas Skala Besar',
+    tags: ['Summit', 'Events', 'Announcements', 'Architecture', 'AI'],
+    categories: ['Pengumuman'],
+    url: '/servers',
+    description:
+      'ArchiBot memperkenalkan pembaruan terbesar tahun ini untuk membantu pemilik server Discord membangun, mengamankan, dan mengembangkan komunitas dalam hitungan detik.',
+    heroImage: '/uploads/posts/breakpoint-london-lineup/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "breakpoint-london-lineup"
+    cursor: 'archibot-summit-2026-lineup',
   },
   {
-    "id": "solana-changelog-october-22-2026",
-    "published": "Oct 23, 2026",
-    "publishedAt": "2026-10-23T01:09",
-    "title": "Solana Changelog: October 22, 2026",
-    "tags": [
-      "Alpenglow",
-      "Developers",
-      "Network",
-      "Newsletter",
-      "Technology"
-    ],
-    "categories": [
-      "Changelog"
-    ],
-    "url": "/news/solana-changelog-october-22-2026",
-    "description": "Agave v4.3.2 and Firedancer v26.10.4 arrive with new program SDKs and work on Alpenglow, validator I/O, gossip, and Transaction V1.",
-    "heroImage": "/uploads/posts/solana-changelog-october-22-2026/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'archibot-changelog-october-22-2026',
+    published: '23 Okt 2026',
+    publishedAt: '2026-10-23T01:09',
+    title: 'ArchiBot Changelog: Pembaruan Sistem Role & Voice Hub Dinamis',
+    tags: ['Changelog', 'Developers', 'Voice Hub', 'Roles'],
+    categories: ['Changelog'],
+    url: '/servers',
+    description:
+      'Rilis terbaru menghadirkan pembersihan ruang suara otomatis yang lebih cepat, pengelolaan izin peran visual, serta peningkatan responsivitas dashboard.',
+    heroImage: '/uploads/posts/solana-changelog-october-22-2026/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "solana-changelog-october-22-2026"
+    cursor: 'archibot-changelog-october-22-2026',
   },
   {
-    "id": "solana-changelog-october-16-2026",
-    "published": "Oct 16, 2026",
-    "publishedAt": "2026-10-16T08:08",
-    "title": "Solana Changelog: October 16, 2026",
-    "tags": [
-      "Newsletter",
-      "Developers",
-      "Alpenglow",
-      "Technology"
-    ],
-    "categories": [
-      "Changelog"
-    ],
-    "url": "/news/solana-changelog-october-16-2026",
-    "description": "Solana Web3.js v3.1 lands alongside Agave and Firedancer releases, plus updates on CU limits, Alpenglow, and validator performance.",
-    "heroImage": "/uploads/posts/default-blog.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'archibot-changelog-october-16-2026',
+    published: '16 Okt 2026',
+    publishedAt: '2026-10-16T08:08',
+    title: 'ArchiBot Changelog: Custom Embed Builder & Multi-Channel Webhook',
+    tags: ['Embeds', 'Developers', 'Dashboard', 'Technology'],
+    categories: ['Changelog'],
+    url: '/servers',
+    description:
+      'Kini Anda dapat merancang pesan pengumuman kaya fitur dengan warna kustom, thumbnail, footer, dan mengirimkannya langsung ke channel mana pun.',
+    heroImage: '/uploads/posts/default-blog.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "solana-changelog-october-16-2026"
+    cursor: 'archibot-changelog-october-16-2026',
   },
   {
-    "id": "geo-aware-leader-schedule",
-    "published": "Oct 14, 2026",
-    "publishedAt": "2026-10-14T15:05",
-    "title": "Geo-Aware Leader Schedule",
-    "tags": [
-      "Network"
-    ],
-    "categories": [
-      "Upgrades"
-    ],
-    "url": "/news/geo-aware-leader-schedule",
-    "description": "This study evaluates SIMD-0675, a geo-aware leader schedule for Solana. It reorders the stake-weighted random schedule so that consecutive leaders are geographically close, which cuts handoff latency. No validator’s number of leader windows changes. Two parameters are tuned: STAKE_FLOOR (σ), the stake fraction that sets each location’s compatibility radius, and RUN_LENGTH (γ), the size of the contiguous blocks of compatible leaders. They are tested on 6,250 synthetic Monte Carlo networks built on today’s 124 validator locations. The handoff gain levels off quickly as γ grows, while the risks keep rising: leaders concentrating in one region, and validators declaring fake locations. The study recommends σ ≈ 10%, the highest value that keeps Asia’s bins local, and γ between 3 and 7 (about 29 ms mean gain over random at γ = 7). These conclusions depend on today’s geography.",
-    "heroImage": "/uploads/posts/default-blog.webp",
-    "author": {
-      "name": "Umberto Natale",
-      "avatar": "/uploads/authors/MostlyData_.webp"
+    id: 'optimasi-arsitektur-server-discord',
+    published: '14 Okt 2026',
+    publishedAt: '2026-10-14T15:05',
+    title: 'Panduan Merancang Tata Letak Channel Discord yang Meningkatkan Retensi Member',
+    tags: ['Architecture'],
+    categories: ['Panduan'],
+    url: '/servers',
+    description:
+      'Studi mendalam tentang bagaimana struktur kategori yang rapi, pembagian ruang baca dan obrolan, serta penataan peran otomatis mampu meningkatkan keaktifan anggota baru hingga 80%.',
+    heroImage: '/uploads/posts/default-blog.webp',
+    author: {
+      name: 'ArchiBot Research',
+      avatar: '/uploads/authors/MostlyData_.webp',
     },
-    "cursor": "geo-aware-leader-schedule"
+    cursor: 'optimasi-arsitektur-server-discord',
   },
   {
-    "id": "breakpoint-2026-london-speakers-2",
-    "published": "Oct 12, 2026",
-    "publishedAt": "2026-10-12T04:41",
-    "title": "More Breakpoint 2026 Speakers Confirmed for London",
-    "tags": [
-      "Breakpoint",
-      "Events",
-      "Announcements"
-    ],
-    "categories": [
-      "Breakpoint"
-    ],
-    "url": "/news/breakpoint-2026-london-speakers-2",
-    "description": "Twelve more speakers join Breakpoint 2026 at Olympia London, taking the stage from 15–17 November across finance, trading and infrastructure.",
-    "heroImage": "/uploads/posts/breakpoint-2026-london-speakers-2/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'katalog-template-lego-2026',
+    published: '12 Okt 2026',
+    publishedAt: '2026-10-12T04:41',
+    title: 'Memperkenalkan Katalog Template & Modul Lego Baru untuk Berbagai Komunitas',
+    tags: ['Lego', 'Templates', 'Announcements'],
+    categories: ['Fitur Baru'],
+    url: '/servers',
+    description:
+      'Mulai dari komunitas Gaming, Esports, Belajar Bersama, hingga Hub Pengembang—pasang seluruh susunan channel dan role hanya dengan satu klik.',
+    heroImage: '/uploads/posts/breakpoint-2026-london-speakers-2/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "breakpoint-2026-london-speakers-2"
+    cursor: 'katalog-template-lego-2026',
   },
   {
-    "id": "payments-on-solana-september-2026-in-five-stories",
-    "published": "Oct 9, 2026",
-    "publishedAt": "2026-10-09T12:46",
-    "title": "Payments on Solana: September 2026 in Five Stories",
-    "tags": [
-      "Payments",
-      "Stablecoins",
-      "AI",
-      "Recap"
-    ],
-    "categories": [
-      "Payments"
-    ],
-    "url": "/news/payments-on-solana-september-2026-in-five-stories",
-    "description": "Payment Channels topped 1 million payments per second in testing as Solana stablecoin supply reached $17.3 billion and x402 share hit 76%.",
-    "heroImage": "/uploads/posts/payments-on-solana-september-2026-in-five-stories/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'keamanan-dan-backup-server-otomatis',
+    published: '9 Okt 2026',
+    publishedAt: '2026-10-09T12:46',
+    title: 'Keamanan Server di ArchiBot: 5 Fitur Penting untuk Melindungi Komunitas Anda',
+    tags: ['Security', 'Backups', 'Moderation', 'Recap'],
+    categories: ['Keamanan'],
+    url: '/servers',
+    description:
+      'Sistem Snapshot Backup otomatis, pemulihan struktur instan, dan pembatasan akses dashboard khusus Owner & Administrator menjaga server Anda tetap aman setiap saat.',
+    heroImage: '/uploads/posts/payments-on-solana-september-2026-in-five-stories/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "payments-on-solana-september-2026-in-five-stories"
+    cursor: 'keamanan-dan-backup-server-otomatis',
   },
   {
-    "id": "breakpoint-guide-part2",
-    "published": "Oct 8, 2026",
-    "publishedAt": "2026-10-08T18:18",
-    "title": "Breakpoint 2026: Booked Breakpoint? Let's Get You Prepped (Part 2)",
-    "tags": [
-      "Breakpoint",
-      "Events",
-      "cyber-security",
-      "Solana"
-    ],
-    "categories": [
-      "Breakpoint"
-    ],
-    "url": "/news/breakpoint-guide-part2",
-    "description": "Arrive at Breakpoint London 2026 ready for a 6,000-person event, with travel booked, devices secured, and your week mapped in advance.",
-    "heroImage": "/uploads/posts/breakpoint-guide-part2/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'panduan-persiapan-komunitas-besar',
+    published: '8 Okt 2026',
+    publishedAt: '2026-10-08T18:18',
+    title: 'Siap Menyambut Ribuan Member Baru? Ini Checklist Persiapan Server Anda',
+    tags: ['Community', 'Guides', 'Moderation', 'ArchiBot'],
+    categories: ['Panduan'],
+    url: '/servers',
+    description:
+      'Pastikan hierarki peran, aturan verifikasi, channel pengumuman, dan kapasitas Voice Hub Anda telah terkonfigurasi dengan baik sebelum acara besar dimulai.',
+    heroImage: '/uploads/posts/breakpoint-guide-part2/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "breakpoint-guide-part2"
+    cursor: 'panduan-persiapan-komunitas-besar',
   },
   {
-    "id": "solana-changelog-october-8-2026",
-    "published": "Oct 8, 2026",
-    "publishedAt": "2026-10-08T08:33",
-    "title": "Solana Changelog: October 8, 2026",
-    "tags": [
-      "Developers",
-      "Newsletter",
-      "Network",
-      "Solana",
-      "Technology"
-    ],
-    "categories": [
-      "Changelog"
-    ],
-    "url": "/news/solana-changelog-october-8-2026",
-    "description": "web3.js v3 is ready for general use, while Solana activates a feature gate to cut slot times from 250ms to 200ms after one epoch.",
-    "heroImage": "/uploads/posts/solana-changelog-october-8-2026/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'archibot-changelog-october-8-2026',
+    published: '8 Okt 2026',
+    publishedAt: '2026-10-08T08:33',
+    title: 'ArchiBot Changelog: Skeleton Loading & Peningkatan Performa Dashboard',
+    tags: ['Developers', 'Performance', 'Dashboard', 'ArchiBot'],
+    categories: ['Changelog'],
+    url: '/servers',
+    description:
+      'Transisi antar menu kini terasa instan berkat implementasi skeleton pratinjau data dan optimasi komunikasi API ke server Discord.',
+    heroImage: '/uploads/posts/solana-changelog-october-8-2026/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "solana-changelog-october-8-2026"
+    cursor: 'archibot-changelog-october-8-2026',
   },
   {
-    "id": "samsung-wallet",
-    "published": "Oct 7, 2026",
-    "publishedAt": "2026-10-07T23:30",
-    "title": "Samsung Partners with Solana to Natively Deliver Stablecoins in Samsung Wallet to 82 Million U.S. Galaxy Devices",
-    "tags": [
-      "Partner",
-      "Payments",
-      "Stablecoins",
-      "cross-border-payments",
-      "Featured"
-    ],
-    "categories": [
-      "Payments"
-    ],
-    "url": "/news/samsung-wallet",
-    "description": "Beginning the last week of October 2026, Samsung Wallet will support USDC cross-border transfers on Solana across 82 million U.S. Galaxy devices.",
-    "heroImage": "/uploads/posts/samsung-wallet/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'integrasi-oauth2-discord-instan',
+    published: '7 Okt 2026',
+    publishedAt: '2026-10-07T23:30',
+    title: 'Login Satu Klik dengan Discord OAuth2: Kelola Semua Server Anda dengan Mudah',
+    tags: ['OAuth2', 'Security', 'Dashboard', 'Featured'],
+    categories: ['Pembaruan'],
+    url: '/login',
+    description:
+      'Tanpa perlu konfigurasi rumit—cukup masuk menggunakan akun Discord Anda dan sistem akan menampilkan seluruh server di mana Anda memiliki akses penuh.',
+    heroImage: '/uploads/posts/samsung-wallet/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "samsung-wallet"
+    cursor: 'integrasi-oauth2-discord-instan',
   },
   {
-    "id": "solana-ecosystem-roundup-september-2026",
-    "published": "Oct 6, 2026",
-    "publishedAt": "2026-10-06T19:38",
-    "title": "Solana Ecosystem Roundup: September 2026",
-    "tags": [],
-    "categories": [
-      "Ecosystem"
-    ],
-    "url": "/news/solana-ecosystem-roundup-september-2026",
-    "description": "September saw growth across tokenized stocks, stablecoins, payments, and DeFi. Tokenized equity supply reached $684 million, stablecoins hit $17.51 billion, and the network processed 3.18 billion non-vote transactions.",
-    "heroImage": "/uploads/posts/solana-ecosystem-roundup-september-2026/heroImage.webp",
-    "author": {
-      "name": "Solana Foundation",
-      "avatar": "/uploads/authors/solanaLogoMark.svg"
+    id: 'archibot-ecosystem-roundup-september-2026',
+    published: '6 Okt 2026',
+    publishedAt: '2026-10-06T19:38',
+    title: 'Sorotan Ekosistem ArchiBot: Pertumbuhan Komunitas & Fitur Otomasi Terbaru',
+    tags: [],
+    categories: ['Ekosistem'],
+    url: '/servers',
+    description:
+      'Bulan ini mencatat pertumbuhan luar biasa pada penggunaan AI Architect, pembuatan jutaan ruang suara dinamis, dan adopsi luas oleh ribuan admin server baru.',
+    heroImage: '/uploads/posts/solana-ecosystem-roundup-september-2026/heroImage.webp',
+    author: {
+      name: 'Tim ArchiBot',
+      avatar: '/uploads/authors/solanaLogoMark.svg',
     },
-    "cursor": "solana-ecosystem-roundup-september-2026"
-  }
+    cursor: 'archibot-ecosystem-roundup-september-2026',
+  },
 ];

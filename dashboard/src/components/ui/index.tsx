@@ -48,7 +48,7 @@ export const MdIcon: React.FC<{ name: string; slot?: string; className?: string 
 }) => (
   <span
     slot={slot}
-    className={`material-symbols-outlined inline-flex items-center justify-center leading-none select-none shrink-0 overflow-hidden ${className}`.trim()}
+    className={`material-symbols-outlined inline-flex items-center justify-center leading-none select-none shrink-0 overflow-visible ${className}`.trim()}
   >
     {name}
   </span>
@@ -98,12 +98,12 @@ export const MdButton: React.FC<MdButtonProps> = ({
   };
 
   const iconSizes: Record<string, string> = {
-    xs: 'text-sm w-3.5 h-3.5',
-    sm: 'text-base w-4 h-4',
-    md: 'text-lg w-4.5 h-4.5',
-    lg: 'text-xl w-5 h-5',
-    xl: 'text-2xl w-6 h-6',
-    '2xl': 'text-2xl w-7 h-7',
+    xs: 'text-sm',
+    sm: 'text-base',
+    md: 'text-lg',
+    lg: 'text-xl',
+    xl: 'text-2xl',
+    '2xl': 'text-2xl',
   };
 
   const variantStyles: Record<string, string> = {
@@ -227,7 +227,7 @@ export const MdFab: React.FC<MdFabProps> = ({
 // ============================================================================
 
 export interface MdTextFieldProps {
-  label: string;
+  label?: string;
   value: string | number;
   onChange: (value: string) => void;
   debounceMs?: number;
@@ -239,6 +239,7 @@ export interface MdTextFieldProps {
   supportingText?: string;
   icon?: string;
   className?: string;
+  compact?: boolean;
 }
 
 export const MdTextField: React.FC<MdTextFieldProps> = ({
@@ -254,6 +255,7 @@ export const MdTextField: React.FC<MdTextFieldProps> = ({
   supportingText,
   icon,
   className = 'w-full',
+  compact = false,
 }) => {
   const ref = useRef<any>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -289,10 +291,48 @@ export const MdTextField: React.FC<MdTextFieldProps> = ({
     }
   }, [value]);
 
+  const resolvedClass = `${compact ? 'compact-search-field' : ''} ${className}`.trim();
+
+  if (compact) {
+    return (
+      <div className={`relative flex items-center h-10 w-full ${className}`.trim()}>
+        {icon && (
+          <span className="absolute left-3 flex items-center pointer-events-none text-discord-muted">
+            <MdIcon name={icon} className="text-lg leading-none" />
+          </span>
+        )}
+        <input
+          ref={ref}
+          type={type}
+          defaultValue={String(value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          required={required}
+          className={`h-10 w-full rounded-xl border border-discord-border bg-discord-surface text-discord-white text-xs font-normal placeholder:text-discord-muted hover:border-discord-border-hover focus:outline-none focus:border-discord-blurple focus:ring-1 focus:ring-discord-blurple transition-all ${
+            icon ? 'pl-9 pr-8' : 'px-3.5'
+          }`}
+        />
+        {value ? (
+          <button
+            type="button"
+            onClick={() => {
+              if (ref.current) ref.current.value = '';
+              onChange('');
+            }}
+            className="absolute right-2.5 flex items-center text-discord-muted hover:text-discord-white transition-colors cursor-pointer"
+            title="Clear"
+          >
+            <MdIcon name="close" className="text-sm leading-none" />
+          </button>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <md-outlined-text-field
       ref={ref}
-      label={label}
+      label={label || undefined}
       value={String(value)}
       type={type}
       placeholder={placeholder}
@@ -300,7 +340,7 @@ export const MdTextField: React.FC<MdTextFieldProps> = ({
       required={required || undefined}
       rows={rows}
       supportingText={supportingText}
-      class={className}
+      class={resolvedClass}
     >
       {icon && <md-icon slot="leading-icon">{icon}</md-icon>}
     </md-outlined-text-field>
@@ -360,7 +400,7 @@ export const MdSelect: React.FC<MdSelectProps> = ({
         const lbl = typeof opt === 'string' ? opt : opt.label;
         return (
           <md-select-option key={val} value={val} selected={val === value || undefined}>
-            <div slot="headline">{lbl}</div>
+            <div className="text-xs font-normal leading-5 truncate">{lbl}</div>
           </md-select-option>
         );
       })}
@@ -368,14 +408,19 @@ export const MdSelect: React.FC<MdSelectProps> = ({
   );
 };
 
-export const MdSwitch: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }> = ({ checked, onChange, disabled }) => {
+export const MdSwitch: React.FC<{
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled?: boolean;
+  className?: string;
+}> = ({ checked, onChange, disabled, className = '' }) => {
   const ref = useRef<any>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const handler = (e: Event) => {
-      onChange((e.target as any).selected);
+      onChange(Boolean((e.target as any).selected));
     };
     el.addEventListener('change', handler);
     return () => el.removeEventListener('change', handler);
@@ -383,16 +428,16 @@ export const MdSwitch: React.FC<{ checked: boolean; onChange: (checked: boolean)
 
   useEffect(() => {
     if (ref.current) {
-      ref.current.selected = checked;
+      ref.current.selected = Boolean(checked);
     }
   }, [checked]);
 
   return (
     <md-switch
       ref={ref}
-      selected={checked || undefined}
-      disabled={disabled || undefined}
-      icons
+      selected={checked ? true : undefined}
+      disabled={disabled ? true : undefined}
+      class={`shrink-0 cursor-pointer ${className}`.trim()}
     />
   );
 };
@@ -875,7 +920,7 @@ export const MdDialog: React.FC<MdDialogProps> = ({ open, onClose, headline, chi
         </div>
         <div
           slot="content"
-          className="flex flex-col min-w-[320px] sm:min-w-[540px] md:min-w-[580px] text-discord-text text-xs font-normal"
+          className="flex flex-col gap-4.5 min-w-[300px] sm:min-w-[480px] md:min-w-[540px] text-discord-text text-xs font-normal pt-2 pb-1"
         >
           {children}
         </div>
@@ -1035,7 +1080,7 @@ export const NoticeBanner: React.FC<NoticeBannerProps> = ({
 // CARDS & SURFACES
 // ============================================================================
 
-export interface SurfaceCardProps {
+export interface SurfaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   subtitle?: string;
   headerAction?: React.ReactNode;
@@ -1045,7 +1090,7 @@ export interface SurfaceCardProps {
   onClick?: () => void;
 }
 
-export const SurfaceCard: React.FC<SurfaceCardProps> = ({
+export const SurfaceCard = React.forwardRef<HTMLDivElement, SurfaceCardProps>(({
   title,
   subtitle,
   headerAction,
@@ -1053,10 +1098,13 @@ export const SurfaceCard: React.FC<SurfaceCardProps> = ({
   className = '',
   noPadding = false,
   onClick,
-}) => (
+  ...rest
+}, ref) => (
   <div
+    ref={ref}
     onClick={onClick}
     className={`bg-discord-card border border-discord-border rounded-xl ${noPadding ? 'overflow-hidden' : 'p-5'} ${className}`.trim()}
+    {...rest}
   >
     {(title || subtitle || headerAction) && (
       <div className={`flex items-start justify-between gap-3 ${noPadding ? 'px-5 pt-5 pb-3' : 'mb-4'}`}>
@@ -1069,7 +1117,8 @@ export const SurfaceCard: React.FC<SurfaceCardProps> = ({
     )}
     {children}
   </div>
-);
+));
+SurfaceCard.displayName = 'SurfaceCard';
 
 export interface QuickActionCardProps {
   title: string;
@@ -1176,7 +1225,7 @@ export const SwitchRow: React.FC<SwitchRowProps> = ({
 }) => (
   <div
     className={`flex items-center justify-between gap-4 ${
-      boxed ? 'p-3.5 rounded-xl bg-discord-surface border border-discord-border' : 'py-1'
+      boxed ? 'p-3.5 rounded-xl bg-discord-surface' : 'py-1'
     } ${className}`.trim()}
   >
     <div>
@@ -1223,13 +1272,18 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
   onChange,
   placeholder = '#5865F2',
 }) => (
-  <div className="flex items-center gap-3">
-    <input
-      type="color"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="h-12 w-14 rounded-lg border border-discord-border bg-discord-bg cursor-pointer p-1 shrink-0"
-    />
-    <MdTextField label={label} value={value} onChange={onChange} placeholder={placeholder} />
+  <div className="flex items-center gap-3 w-full">
+    <div className="relative shrink-0">
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 w-12 rounded-xl border border-discord-border bg-discord-surface cursor-pointer p-1 shrink-0 shadow-sm transition-transform hover:scale-105"
+        title="Choose color"
+      />
+    </div>
+    <div className="flex-1 min-w-0">
+      <MdTextField label={label} value={value} onChange={onChange} placeholder={placeholder} />
+    </div>
   </div>
 );

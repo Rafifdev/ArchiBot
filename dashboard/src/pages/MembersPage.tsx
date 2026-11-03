@@ -541,9 +541,9 @@ export const MembersPage: React.FC = () => {
           </>
         }
       >
-        <p className="text-discord-muted text-xs font-normal">
+        <div className="p-3 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal">
           This will kick the member from the server. They can rejoin with an invite link.
-        </p>
+        </div>
         <MdTextField
           label="Kick Reason (Optional)"
           value={kickReason}
@@ -567,9 +567,9 @@ export const MembersPage: React.FC = () => {
           </>
         }
       >
-        <p className="text-discord-red text-xs font-normal">
-          This will permanently ban the user from the server.
-        </p>
+        <div className="p-3 rounded-xl bg-discord-red/10 border border-discord-red/20 text-xs text-discord-red font-normal">
+          This will permanently ban the user from the server and prevent them from rejoining.
+        </div>
         <MdSelect
           label="Delete Message History"
           value={banDays}

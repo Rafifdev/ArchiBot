@@ -62,15 +62,19 @@ export function useRealtime(
         };
 
         ws.onclose = () => {
+          if (unmounted) return;
           setConnected(false);
           wsRef.current = null;
-          if (!unmounted) {
-            reconnectTimeoutRef.current = setTimeout(connect, 3000);
-          }
+          reconnectTimeoutRef.current = setTimeout(connect, 3000);
         };
 
         ws.onerror = () => {
-          ws.close();
+          if (unmounted) return;
+          if (ws.readyState === WebSocket.OPEN) {
+            try {
+              ws.close();
+            } catch {}
+          }
         };
       } catch (err) {
         if (!unmounted) {
@@ -84,13 +88,29 @@ export function useRealtime(
     return () => {
       unmounted = true;
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (wsRef.current) {
-        if (guildId && wsRef.current.readyState === WebSocket.OPEN) {
-          try {
-            wsRef.current.send(JSON.stringify({ type: 'unsubscribe', guildId }));
-          } catch {}
+      const ws = wsRef.current;
+      if (ws) {
+        // Detach active callbacks to prevent state updates after unmount
+        ws.onmessage = null;
+        ws.onerror = null;
+
+        if (ws.readyState === WebSocket.CONNECTING) {
+          // If still connecting, defer close until open so the browser doesn't log
+          // "WebSocket is closed before the connection is established"
+          ws.onopen = () => {
+            try {
+              ws.close();
+            } catch {}
+          };
+          ws.onclose = null;
+        } else if (ws.readyState === WebSocket.OPEN) {
+          if (guildId) {
+            try {
+              ws.send(JSON.stringify({ type: 'unsubscribe', guildId }));
+            } catch {}
+          }
+          ws.close();
         }
-        wsRef.current.close();
         wsRef.current = null;
       }
     };

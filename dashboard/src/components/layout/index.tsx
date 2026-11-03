@@ -594,6 +594,7 @@ export const CommandSearchModal: React.FC<CommandSearchModalProps> = ({
           debounceMs={250}
           icon="search"
           placeholder={guildId ? 'Find modules, channels, roles, voice hubs...' : 'Find server by name...'}
+          className="command-palette-search w-full"
         />
         <div className="command-palette-scroll h-[316px] max-h-[316px] overflow-y-auto">
           {!guildId ? (

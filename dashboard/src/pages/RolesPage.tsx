@@ -314,8 +314,20 @@ export const RolesPage: React.FC = () => {
       >
         <MdTextField label="Role Name" value={createName} onChange={setCreateName} required />
         <ColorPickerField label="Hex Color" value={createColor} onChange={setCreateColor} />
-        <SwitchRow label="Display members separately (Hoist)" checked={createHoist} onChange={setCreateHoist} />
-        <SwitchRow label="Allow anyone to @mention this role" checked={createMentionable} onChange={setCreateMentionable} />
+        <SwitchRow
+          boxed
+          label="Display members separately (Hoist)"
+          description="Shows members with this role in a separate list category"
+          checked={createHoist}
+          onChange={setCreateHoist}
+        />
+        <SwitchRow
+          boxed
+          label="Allow anyone to @mention this role"
+          description="Allows all members to ping this role in chat"
+          checked={createMentionable}
+          onChange={setCreateMentionable}
+        />
       </MdDialog>
 
       <MdDialog
@@ -336,35 +348,52 @@ export const RolesPage: React.FC = () => {
         <MdTextField label="Role Name" value={editName} onChange={setEditName} required />
         <ColorPickerField label="Hex Color" value={editColor} onChange={setEditColor} />
 
-        <SwitchRow label="Display separately (Hoist)" checked={editHoist} onChange={setEditHoist} />
-        <SwitchRow label="Allow anyone to @mention" checked={editMentionable} onChange={setEditMentionable} />
+        <SwitchRow
+          boxed
+          label="Display separately (Hoist)"
+          description="Shows members with this role in a separate list category"
+          checked={editHoist}
+          onChange={setEditHoist}
+        />
+        <SwitchRow
+          boxed
+          label="Allow anyone to @mention"
+          description="Allows all members to ping this role in chat"
+          checked={editMentionable}
+          onChange={setEditMentionable}
+        />
 
-        <h4 className="mt-2 pt-3 border-t border-discord-border text-xs font-normal text-discord-white">
-          Permissions Matrix
-        </h4>
-
-        {PERMISSION_GROUPS.map((group, gIdx) => (
-          <div key={gIdx} className="flex flex-col gap-1.5">
-            <span className="text-xs text-discord-blurple font-normal">{group.category}</span>
-            {group.perms.map((p) => {
-              const active = editPermissions.includes(p.key);
-              return (
-                <SwitchRow
-                  key={p.key}
-                  label={p.label}
-                  danger={p.danger}
-                  boxed
-                  className="px-3 py-1.5"
-                  checked={active}
-                  onChange={(checked) => {
-                    if (checked) setEditPermissions((prev) => [...prev, p.key]);
-                    else setEditPermissions((prev) => prev.filter((k) => k !== p.key));
-                  }}
-                />
-              );
-            })}
+        <div className="flex flex-col gap-2 pt-2 border-t border-discord-border">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-normal text-discord-white">Permissions Matrix</h4>
+            <span className="text-[11px] text-discord-muted">{editPermissions.length} active</span>
           </div>
-        ))}
+
+          <div className="flex flex-col gap-3.5 max-h-64 overflow-y-auto pr-1 rounded-xl bg-discord-surface/40 p-3 border border-discord-border">
+            {PERMISSION_GROUPS.map((group, gIdx) => (
+              <div key={gIdx} className="flex flex-col gap-1.5">
+                <span className="text-[10px] text-discord-blurple font-normal uppercase tracking-wider">{group.category}</span>
+                {group.perms.map((p) => {
+                  const active = editPermissions.includes(p.key);
+                  return (
+                    <SwitchRow
+                      key={p.key}
+                      label={p.label}
+                      danger={p.danger}
+                      boxed
+                      className="px-3 py-1.5"
+                      checked={active}
+                      onChange={(checked) => {
+                        if (checked) setEditPermissions((prev) => [...prev, p.key]);
+                        else setEditPermissions((prev) => prev.filter((k) => k !== p.key));
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
       </MdDialog>
 
       <ConfirmDialog

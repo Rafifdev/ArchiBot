@@ -119,6 +119,44 @@
   --md-outlined-text-field-supporting-text-size: 11px;
   --md-outlined-select-text-field-input-text-size: 12px;
   --md-outlined-select-text-field-label-text-size: 12px;
+
+  /* Dropdown Menu & Select Option items - exact match with 12px text size of closed input */
+  --md-menu-item-label-text-size: 12px;
+  --md-menu-item-label-text-line-height: 20px;
+  --md-menu-item-label-text-weight: 400;
+  --md-menu-item-one-line-container-height: 38px;
+  --md-menu-item-top-space: 8px;
+  --md-menu-item-bottom-space: 8px;
+  --md-menu-item-leading-space: 14px;
+  --md-menu-item-trailing-space: 14px;
+  --md-menu-item-supporting-text-size: 11px;
+  --md-menu-item-supporting-text-weight: 400;
+
+  /* Material Web Switch Tokens - Discord High Contrast Theme */
+  --md-switch-track-width: 44px;
+  --md-switch-track-height: 24px;
+  --md-switch-track-shape: 9999px;
+  --md-switch-track-outline-width: 0px;
+  --md-switch-track-outline-color: transparent;
+
+  /* Off state: clearly visible knob and track */
+  --md-switch-track-color: #2E333D;
+  --md-switch-handle-color: #80848E;
+  --md-switch-handle-width: 18px;
+  --md-switch-handle-height: 18px;
+  --md-switch-handle-shape: 9999px;
+  --md-switch-hover-track-color: #383E4A;
+  --md-switch-hover-handle-color: #C4C9CE;
+
+  /* On state: Discord Blurple & Pure White knob */
+  --md-switch-selected-track-color: var(--color-discord-blurple);
+  --md-switch-selected-handle-color: #FFFFFF;
+  --md-switch-selected-handle-width: 18px;
+  --md-switch-selected-handle-height: 18px;
+  --md-switch-selected-hover-track-color: #4752C4;
+  --md-switch-selected-hover-handle-color: #FFFFFF;
+  --md-switch-selected-focus-track-color: var(--color-discord-blurple);
+  --md-switch-selected-focus-handle-color: #FFFFFF;
 }
 
 /* Light theme override when toggled via header */
@@ -137,49 +175,73 @@
   --color-discord-muted: #4E5058;
 }
 
-/* Normal weight (wght 400, strictly not bold), balanced 24px standard & anti-overflow */
+/* Global Unified Material Symbols: Refined Light Weight (wght 300) matching Poppins 400 */
 md-icon,
 .material-symbols-outlined {
   font-family: var(--md-icon-font) !important;
-  font-weight: 400 !important;
+  font-weight: 300 !important;
   font-style: normal;
   font-size: 24px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'liga';
-  overflow: hidden;
+  overflow: visible;
+}
+
+/* Optical adjustment for compact icons (sidebar / small controls) */
+aside md-icon,
+aside .material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20 !important;
 }
 
 /* Center all Material Web Dialogs in viewport (Overriding Tailwind's * { margin: 0 } reset) */
 md-dialog {
   margin: auto !important;
-  max-width: min(620px, calc(100vw - 32px)) !important;
-  max-height: min(720px, calc(100vh - 32px)) !important;
+  max-width: min(640px, calc(100vw - 32px)) !important;
+  max-height: min(780px, calc(100vh - 32px)) !important;
   --md-dialog-container-shape: 16px;
 }
 
-/* Perfect-pixel unified padding with generous breathing space above & below search bar */
+/* Perfect-pixel unified padding with generous breathing space */
 md-dialog [slot="headline"] {
-  padding: 16px 16px 6px 16px !important;
+  padding: 20px 24px 8px 24px !important;
 }
 
 md-dialog [slot="content"] {
-  padding: 12px 16px 16px 16px !important;
+  padding: 12px 24px 20px 24px !important;
+  overflow-y: auto !important;
+  max-height: calc(85vh - 140px) !important;
 }
 
 md-dialog [slot="actions"] {
-  padding: 8px 16px 16px 16px !important;
+  padding: 12px 24px 20px 24px !important;
 }
 
-/* Search bar height locked at 48px */
-md-dialog md-outlined-text-field {
+/* Command palette search bar height locked at 48px */
+.command-palette md-outlined-text-field,
+md-dialog .command-palette-search {
   --md-outlined-text-field-top-space: 12px;
   --md-outlined-text-field-bottom-space: 12px;
+}
+
+/* Compact search field (e.g. page headers) - matches MdButton 40px height */
+.compact-search-field,
+md-outlined-text-field.compact-search-field {
+  height: 40px !important;
+  min-height: 40px !important;
+  --md-outlined-text-field-container-shape: 12px;
+  --md-outlined-text-field-top-space: 8px;
+  --md-outlined-text-field-bottom-space: 8px;
+  --md-outlined-text-field-leading-space: 12px;
+  --md-outlined-text-field-trailing-space: 12px;
+  --md-outlined-text-field-input-text-size: 13px;
+  --md-outlined-text-field-input-text-line-height: 20px;
+  display: block;
 }
 
 /* Command palette scroll container: exact 316px height (2 category headers + 5 x 48px items) and flush right edge */
@@ -222,6 +284,29 @@ md-dialog md-list-item,
   border-radius: 8px;
 }
 
+/* Select Option & Menu Item Typography - matches select input before click */
+md-select-option,
+md-menu-item {
+  --md-menu-item-label-text-size: 12px !important;
+  --md-menu-item-label-text-line-height: 20px !important;
+  --md-menu-item-label-text-weight: 400 !important;
+  --md-menu-item-one-line-container-height: 38px !important;
+  --md-menu-item-top-space: 8px !important;
+  --md-menu-item-bottom-space: 8px !important;
+  --md-menu-item-leading-space: 14px !important;
+  --md-menu-item-trailing-space: 14px !important;
+  font-size: 12px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+}
+
+md-select-option [slot="headline"],
+md-select-option .headline {
+  font-size: 12px !important;
+  line-height: 20px !important;
+  font-weight: 400 !important;
+}
+
 /* Sleek Discord-style Dark Scrollbars (without arrow buttons) */
 ::-webkit-scrollbar {
   width: 6px;
@@ -246,3 +331,37 @@ md-dialog md-list-item,
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-discord-border-hover);
 }
+
+/* Smooth Modal Mode Transition (e.g., Switch between Channel and Category creation) */
+@keyframes modalSwitchIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-modal-switch {
+  animation: modalSwitchIn 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Input-Matched Material Web Icon Button (matches 56px height & 8px container shape of textfield/select) */
+.input-matched-icon-button,
+md-outlined-icon-button.input-matched-icon-button {
+  --md-outlined-icon-button-container-shape: 8px !important;
+  --md-outlined-icon-button-container-width: 56px !important;
+  --md-outlined-icon-button-container-height: 56px !important;
+  --md-outlined-icon-button-outline-color: var(--color-discord-border) !important;
+  --md-outlined-icon-button-hover-outline-color: var(--color-discord-border-hover) !important;
+  --md-outlined-icon-button-focus-outline-color: var(--color-discord-blurple) !important;
+  --md-outlined-icon-button-icon-size: 24px !important;
+  --md-outlined-icon-button-icon-color: var(--color-discord-white) !important;
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 8px !important;
+}
+

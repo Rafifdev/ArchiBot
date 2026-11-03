@@ -19,6 +19,7 @@ type Dot = {
 type Subpath = {
   path: SVGPathElement;
   length: number;
+  points: { x: number; y: number }[];
 };
 
 type Cursor = {
@@ -84,6 +85,8 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
       const d = BASE_PATH_D;
       const subDs = (d.match(/M[^M]+/g) || []).map((s) => s.trim());
 
+      const STEP = 4;
+
       const subpaths: Subpath[] = subDs.map((sd) => {
         const p = document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -93,7 +96,19 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
         p.setAttribute("fill", "none");
         p.setAttribute("stroke", "none");
         glowSVG.appendChild(p);
-        return { path: p, length: p.getTotalLength() };
+        const L = p.getTotalLength();
+
+        const points: { x: number; y: number }[] = [];
+        if (isFinite(L) && L > 1) {
+          const count = Math.ceil(L / STEP);
+          for (let s = 0; s <= count; s++) {
+            const pos = Math.min(s * STEP, L);
+            const pt = p.getPointAtLength(pos);
+            points.push({ x: Number(pt.x.toFixed(1)), y: Number(pt.y.toFixed(1)) });
+          }
+        }
+
+        return { path: p, length: L, points };
       });
 
       // Clear existing dots
@@ -115,6 +130,7 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
           );
           c.setAttribute("r", dotSize.toString());
           c.setAttribute("fill", dotColor);
+          c.setAttribute("opacity", "0.95");
           dotLayer.appendChild(c);
           dots.push({ elem: c, subIdx, offset, length: L, baseR: dotSize });
         }
@@ -158,6 +174,9 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
     const dots = dotsRef.current;
     const subpaths = subpathsRef.current;
 
+    const STEP = 4;
+    const INFLUENCE_RADIUS_SQ = INFLUENCE_RADIUS * INFLUENCE_RADIUS;
+
     function tick(now: number) {
       // Calculate delta time, capping large jumps when resuming tab
       const rawDt = (now - lastTRef.current) / 1000;
@@ -170,18 +189,21 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
       for (let i = 0; i < dots.length; i++) {
         const d = dots[i];
         const sp = subpaths[d.subIdx];
-        if (!sp) continue;
+        if (!sp || sp.points.length === 0) continue;
 
         let speed = sp.length / BASE_LAP;
         let grow = 1.0;
 
-        if (hasCursor) {
-          const pt = sp.path.getPointAtLength(d.offset);
+        // Ultra fast O(1) point lookup from precomputed array instead of expensive getPointAtLength()
+        const ptIdx = Math.floor(d.offset / STEP) % sp.points.length;
+        const pt = sp.points[ptIdx];
+
+        if (hasCursor && pt) {
           const dx = pt.x - cursor.x;
           const dy = pt.y - cursor.y;
           const distSq = dx * dx + dy * dy;
 
-          if (distSq < INFLUENCE_RADIUS * INFLUENCE_RADIUS) {
+          if (distSq < INFLUENCE_RADIUS_SQ) {
             const dist = Math.sqrt(distSq);
             const t = 1 - dist / INFLUENCE_RADIUS;
             const influence = t * t;
@@ -192,11 +214,12 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
 
         d.offset = (d.offset + speed * dt) % d.length;
 
-        const pt2 = sp.path.getPointAtLength(d.offset);
-        d.elem.setAttribute("cx", pt2.x.toFixed(1));
-        d.elem.setAttribute("cy", pt2.y.toFixed(1));
-        if (grow > 1.01 || d.baseR !== dotSize) {
-          d.elem.setAttribute("r", (d.baseR * grow).toFixed(2));
+        if (pt) {
+          d.elem.setAttribute("cx", pt.x.toString());
+          d.elem.setAttribute("cy", pt.y.toString());
+          if (grow > 1.01 || d.baseR !== dotSize) {
+            d.elem.setAttribute("r", (d.baseR * grow).toFixed(1));
+          }
         }
       }
 
@@ -249,7 +272,7 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
     <div className={className} ref={divRef}>
       <div
         ref={stackRef}
-        className="relative w-full"
+        className="relative w-full overflow-hidden"
         style={{ aspectRatio: "1828 / 790" }}
       >
         {/* Base SVG (overlay) */}
@@ -259,10 +282,6 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
           className="absolute inset-0 w-full h-full block"
-          style={{
-            maskImage:
-              "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1))",
-          }}
         >
           <g>
             <path
@@ -270,7 +289,7 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
               id="earthBasePath"
               d={BASE_PATH_D}
               stroke="#ffffff"
-              strokeOpacity={1}
+              strokeOpacity={0.85}
               strokeWidth={1}
               fill="none"
               strokeLinecap="round"
@@ -280,7 +299,7 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
           </g>
         </svg>
 
-        {/* Glow SVG (dots only, hardware accelerated via group filter) */}
+        {/* Glow SVG (dots only, hardware accelerated) */}
         <svg
           ref={glowSvgRef}
           id="earthGlow"
@@ -288,19 +307,18 @@ export const EarthAnimation: React.FC<EarthAnimationProps> = ({
           xmlns="http://www.w3.org/2000/svg"
           aria-hidden="true"
           className="absolute inset-0 w-full h-full block pointer-events-none"
-          style={{
-            maskImage:
-              "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 1))",
-          }}
         >
-          <g
-            ref={dotLayerRef}
-            id="dotLayer"
-            style={{
-              filter: "drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))",
-            }}
-          />
+          <g ref={dotLayerRef} id="dotLayer" />
         </svg>
+
+        {/* Hardware-accelerated fading mask using pure CSS gradient overlay instead of expensive SVG mask-image */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0) 45%, rgba(0,0,0,0.85) 90%, rgba(0,0,0,1) 100%)",
+          }}
+        />
       </div>
     </div>
   );

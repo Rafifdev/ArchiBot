@@ -17,7 +17,7 @@ function getEnv(key, defaultVal = '') {
 
 export const config = {
   get PORT() {
-    return Number(getEnv('PORT', '3001'));
+    return Number(getEnv('PORT', '3000'));
   },
   get JWT_SECRET() {
     return getEnv('JWT_SECRET', 'archibot_jwt_dashboard_secret_2026_default');

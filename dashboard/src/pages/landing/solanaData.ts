@@ -2,274 +2,134 @@ import { NEWS_POSTS, TERMINAL_DATA, type NewsPostItem, type TerminalItem } from 
 
 export { NEWS_POSTS, TERMINAL_DATA, type NewsPostItem, type TerminalItem };
 
-export const HERO_PROMOS = [
-  {
-    id: 'samsung',
-    title: 'Samsung Wallet + ArchiBot',
-    description:
-      'Integrasi bot hadir secara native di 82 juta perangkat pengguna.',
-    cta: 'Baca pengumuman',
-    image: '/src/img/index/samsung-wallet-promo.webp',
-    href: 'https://solana.com/news/samsung-wallet',
-  },
-  {
-    id: 'breakpoint',
-    title: 'ArchiBot Breakpoint 2026',
-    description: 'London, Inggris · 15-17 November 2026',
-    cta: 'Dapatkan tiket Breakpoint',
-    image: '/src/img/index/breakpoint-2026-promo.webp',
-    href: 'https://solana.com/breakpoint',
-  },
-];
-
-export const HERO_LOGOS = [
-  {
-    src: '/src/img/logos-eco/western-union.svg',
-    alt: 'Western Union',
-    width: 158,
-    height: 22,
-  },
-  {
-    src: '/src/img/logos-eco/visa.svg',
-    alt: 'Visa',
-    width: 68,
-    height: 22,
-  },
-  {
-    src: '/src/img/logos-eco/worldpay.svg',
-    alt: 'Worldpay',
-    width: 118,
-    height: 24,
-  },
-  {
-    src: '/src/img/logos-eco/circle.svg',
-    alt: 'Circle',
-    width: 93,
-    height: 24,
-  },
-  {
-    src: '/src/img/logos-eco/paypal.svg',
-    alt: 'PayPal',
-    width: 92,
-    height: 24,
-  },
-  {
-    src: '/src/img/logos-eco/fiserv.svg',
-    alt: 'Fiserv',
-    width: 65,
-    height: 32,
-  },
-];
-
 export interface SolanaEventItem {
   key: string;
   title: string;
   img: string;
-  dateFormatted: string;
-  location: string;
+  dateFormatted?: string;
+  location?: string;
+  category?: string;
+  memberCount?: string;
   url: string;
 }
 
 export const SOLANA_EVENTS: SolanaEventItem[] = [
   {
-    key: 'evt-1',
-    title: 'ArchiBot Breakpoint 2026 London',
-    img: '/src/img/events/event-1.png',
-    dateFormatted: 'Sun, Nov 15',
-    location: 'London',
-    url: 'https://solana.com/breakpoint',
+    key: 'srv-1',
+    title: "Yoapipp's server",
+    img: '/src/img/events/yoapipp-server.svg',
+    category: 'Komunitas',
+    memberCount: '150 Member Aktif',
+    url: '/servers',
   },
   {
-    key: 'evt-2',
-    title: 'ArchiBot AI & Agents Summit',
-    img: '/src/img/events/event-2.jpg',
-    dateFormatted: 'Sat, Nov 14',
-    location: 'London',
-    url: 'https://solana.com/events',
+    key: 'srv-2',
+    title: 'The JAWIR',
+    img: '/src/img/events/the-jawir.png',
+    category: 'Gaming',
+    memberCount: '1.2K Member Aktif',
+    url: '/servers',
   },
   {
-    key: 'evt-3',
-    title: 'ArchiBot Community Architecture Forum',
-    img: '/src/img/events/event-3.png',
-    dateFormatted: 'Mon, Nov 16',
-    location: 'London',
-    url: 'https://solana.com/events',
+    key: 'srv-3',
+    title: "Yoapipp's server",
+    img: '/src/img/events/yoapipp-server.svg',
+    category: 'Komunitas',
+    memberCount: '150 Member Aktif',
+    url: '/servers',
   },
   {
-    key: 'evt-4',
-    title: 'Superteam Indonesia Builder Night',
-    img: '/src/img/events/event-4.jpg',
-    dateFormatted: 'Thu, Nov 19',
-    location: 'Jakarta',
-    url: 'https://solana.com/events',
+    key: 'srv-4',
+    title: 'The JAWIR',
+    img: '/src/img/events/the-jawir.png',
+    category: 'Gaming',
+    memberCount: '1.2K Member Aktif',
+    url: '/servers',
   },
   {
-    key: 'evt-5',
-    title: 'ArchiBot Hacker House APAC',
-    img: '/src/img/events/event-5.jpg',
-    dateFormatted: 'Tue, Nov 24',
-    location: 'Singapore',
-    url: 'https://solana.com/events',
+    key: 'srv-5',
+    title: "Yoapipp's server",
+    img: '/src/img/events/yoapipp-server.svg',
+    category: 'Komunitas',
+    memberCount: '150 Member Aktif',
+    url: '/servers',
   },
   {
-    key: 'evt-6',
-    title: 'Community & Automation Summit',
-    img: '/src/img/events/event-6.png',
-    dateFormatted: 'Thu, Dec 3',
-    location: 'New York',
-    url: 'https://solana.com/events',
+    key: 'srv-6',
+    title: 'The JAWIR',
+    img: '/src/img/events/the-jawir.png',
+    category: 'Gaming',
+    memberCount: '1.2K Member Aktif',
+    url: '/servers',
   },
   {
-    key: 'evt-7',
-    title: 'ArchiBot Discord Lego Day',
-    img: '/src/img/events/event-7.png',
-    dateFormatted: 'Wed, Dec 9',
-    location: 'Dubai',
-    url: 'https://solana.com/events',
+    key: 'srv-7',
+    title: "Yoapipp's server",
+    img: '/src/img/events/yoapipp-server.svg',
+    category: 'Komunitas',
+    memberCount: '150 Member Aktif',
+    url: '/servers',
+  },
+  {
+    key: 'srv-8',
+    title: 'The JAWIR',
+    img: '/src/img/events/the-jawir.png',
+    category: 'Gaming',
+    memberCount: '1.2K Member Aktif',
+    url: '/servers',
   },
 ];
 
-export const PERFORMANCE_STATS = [
+export interface PerformanceStatItem {
+  id: string;
+  value: string;
+  label: string;
+  color: string;
+  apiKey?: 'uptime' | 'latency' | 'activeUsers' | 'servers';
+}
+
+export const PERFORMANCE_STATS: PerformanceStatItem[] = [
   {
-    id: 'active-wallets',
-    value: '50M',
-    label: 'Member & server aktif',
-    color: 'text-nd-highlight-blue',
-  },
-  {
-    id: 'monthly-txs',
-    value: '3.5B',
-    label: 'Otomasi & pesan bulanan',
-    color: 'text-nd-highlight-gold',
-  },
-  {
-    id: 'trade-volume',
+    id: 'bot-uptime',
     value: '99.9%',
-    label: 'Tingkat uptime bot',
-    color: 'text-nd-highlight-orange',
+    label: 'Tingkat Uptime Bot',
+    color: 'text-nd-highlight-blue',
+    apiKey: 'uptime',
   },
   {
-    id: 'app-revenue',
-    value: '0.02s',
-    label: 'Kecepatan respon latensi',
+    id: 'bot-latency',
+    value: '18ms',
+    label: 'Latensi & Respons Bot',
+    color: 'text-nd-highlight-gold',
+    apiKey: 'latency',
+  },
+  {
+    id: 'active-users',
+    value: '52',
+    label: 'Pengguna aktif',
+    color: 'text-nd-highlight-orange',
+    apiKey: 'activeUsers',
+  },
+  {
+    id: 'total-servers',
+    value: '2',
+    label: 'Server terhubung',
     color: 'text-nd-highlight-green',
+    apiKey: 'servers',
   },
 ];
 
 export const WHATS_UP_CATEGORIES: {
-  id: 'all' | 'defi' | 'institutions' | 'consumer' | 'developers' | 'ecosystem';
+  id: 'all' | 'developers' | 'defi' | 'consumer' | 'institutions' | 'ecosystem';
   label: string;
   color: string;
 }[] = [
   { id: 'all', label: 'Semua', color: '#FFFFFF' },
-  { id: 'defi', label: 'DeFi', color: '#CA9FF5' },
-  { id: 'institutions', label: 'Institusi', color: '#55E9AB' },
-  { id: 'consumer', label: 'Konsumen', color: '#CFF15E' },
-  { id: 'developers', label: 'Pengembang', color: '#F48252' },
-  { id: 'ecosystem', label: 'Ekosistem', color: '#FFC526' },
-];
-
-export const PROJECTS_CARDS = [
-  {
-    key: 'western-union',
-    name: 'Western Union',
-    statValue: 'USDPT',
-    statLabel: 'Stablecoin diluncurkan 2026',
-    logo: '/src/img/logos-eco/western-union.svg',
-    href: 'https://www.westernunion.com/blog/en/us/western-union-announces-usdpt-stablecoin-on-solana-and-digital-asset-network/',
-    color: 'text-nd-highlight-gold',
-    bgClassName:
-      'max-md:bg-[length:auto_320%] max-md:bg-[position:20%_0%] md:bg-[length:300%_300%] md:bg-[position:0%_0%]',
-    logoClassName: 'h-[20px] xl:h-[26px]',
-  },
-  {
-    key: 'visa',
-    name: 'Visa',
-    statValue: 'Jutaan',
-    statLabel: 'Diselesaikan dalam USDC',
-    logo: '/src/img/logos-eco/visa.svg',
-    href: 'https://usa.visa.com/about-visa/newsroom/press-releases.releaseId.19881.html',
-    color: 'text-nd-highlight-blue',
-    bgClassName:
-      'max-md:bg-[length:auto_320%] max-md:bg-[position:60%_0%] md:bg-[length:300%_300%] md:bg-[position:50%_0%]',
-    logoClassName: 'h-[24px] xl:h-[30px]',
-  },
-  {
-    key: 'paypal',
-    name: 'Paypal',
-    statValue: 'PYUSD',
-    statLabel: 'Stablecoin yang diterbitkan',
-    logo: '/src/img/logos-eco/paypal.svg',
-    href: 'https://newsroom.paypal-corp.com/2024-05-29-PayPal-USD-Stablecoin-Now-Available-on-Solana-Blockchain,-Providing-Faster,-Cheaper-Transactions-for-Consumers',
-    color: 'text-nd-highlight-blue',
-    bgClassName:
-      'max-md:bg-[length:auto_320%] max-md:bg-[position:20%_50%] md:bg-[length:300%_300%] md:bg-[position:100%_0%]',
-    logoClassName: 'h-[28px] xl:h-[34px]',
-  },
-  {
-    key: 'franklin-templeton',
-    name: 'Franklin Templeton',
-    statValue: '64%',
-    statLabel: 'Pertumbuhan Aset Bulanan di Blockchain',
-    logo: '/src/img/logos-eco/franklin-templeton.webp',
-    href: 'https://www.franklintempleton.com/press-releases/news-room/2025/franklin-templeton-expands-benji-platform-to-solana',
-    color: 'text-nd-highlight-lavendar',
-    bgClassName:
-      'max-md:bg-[length:auto_320%] max-md:bg-[position:60%_50%] md:bg-[length:300%_300%] md:bg-[position:0%_100%]',
-    logoClassName: 'h-[30px] xl:h-[36px]',
-  },
-  {
-    key: 'r3',
-    name: 'r3',
-    statValue: '10B',
-    statLabel: 'dalam Aset Terregulasi di Blockchain',
-    logo: '/src/img/logos-eco/r3.webp',
-    href: 'https://r3.com/press-media/r3-and-solana-strike-strategic-partnership-entering-new-era-for-public-and-enterprise-blockchain-integration/',
-    color: 'text-nd-highlight-orange',
-    bgClassName:
-      'max-md:bg-[length:auto_320%] max-md:bg-[position:20%_100%] md:bg-[length:300%_300%] md:bg-[position:50%_100%]',
-    logoClassName: 'h-[30px] xl:h-[36px]',
-  },
-  {
-    key: 'bullish',
-    name: 'Bullish',
-    statValue: '2.5B',
-    statLabel: 'Volume Harian',
-    logo: '/src/img/logos-eco/bullish.svg',
-    href: 'https://bullish.com/news-insights/announcements/bullish- collaborates-with-solana-foundation-to-accelerate-stablecoin-adoption-and-on-chain-capital-markets/',
-    color: 'text-nd-highlight-green',
-    bgClassName:
-      'max-md:bg-[length:auto_320%] max-md:bg-[position:60%_100%] md:bg-[length:300%_300%] md:bg-[position:100%_100%]',
-    logoClassName: 'h-[26px] xl:h-[32px]',
-  },
-];
-
-export const PROJECTS_LOGOS = [
-  {
-    src: '/src/img/logos-eco/hamilton-lane.webp',
-    alt: 'Hamilton Lane',
-    height: 36,
-  },
-  {
-    src: '/src/img/logos-eco/blackrock.png',
-    alt: 'Blackrock',
-    height: 36,
-  },
-  {
-    src: '/src/img/logos-eco/brevan-howard.png',
-    alt: 'Brevan Howard',
-    height: 36,
-  },
-  {
-    src: '/src/img/logos-eco/societe-generale.png',
-    alt: 'Societe Generale',
-    height: 36,
-  },
-  {
-    src: '/src/img/logos-eco/vaneck.png',
-    alt: 'Vaneck',
-    height: 36,
-  },
+  { id: 'developers', label: 'Arsitektur', color: '#F48252' },
+  { id: 'defi', label: 'Suara & Otomasi', color: '#CA9FF5' },
+  { id: 'consumer', label: 'Keamanan', color: '#CFF15E' },
+  { id: 'institutions', label: 'Komunitas', color: '#55E9AB' },
+  { id: 'ecosystem', label: 'Manajemen & Peran', color: '#FFC526' },
 ];
 
 export interface SolanaVideoItem {
@@ -285,47 +145,47 @@ export const SOLANA_VIDEOS: SolanaVideoItem[] = [
   {
     id: 'vid-1',
     videoId: 'HxfTZ6romJc',
-    title: 'Solana Stories: Collector Crypt | Comic-Con meets Wall Street',
+    title: 'ArchiBot Stories: Membangun Komunitas Gaming 100.000 Member',
     description:
-      'Bagaimana Collector Crypt mengubah kartu koleksi fisik bernilai miliaran dolar menjadi pasar on-chain yang likuid di Solana.',
+      'Bagaimana arsitek komunitas merancang puluhan kategori, antrean voice room, dan sistem peran otomatis dalam waktu kurang dari 5 menit.',
     thumbnail: '/src/img/videos/HxfTZ6romJc.jpg',
-    badge: 'SOLANA STORIES',
+    badge: 'ARCHIBOT STORIES',
   },
   {
     id: 'vid-2',
     videoId: 'twAN-yIWoys',
-    title: 'Solana Stories: Lead Bank | We Bought A Bank',
+    title: 'ArchiBot Stories: Transformasi Server Edukasi & Kampus',
     description:
-      'Mengapa inovasi perbankan tradisional dan infrastruktur blockchain berkinerja tinggi bersatu untuk membangun jembatan pembayaran global.',
+      'Mengapa universitas dan komunitas belajar beralih ke sistem Template Lego ArchiBot untuk mengelola ratusan kelas diskusi secara rapi.',
     thumbnail: '/src/img/videos/twAN-yIWoys.jpg',
-    badge: 'SOLANA STORIES',
+    badge: 'ARCHIBOT STORIES',
   },
   {
     id: 'vid-3',
     videoId: 'qMspBj3xwqA',
-    title: 'Solana Stories: Crypto Never Sleeps',
+    title: 'ArchiBot Stories: Moderasi Otomatis Tanpa Henti 24/7',
     description:
-      'Di balik layar pasar modal internet 24/7 yang memproses triliunan dolar volume perdagangan dengan latensi sub-detik.',
+      'Di balik layar infrastruktur keamanan ArchiBot yang menangkal serangan spam dan raid pada ribuan server Discord dengan latensi sub-detik.',
     thumbnail: '/src/img/videos/qMspBj3xwqA.jpg',
-    badge: 'SOLANA STORIES',
+    badge: 'ARCHIBOT STORIES',
   },
   {
     id: 'vid-4',
     videoId: 'JNLbpT5qgww',
-    title: 'Solana Stories: The Agents Are Here',
+    title: 'ArchiBot Stories: Era Baru AI Server Architect',
     description:
-      'Masa depan perdagangan otonom di mana agen AI melakukan transaksi mikro secara instan melalui protokol x402 di Solana.',
+      'Masa depan pengelolaan Discord di mana asisten AI merancang struktur channel, permission, dan pesan embed hanya dari perintah teks.',
     thumbnail: '/src/img/videos/JNLbpT5qgww.jpg',
-    badge: 'SOLANA STORIES',
+    badge: 'ARCHIBOT STORIES',
   },
   {
     id: 'vid-5',
     videoId: 'Jh_TXAnVMkM',
-    title: 'Solana Accelerate: Building Internet Capital Markets',
+    title: 'ArchiBot Summit: Standar Baru Arsitektur Komunitas Digital',
     description:
-      'Para pendiri, institusi keuangan, dan rekayasawan protokol berbagi visi tentang masa depan sistem keuangan terdesentralisasi.',
+      'Para pemilik server terbesar, moderator profesional, dan tim pengembang ArchiBot berbagi visi tentang masa depan ekosistem Discord.',
     thumbnail: '/src/img/videos/Jh_TXAnVMkM.jpg',
-    badge: 'ACCELERATE',
+    badge: 'SUMMIT',
   },
 ];
 
@@ -671,7 +531,7 @@ export const HEADER_MEGA_MENUS: NavMegaMenu[] = [
           {
             title: 'Discord OAuth2',
             subtitle: 'Login aman tanpa perlu membagikan token server Anda',
-            href: '/login',
+            href: '/api/auth/login',
           },
           {
             title: 'Role Manager',
@@ -746,66 +606,34 @@ export const HEADER_MEGA_MENUS: NavMegaMenu[] = [
 
 export const FOOTER_COLUMNS = [
   {
-    heading: 'Gunakan ArchiBot',
+    heading: 'Fitur & Modul',
     links: [
-      { label: 'Ikhtisar ArchiBot', href: '/servers' },
-      { label: 'Server & Guilds', href: '/servers' },
-      { label: 'Panduan Setup', href: '/servers' },
-      { label: 'Login Discord', href: '/login' },
-    ],
-  },
-  {
-    heading: 'Arsitektur',
-    links: [
-      { label: 'Lego & Template', href: '/servers' },
-      { label: 'Channels & Kategori', href: '/servers' },
-      { label: 'Roles & Permission', href: '/servers' },
-    ],
-  },
-  {
-    heading: 'Fitur',
-    links: [
-      { label: 'ArchiBot untuk Komunitas', href: '/servers' },
-      { label: 'Voice Hub Dinamis', href: '/servers' },
+      { label: 'AI Server Architect', href: '/servers' },
+      { label: 'Template Lego', href: '/servers' },
+      { label: 'Dynamic Voice Hub', href: '/servers' },
       { label: 'Custom Embed Builder', href: '/servers' },
-      { label: 'Server Backup', href: '/servers' },
+      { label: 'Role & Permission Manager', href: '/servers' },
+      { label: 'Server Backup & Restore', href: '/servers' },
     ],
   },
   {
-    heading: 'Produk',
+    heading: 'Akses & Navigasi',
     links: [
-      { label: 'Web Dashboard', href: '/servers' },
-      { label: 'Discord Bot Client', href: '/servers' },
-      { label: 'Role Manager', href: '/servers' },
-      { label: 'Member Moderation', href: '/servers' },
+      { label: 'Pilih Server Discord', href: '/servers' },
+      { label: 'Tambah Bot ke Server', href: '/servers' },
+      { label: 'Masuk dengan Discord', href: '/api/auth/login' },
+      { label: 'Ringkasan & Statistik Server', href: '/servers' },
     ],
   },
   {
-    heading: 'Ekosistem',
+    heading: 'Komunitas & Dukungan',
     links: [
-      { label: 'Server Terhubung', href: '/servers' },
-      { label: 'Komunitas Discord', href: 'https://discord.gg' },
-      { label: 'Status Uptime', href: '/servers' },
-      { label: 'ArchiBot Terminal', href: '/servers' },
-    ],
-  },
-  {
-    heading: 'Dokumentasi',
-    links: [
+      { label: 'Komunitas Discord Resmi', href: 'https://discord.gg' },
+      { label: 'GitHub Repository', href: 'https://github.com/Rafifdev/ArchiBot' },
       { label: 'Panduan Memulai', href: '/servers' },
-      { label: 'Daftar Perintah', href: '/servers' },
-      { label: 'Pengaturan Bot', href: '/servers' },
-      { label: 'Changelog', href: '/servers' },
+      { label: 'Laporkan Masalah & Feedback', href: 'https://github.com/Rafifdev/ArchiBot/issues' },
     ],
   },
-];
-
-export const FOOTER_META_LINKS = [
-  { label: 'Pendanaan', href: 'https://solana.org/grants' },
-  { label: 'Media Kit', href: 'https://solana.com/id/branding' },
-  { label: 'Karir', href: 'https://jobs.solana.com/' },
-  { label: 'Penolakan', href: 'https://solana.com/id/tos' },
-  { label: 'Kebijakan Privasi', href: 'https://solana.com/id/privacy-policy' },
 ];
 
 export const SOLANA_LANGUAGES = [
