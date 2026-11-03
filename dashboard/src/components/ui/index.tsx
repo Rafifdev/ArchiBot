@@ -869,6 +869,74 @@ export const StatusBadge = Badge;
 // DIALOGS & MODALS
 // ============================================================================
 
+const DIALOG_SYNC_OPEN_ANIMATION = {
+  dialog: [
+    [
+      [{ transform: 'translateY(-16px) scale(0.98)', opacity: 0 }, { transform: 'translateY(0) scale(1)', opacity: 1 }],
+      { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' as FillMode },
+    ],
+  ],
+  scrim: [
+    [
+      [{ opacity: 0 }, { opacity: 0.32 }],
+      { duration: 220, easing: 'linear', fill: 'forwards' as FillMode },
+    ],
+  ],
+  container: [],
+  headline: [
+    [
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' as FillMode },
+    ],
+  ],
+  content: [
+    [
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' as FillMode },
+    ],
+  ],
+  actions: [
+    [
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'forwards' as FillMode },
+    ],
+  ],
+};
+
+const DIALOG_SYNC_CLOSE_ANIMATION = {
+  dialog: [
+    [
+      [{ transform: 'translateY(0) scale(1)', opacity: 1 }, { transform: 'translateY(-12px) scale(0.98)', opacity: 0 }],
+      { duration: 140, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' as FillMode },
+    ],
+  ],
+  scrim: [
+    [
+      [{ opacity: 0.32 }, { opacity: 0 }],
+      { duration: 140, easing: 'linear', fill: 'forwards' as FillMode },
+    ],
+  ],
+  container: [],
+  headline: [
+    [
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 120, easing: 'linear', fill: 'forwards' as FillMode },
+    ],
+  ],
+  content: [
+    [
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 120, easing: 'linear', fill: 'forwards' as FillMode },
+    ],
+  ],
+  actions: [
+    [
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 120, easing: 'linear', fill: 'forwards' as FillMode },
+    ],
+  ],
+};
+
 export interface MdDialogProps {
   open: boolean;
   onClose: () => void;
@@ -883,6 +951,8 @@ export const MdDialog: React.FC<MdDialogProps> = ({ open, onClose, headline, chi
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    el.getOpenAnimation = () => DIALOG_SYNC_OPEN_ANIMATION;
+    el.getCloseAnimation = () => DIALOG_SYNC_CLOSE_ANIMATION;
     const handleClosed = () => onClose();
     el.addEventListener('closed', handleClosed);
     return () => el.removeEventListener('closed', handleClosed);
@@ -890,6 +960,8 @@ export const MdDialog: React.FC<MdDialogProps> = ({ open, onClose, headline, chi
 
   useEffect(() => {
     if (ref.current) {
+      ref.current.getOpenAnimation = () => DIALOG_SYNC_OPEN_ANIMATION;
+      ref.current.getCloseAnimation = () => DIALOG_SYNC_CLOSE_ANIMATION;
       ref.current.open = open;
     }
   }, [open]);
@@ -908,7 +980,7 @@ export const MdDialog: React.FC<MdDialogProps> = ({ open, onClose, headline, chi
     <>
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/55 backdrop-blur-xs pointer-events-auto select-none"
+          className="fixed inset-0 z-40 bg-black/55 backdrop-blur-xs pointer-events-auto select-none transition-opacity duration-200"
           onClick={onClose}
           onWheel={(e) => e.preventDefault()}
           onTouchMove={(e) => e.preventDefault()}
