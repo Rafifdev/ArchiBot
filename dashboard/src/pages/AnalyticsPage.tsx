@@ -626,45 +626,46 @@ export const AnalyticsPage: React.FC = () => {
 
       const snapshots: SnapshotCardItem[] = [
         {
-          label: 'New Joins',
+          label: 'Period Joins',
           value: welcomer.joinsInPeriod,
-          subtext: `Across the selected ${period} days`,
+          subtext: `Across selected ${period} days`,
           dotColor: 'bg-discord-blurple',
         },
         {
-          label: 'Verified Joins',
+          label: 'Verified in Period',
           value: verification.verifiedInPeriod,
           subtext:
             verification.verifiedInPeriod > 0
               ? 'Passed verification gate'
-              : 'Nothing verified in period',
+              : 'None verified in period',
           dotColor: 'bg-discord-green',
         },
         {
-          label: 'Unverified',
-          value: verification.unverifiedMembers,
-          subtext: 'Awaiting CAPTCHA completion',
-          dotColor: 'bg-discord-yellow',
+          label: 'Period Pass Rate',
+          value:
+            welcomer.joinsInPeriod > 0
+              ? `${Math.round((verification.verifiedInPeriod / welcomer.joinsInPeriod) * 100)}%`
+              : 'No data',
+          subtext: 'Join-to-verified ratio',
+          dotColor: 'bg-discord-green',
         },
         {
-          label: 'Anti-Invite',
-          value: verification.antiInvite ? 'Active' : 'Off',
-          subtext: 'Blocks external invite links',
-          dotColor: verification.antiInvite ? 'bg-discord-green' : 'bg-discord-red',
+          label: 'Gate Role',
+          value: verification.verifiedRoleName ? `@${verification.verifiedRoleName}` : 'Unset',
+          subtext: 'Granted after solving CAPTCHA',
+          dotColor: verification.verifiedRoleName ? 'bg-discord-blurple' : 'bg-discord-yellow',
         },
         {
-          label: 'Anti-Spam',
-          value: verification.antiSpam ? 'Active' : 'Off',
-          subtext: 'Blocks rapid message flooding',
-          dotColor: verification.antiSpam ? 'bg-discord-green' : 'bg-discord-red',
+          label: 'Rules Channel',
+          value: verification.rulesChannelName ? `#${verification.rulesChannelName}` : 'Unlinked',
+          subtext: 'Rules guidance channel',
+          dotColor: verification.rulesChannelName ? 'bg-discord-blurple' : 'bg-discord-muted',
         },
         {
-          label: 'Gate Status',
-          value: verification.configured ? 'Ready' : 'Unset',
-          subtext: verification.verifiedRoleName
-            ? `@${verification.verifiedRoleName}`
-            : 'No role assigned yet',
-          dotColor: verification.configured ? 'bg-discord-green' : 'bg-discord-yellow',
+          label: 'Daily Avg Verified',
+          value: (verification.verifiedInPeriod / period).toFixed(1),
+          subtext: `Per day over ${period} days`,
+          dotColor: 'bg-discord-green',
         },
       ];
 
@@ -710,31 +711,6 @@ export const AnalyticsPage: React.FC = () => {
             : [],
           primaryColorClass: 'bg-discord-green',
           secondaryColorClass: 'bg-discord-red',
-        },
-        {
-          title: 'CAPTCHA Completion Speed',
-          subtitle: 'How quickly newcomers solve the distorted image CAPTCHA',
-          legends: [
-            { label: 'Solve time', tone: 'blurple' },
-            { label: 'Expected (< 30s)', tone: 'neutral', dashed: true },
-          ],
-          emptyIcon: 'password',
-          emptyText: 'No CAPTCHA challenges recorded in this period yet',
-          points: [],
-          primaryColorClass: 'bg-discord-blurple',
-        },
-        {
-          title: 'Auto-Moderation Blocks',
-          subtitle: 'Spam and unauthorized Discord invite links intercepted',
-          legends: [
-            { label: 'Invites Blocked', tone: 'red' },
-            { label: 'Spam Muted', tone: 'yellow' },
-          ],
-          emptyIcon: 'security',
-          emptyText: 'No moderation violations in this period yet',
-          points: [],
-          primaryColorClass: 'bg-discord-red',
-          secondaryColorClass: 'bg-discord-yellow',
         },
       ];
 
@@ -865,22 +841,10 @@ export const AnalyticsPage: React.FC = () => {
           dotColor: 'bg-discord-green',
         },
         {
-          label: 'Welcome Banner',
-          value: welcomer.cardEnabled ? 'Enabled' : 'Off',
-          subtext: 'Canvas visual greeting card',
-          dotColor: welcomer.cardEnabled ? 'bg-discord-blurple' : 'bg-discord-muted',
-        },
-        {
-          label: 'Direct Message',
-          value: welcomer.dmEnabled ? 'Enabled' : 'Off',
-          subtext: 'Private DM greeting on join',
-          dotColor: welcomer.dmEnabled ? 'bg-discord-blurple' : 'bg-discord-muted',
-        },
-        {
-          label: 'Auto-Roles',
-          value: welcomer.autoRolesCount,
-          subtext: 'Roles assigned to newcomers',
-          dotColor: welcomer.autoRolesCount > 0 ? 'bg-discord-green' : 'bg-discord-yellow',
+          label: 'Daily Avg Joins',
+          value: (welcomer.joinsInPeriod / period).toFixed(1),
+          subtext: `Per day over ${period} days`,
+          dotColor: 'bg-discord-blurple',
         },
         {
           label: 'Online Now',
@@ -889,10 +853,25 @@ export const AnalyticsPage: React.FC = () => {
           dotColor: 'bg-discord-green',
         },
         {
-          label: 'Daily Avg Joins',
-          value: (welcomer.joinsInPeriod / period).toFixed(1),
-          subtext: `Over the selected ${period} days`,
-          dotColor: 'bg-discord-blurple',
+          label: 'Presence Ratio',
+          value:
+            summary.memberCount > 0
+              ? `${Math.round((summary.onlineCount / summary.memberCount) * 100)}%`
+              : 'No data',
+          subtext: 'Online out of total members',
+          dotColor: 'bg-discord-green',
+        },
+        {
+          label: 'Welcome Channel',
+          value: welcomer.welcomeChannelName ? `#${welcomer.welcomeChannelName}` : 'Unset',
+          subtext: welcomer.cardEnabled ? 'Card greeting enabled' : 'Text greeting',
+          dotColor: welcomer.welcomeChannelName ? 'bg-discord-blurple' : 'bg-discord-muted',
+        },
+        {
+          label: 'Goodbye Channel',
+          value: welcomer.goodbyeChannelName ? `#${welcomer.goodbyeChannelName}` : 'Unset',
+          subtext: welcomer.goodbyeEnabled ? 'Departure announcements on' : 'Disabled',
+          dotColor: welcomer.goodbyeChannelName ? 'bg-discord-blurple' : 'bg-discord-muted',
         },
       ];
 
@@ -916,41 +895,6 @@ export const AnalyticsPage: React.FC = () => {
               : [],
           primaryColorClass: 'bg-discord-green',
           secondaryColorClass: 'bg-discord-blurple',
-        },
-        {
-          title: 'Greeting Delivery Channels',
-          subtitle: 'Channel welcome cards compared to DM greetings dispatched',
-          legends: [
-            { label: 'Channel Card', tone: 'blurple' },
-            { label: 'Direct Message', tone: 'fuchsia' },
-          ],
-          emptyIcon: 'mark_email_read',
-          emptyText: 'No welcome dispatches in this period yet',
-          points:
-            welcomer.welcomeEnabled && welcomer.joinsInPeriod > 0
-              ? buckets.map((b) => ({
-                  label: b.label,
-                  primary: b.joins,
-                  secondary: welcomer.dmEnabled ? b.joins : 0,
-                }))
-              : [],
-          primaryColorClass: 'bg-discord-blurple',
-          secondaryColorClass: 'bg-discord-fuchsia',
-        },
-        {
-          title: 'Auto-Role Grant Activity',
-          subtitle: 'Automatic onboarding roles assigned when members join',
-          legends: [{ label: 'Roles Granted', tone: 'green' }],
-          emptyIcon: 'assignment_ind',
-          emptyText: 'No auto-role grants in this period yet',
-          points:
-            welcomer.autoRolesCount > 0 && welcomer.joinsInPeriod > 0
-              ? buckets.map((b) => ({
-                  label: b.label,
-                  primary: b.joins * welcomer.autoRolesCount,
-                }))
-              : [],
-          primaryColorClass: 'bg-discord-green',
         },
         {
           title: 'Retention & Population Mix',
@@ -1093,40 +1037,43 @@ export const AnalyticsPage: React.FC = () => {
 
       const snapshots: SnapshotCardItem[] = [
         {
-          label: 'Active Hubs',
-          value: voice.hubsCount,
-          subtext: 'Join-to-Create triggers',
-          dotColor: 'bg-discord-blurple',
-        },
-        {
-          label: 'Live Temp Rooms',
-          value: voice.tempRoomsCount,
-          subtext: 'Auto-cleanup when empty',
-          dotColor: 'bg-discord-green',
-        },
-        {
-          label: 'In Voice Now',
-          value: voice.totalVoiceConnected,
-          subtext: 'Connected voice users',
-          dotColor: 'bg-discord-green',
-        },
-        {
           label: 'Waiting Rooms',
           value: voice.tempRooms.filter((r) => r.hasWaitingRoom).length,
-          subtext: 'Knock-to-join queues',
+          subtext: 'Knock-to-join lobbies',
           dotColor: 'bg-discord-yellow',
         },
         {
-          label: 'Static Voice',
+          label: 'Static Voice Rooms',
           value: Math.max(0, voice.totalVoiceChannels - voice.tempRoomsCount),
-          subtext: 'Permanent voice channels',
+          subtext: 'Permanent server rooms',
           dotColor: 'bg-discord-blurple',
         },
         {
           label: 'Stage Channels',
           value: voice.stageChannels,
-          subtext: 'Conference & events',
+          subtext: 'Broadcasting & events',
           dotColor: 'bg-discord-fuchsia',
+        },
+        {
+          label: 'Avg Users / Room',
+          value:
+            voice.tempRoomsCount > 0
+              ? (voice.totalVoiceConnected / voice.tempRoomsCount).toFixed(1)
+              : '0.0',
+          subtext: 'Dynamic room user density',
+          dotColor: 'bg-discord-green',
+        },
+        {
+          label: 'Cleanup Policy',
+          value: 'Instant',
+          subtext: 'Auto-deletes when 0 users',
+          dotColor: 'bg-discord-green',
+        },
+        {
+          label: 'Hubs Category',
+          value: voice.hubs[0]?.categoryName || 'Voice',
+          subtext: 'Location of generator triggers',
+          dotColor: 'bg-discord-blurple',
         },
       ];
 
@@ -1170,27 +1117,6 @@ export const AnalyticsPage: React.FC = () => {
               : [],
           primaryColorClass: 'bg-discord-green',
           secondaryColorClass: 'bg-discord-blurple',
-        },
-        {
-          title: 'Room Session Duration',
-          subtitle: 'How long temporary voice rooms remain active before auto-deletion',
-          legends: [
-            { label: 'Session length', tone: 'blurple' },
-            { label: 'Average', tone: 'neutral', dashed: true },
-          ],
-          emptyIcon: 'hourglass_empty',
-          emptyText: 'No temporary voice sessions recorded in this period yet',
-          points: [],
-          primaryColorClass: 'bg-discord-blurple',
-        },
-        {
-          title: 'Voice Control Panel Interactions',
-          subtitle: '15-button interface actions (Lock, Limit, Region, Kick, Transfer)',
-          legends: [{ label: 'Control Actions', tone: 'blurple' }],
-          emptyIcon: 'tune',
-          emptyText: 'No voice panel interactions in this period yet',
-          points: [],
-          primaryColorClass: 'bg-discord-blurple',
         },
       ];
 
@@ -1366,55 +1292,6 @@ export const AnalyticsPage: React.FC = () => {
             { label: 'Forum', primary: structure.forumChannels },
           ],
           primaryColorClass: 'bg-discord-blurple',
-        },
-        {
-          title: 'Category Organization Density',
-          subtitle: 'Average channels housed per category container',
-          legends: [{ label: 'Density', tone: 'green' }],
-          emptyIcon: 'folder',
-          emptyText: 'No categories configured in server',
-          points: [
-            {
-              label: 'Text/Cat',
-              primary:
-                structure.categories > 0
-                  ? Math.round(structure.textChannels / structure.categories)
-                  : 0,
-            },
-            {
-              label: 'Voice/Cat',
-              primary:
-                structure.categories > 0
-                  ? Math.round(structure.voiceChannels / structure.categories)
-                  : 0,
-            },
-            {
-              label: 'Avg Ch/Cat',
-              primary:
-                structure.categories > 0
-                  ? Math.round(
-                      (structure.textChannels + structure.voiceChannels) /
-                        structure.categories
-                    )
-                  : 0,
-            },
-          ],
-          primaryColorClass: 'bg-discord-green',
-        },
-        {
-          title: 'Channel Architecture Activity',
-          subtitle: 'Structural updates and channel deployments over time',
-          legends: [{ label: 'Channel Events', tone: 'yellow' }],
-          emptyIcon: 'view_quilt',
-          emptyText: 'No channel events recorded in this period',
-          points:
-            structure.channelsCreatedInPeriod > 0
-              ? buckets.map((b) => ({
-                  label: b.label,
-                  primary: b.channelsCreated,
-                }))
-              : [],
-          primaryColorClass: 'bg-discord-yellow',
         },
       ];
 
@@ -1596,44 +1473,6 @@ export const AnalyticsPage: React.FC = () => {
           ],
           primaryColorClass: 'bg-discord-blurple',
         },
-        {
-          title: 'Role Visual Styling Distribution',
-          subtitle: 'Roles with custom hex colors versus default appearance',
-          legends: [
-            { label: 'Color-Coded', tone: 'yellow' },
-            { label: 'Default Color', tone: 'neutral' },
-          ],
-          emptyIcon: 'palette',
-          emptyText: 'No roles found in server',
-          points: [
-            {
-              label: 'Roles',
-              primary: structure.coloredRoles,
-              secondary: Math.max(0, structure.totalRoles - structure.coloredRoles),
-            },
-          ],
-          primaryColorClass: 'bg-discord-yellow',
-          secondaryColorClass: 'bg-discord-surface',
-        },
-        {
-          title: 'Role Separation Ratio',
-          subtitle: 'Hoisted roles displayed separately versus standard roles',
-          legends: [
-            { label: 'Hoisted', tone: 'fuchsia' },
-            { label: 'Standard', tone: 'blurple' },
-          ],
-          emptyIcon: 'visibility',
-          emptyText: 'No roles found in server',
-          points: [
-            {
-              label: 'Hierarchy',
-              primary: structure.hoistedRoles,
-              secondary: Math.max(0, structure.totalRoles - structure.hoistedRoles),
-            },
-          ],
-          primaryColorClass: 'bg-discord-fuchsia',
-          secondaryColorClass: 'bg-discord-blurple',
-        },
       ];
 
       const panelSection = {
@@ -1756,31 +1595,31 @@ export const AnalyticsPage: React.FC = () => {
       {
         label: 'Current Members',
         value: summary.memberCount,
-        subtext: `${progressPct}% to next milestone`,
+        subtext: `${summary.humanCount} humans · ${summary.botCount} bots`,
         dotColor: 'bg-discord-blurple',
       },
       {
-        label: 'Goals Reached',
-        value: backupsAndMilestones.reachedCount,
-        subtext: `Last: ${backupsAndMilestones.lastMilestoneReached || 'None'}`,
-        dotColor: 'bg-discord-green',
-      },
-      {
-        label: 'Next Target',
-        value: nextGoal || 'Done',
-        subtext: nextGoal ? `${nextGoal - summary.memberCount} remaining` : 'All goals met',
+        label: 'Members to Goal',
+        value: nextGoal ? `${Math.max(0, nextGoal - summary.memberCount)}` : 'Done',
+        subtext: nextGoal ? `To reach ${nextGoal.toLocaleString()} milestone` : 'All goals reached',
         dotColor: 'bg-discord-yellow',
       },
       {
-        label: 'Saved Backups',
-        value: backupsAndMilestones.backupsCount,
-        subtext: 'Full layout snapshots',
-        dotColor: 'bg-discord-blurple',
+        label: 'Progress Ratio',
+        value: `${progressPct}%`,
+        subtext: 'To next member threshold',
+        dotColor: 'bg-discord-green',
       },
       {
-        label: 'Boost Count',
+        label: 'Active Nitro Boosts',
         value: summary.boostCount,
-        subtext: `Tier ${summary.boostTier} perks`,
+        subtext: `Tier ${summary.boostTier} server perks`,
+        dotColor: 'bg-discord-fuchsia',
+      },
+      {
+        label: 'Server Boost Tier',
+        value: `Level ${summary.boostTier}`,
+        subtext: `${summary.boostCount} active boosts`,
         dotColor: 'bg-discord-fuchsia',
       },
       {
@@ -1788,7 +1627,7 @@ export const AnalyticsPage: React.FC = () => {
         value: backupsAndMilestones.milestoneChannelName
           ? `#${backupsAndMilestones.milestoneChannelName}`
           : 'Unset',
-        subtext: 'Milestone announcements',
+        subtext: 'Milestone celebration posts',
         dotColor: backupsAndMilestones.milestoneChannelName
           ? 'bg-discord-green'
           : 'bg-discord-muted',
@@ -1814,23 +1653,6 @@ export const AnalyticsPage: React.FC = () => {
         secondaryColorClass: 'bg-discord-green',
       },
       {
-        title: 'Backup Snapshot Complexity',
-        subtitle: 'Channels and roles stored inside each saved layout backup',
-        legends: [
-          { label: 'Channels', tone: 'blurple' },
-          { label: 'Roles', tone: 'fuchsia' },
-        ],
-        emptyIcon: 'inventory_2',
-        emptyText: 'No layout backups saved yet',
-        points: backupsAndMilestones.backups.map((b) => ({
-          label: b.label.slice(0, 10),
-          primary: b.channelsCount,
-          secondary: b.rolesCount,
-        })),
-        primaryColorClass: 'bg-discord-blurple',
-        secondaryColorClass: 'bg-discord-fuchsia',
-      },
-      {
         title: 'Daily Member Growth Toward Goal',
         subtitle: 'Daily member joins contributing to the next milestone celebration',
         legends: [{ label: 'Daily Joins', tone: 'green' }],
@@ -1844,15 +1666,6 @@ export const AnalyticsPage: React.FC = () => {
               }))
             : [],
         primaryColorClass: 'bg-discord-green',
-      },
-      {
-        title: 'Milestone Banner Dispatches',
-        subtitle: 'Celebration banners published when member goals are crossed',
-        legends: [{ label: 'Celebrations', tone: 'yellow' }],
-        emptyIcon: 'celebration',
-        emptyText: 'No milestone celebrations triggered in this period yet',
-        points: [],
-        primaryColorClass: 'bg-discord-yellow',
       },
     ];
 
