@@ -1848,19 +1848,17 @@ export const AnalyticsPage: React.FC = () => {
 
         {/* Relative wrapper for Period Snapshots & Charts with single central loading & thicker blur */}
         <div className="relative">
-          {/* Single Loading Effect in the Center of Period Section */}
+          {/* Single Loading Effect in the Center of Period Section (No box wrapper) */}
           {chartLoading && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-discord-sidebar/40 backdrop-blur-sm rounded-2xl transition-all duration-300">
-              <div className="p-4 rounded-2xl bg-discord-card/95 border border-discord-border shadow-2xl flex flex-col items-center justify-center gap-2.5 select-none">
-                <md-circular-progress
-                  indeterminate
-                  class="scale-100"
-                  style={{ '--md-circular-progress-active-indicator-color': '#5865F2' } as any}
-                />
-                <span className="text-xs font-normal text-discord-white tracking-wide">
-                  Memuat data grafik...
-                </span>
-              </div>
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-discord-sidebar/30 backdrop-blur-sm rounded-2xl transition-all duration-300 pointer-events-none select-none">
+              <md-circular-progress
+                indeterminate
+                class="scale-100"
+                style={{ '--md-circular-progress-active-indicator-color': '#5865F2' } as any}
+              />
+              <span className="text-xs font-normal text-discord-white tracking-wide drop-shadow-sm">
+                Memuat data terbaru...
+              </span>
             </div>
           )}
 
