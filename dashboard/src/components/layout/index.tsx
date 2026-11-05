@@ -35,6 +35,7 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
   // Only features that genuinely exist in ArchiBot (bot.js + Express routes)
   const topNavItems: NavEntry[] = [
     { to: `/guilds/${guildId}`, label: 'Home', icon: 'home', end: true },
+    { to: `/guilds/${guildId}/analytics`, label: 'Analytics', icon: 'analytics' },
     { to: `/guilds/${guildId}/architect`, label: 'Lego & Templates', icon: 'architecture' },
   ];
 
@@ -413,7 +414,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
       </div>
 
       {/* Navigation Scrollable Body */}
-      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+      <div className="flex-1 overflow-y-auto pt-3 pb-8 px-2 space-y-4">
         {/* Top items (Home, Lego, Settings) */}
         <div className="space-y-0.5">
           {topNavItems.map((item) => {
@@ -476,8 +477,11 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         ))}
       </div>
 
-      {/* Sidebar Footer */}
-      <div className="p-3 border-t border-discord-border">
+      {/* Sidebar Footer with Subtle Gradient Transition */}
+      <div className="relative shrink-0 p-3 bg-discord-sidebar z-20">
+        {/* Subtle Gradient Fade from scrollable body into footer */}
+        <div className="pointer-events-none absolute -top-8 left-0 right-0 h-8 bg-gradient-to-t from-discord-sidebar via-discord-sidebar/80 to-transparent" />
+
         {guildId ? (
           <Link
             to={`/guilds/${guildId}/settings`}

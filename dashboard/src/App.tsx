@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { LandingPage } from './pages/LandingPage';
 import { ServerSelectPage } from './pages/ServerSelectPage';
 import { OverviewPage } from './pages/OverviewPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ChannelsPage } from './pages/ChannelsPage';
 import { RolesPage } from './pages/RolesPage';
 import { MembersPage } from './pages/MembersPage';
@@ -85,6 +86,7 @@ export const AppContent: React.FC = () => {
         element={user ? <DashboardLayout user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />}
       >
         <Route index element={<OverviewPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="channels" element={<ChannelsPage />} />
         <Route path="roles" element={<RolesPage />} />
         <Route path="members" element={<MembersPage />} />

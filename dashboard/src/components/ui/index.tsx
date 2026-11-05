@@ -1061,6 +1061,61 @@ export const SettingsSkeleton: React.FC = () => (
   </div>
 );
 
+export const AnalyticsSkeleton: React.FC = () => (
+  <div className="flex flex-col gap-6 animate-pulse select-none">
+    <PageHeaderSkeleton />
+    <div className="flex gap-3 border-b border-discord-border pb-2 overflow-hidden">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className={`h-9 w-28 rounded-lg shrink-0 ${
+            i === 0 ? 'bg-discord-surface/90' : 'bg-discord-surface/50'
+          }`}
+        />
+      ))}
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-3"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-discord-surface/90 shrink-0" />
+            <div className="h-3.5 w-32 bg-discord-surface/80 rounded" />
+          </div>
+          <div className="h-6 w-20 bg-discord-surface/90 rounded mt-1" />
+          <div className="h-3 w-36 bg-discord-surface/60 rounded" />
+        </div>
+      ))}
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="p-4 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-2"
+        >
+          <div className="h-3 w-20 bg-discord-surface/80 rounded" />
+          <div className="h-5 w-16 bg-discord-surface/90 rounded" />
+          <div className="h-2.5 w-24 bg-discord-surface/60 rounded" />
+        </div>
+      ))}
+    </div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="p-5 rounded-xl bg-discord-card border border-discord-border flex flex-col gap-4 min-h-[260px]"
+        >
+          <div className="h-4 w-40 bg-discord-surface/90 rounded" />
+          <div className="h-3 w-64 bg-discord-surface/60 rounded" />
+          <div className="flex-1 rounded-lg bg-discord-surface/40 mt-2" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 
 export const SectionHeader: React.FC<{ title: string; className?: string }> = ({ title, className = 'mb-4' }) => (
   <div className={className}>
@@ -1125,16 +1180,16 @@ export const Badge: React.FC<BadgeProps> = ({
 
   // Soft tones (subtle translucent background, colored text, NO BORDER)
   const softTones: Record<BadgeTone, string> = {
-    blurple: 'bg-discord-blurple/20 text-discord-blurple font-medium',
-    green: 'bg-discord-green/20 text-discord-green font-medium',
-    yellow: 'bg-discord-yellow/20 text-discord-yellow font-medium',
-    red: 'bg-discord-red/20 text-discord-red font-medium',
-    premium: 'bg-discord-fuchsia/20 text-discord-fuchsia font-medium',
-    fuchsia: 'bg-discord-fuchsia/20 text-discord-fuchsia font-medium',
+    blurple: 'bg-discord-blurple/20 text-discord-blurple font-normal',
+    green: 'bg-discord-green/20 text-discord-green font-normal',
+    yellow: 'bg-discord-yellow/20 text-discord-yellow font-normal',
+    red: 'bg-discord-red/20 text-discord-red font-normal',
+    premium: 'bg-discord-fuchsia/20 text-discord-fuchsia font-normal',
+    fuchsia: 'bg-discord-fuchsia/20 text-discord-fuchsia font-normal',
     neutral: 'bg-discord-surface text-discord-muted font-normal',
     surface: 'bg-discord-surface text-discord-text font-normal',
     dark: 'bg-black/35 text-discord-muted font-normal',
-    white: 'bg-white/15 text-white font-medium',
+    white: 'bg-white/15 text-white font-normal',
   };
 
   const toneClassMap = (variant === 'soft' ? softTones : solidTones) || solidTones;
