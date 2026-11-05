@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DiscordMark, OverviewSkeleton, SectionHeader, QuickActionCard, ModuleCard } from '../components/ui';
+import {
+  DiscordMark,
+  ModuleCard,
+  OverviewSkeleton,
+  QuickActionCard,
+  SectionHeader,
+  SurfaceCard,
+} from '../components/ui';
 import { useServerSwitch } from '../components/layout';
 
 export const OverviewPage: React.FC = () => {
@@ -122,10 +129,16 @@ export const OverviewPage: React.FC = () => {
       to: `/guilds/${guildId}/embeds`,
     },
     {
-      title: 'Welcome & Goodbye',
-      description: 'Configure automated greeting messages and system channels',
+      title: 'Welcome Message',
+      description: 'Configure welcome cards, greeting messages, DMs, and auto-roles',
       icon: 'waving_hand',
-      to: `/guilds/${guildId}/settings?tab=welcome`,
+      to: `/guilds/${guildId}/welcome`,
+    },
+    {
+      title: 'Goodbye Message',
+      description: 'Configure automated farewell messages when members leave',
+      icon: 'logout',
+      to: `/guilds/${guildId}/goodbye`,
     },
     {
       title: 'Layout Backups',

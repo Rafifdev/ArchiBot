@@ -80,15 +80,32 @@ router.post('/:guildId/roles', verifyGuildAccess, async (req, res) => {
 
 router.patch('/:guildId/roles/:roleId', verifyGuildAccess, async (req, res) => {
   const guild = req.guild;
-  const role = guild.roles.cache.get(req.params.roleId);
+  let role = guild.roles.cache.get(req.params.roleId);
+  if (!role) {
+    role = await guild.roles.fetch(req.params.roleId).catch(() => null);
+  }
   if (!role) {
     return res.status(404).json({ error: 'Role not found.' });
   }
 
-  const me = await guild.members.fetchMe();
-  if (role.position >= me.roles.highest.position) {
+  // Handle @everyone separately: Discord only allows modifying permissions on @everyone
+  if (role.id === guild.id) {
+    const { permissions } = req.body;
+    try {
+      if (permissions !== undefined && Array.isArray(permissions)) {
+        await role.setPermissions(permissions);
+      }
+      return res.json({ success: true, message: 'Server default (@everyone) permissions updated successfully.' });
+    } catch (err) {
+      console.error('Failed to update @everyone role:', err);
+      return res.status(500).json({ error: `Failed to update @everyone: ${err.message}` });
+    }
+  }
+
+  const me = await guild.members.fetchMe().catch(() => null);
+  if (me && role.position >= me.roles.highest.position) {
     return res.status(403).json({
-      error: 'Cannot edit this role because its position is equal to or higher than the bot highest role.',
+      error: 'Cannot edit this role because its position is equal to or higher than the bot highest role in Discord.',
     });
   }
 
@@ -107,21 +124,33 @@ router.patch('/:guildId/roles/:roleId', verifyGuildAccess, async (req, res) => {
     await role.edit(updates);
     return res.json({ success: true, message: 'Role updated successfully.' });
   } catch (err) {
+    console.error('Failed to update role:', err);
     return res.status(500).json({ error: `Failed to update role: ${err.message}` });
   }
 });
 
 router.delete('/:guildId/roles/:roleId', verifyGuildAccess, async (req, res) => {
   const guild = req.guild;
-  const role = guild.roles.cache.get(req.params.roleId);
+  let role = guild.roles.cache.get(req.params.roleId);
+  if (!role) {
+    role = await guild.roles.fetch(req.params.roleId).catch(() => null);
+  }
   if (!role) {
     return res.status(404).json({ error: 'Role not found.' });
   }
 
-  const me = await guild.members.fetchMe();
-  if (role.position >= me.roles.highest.position) {
+  if (role.id === guild.id) {
+    return res.status(400).json({ error: 'Cannot delete the server default (@everyone) role.' });
+  }
+
+  if (role.managed) {
+    return res.status(400).json({ error: 'Cannot delete an integration-managed role.' });
+  }
+
+  const me = await guild.members.fetchMe().catch(() => null);
+  if (me && role.position >= me.roles.highest.position) {
     return res.status(403).json({
-      error: 'Cannot delete this role because its position is equal to or higher than the bot highest role.',
+      error: 'Cannot delete this role because its position is equal to or higher than the bot highest role in Discord.',
     });
   }
 
@@ -129,6 +158,7 @@ router.delete('/:guildId/roles/:roleId', verifyGuildAccess, async (req, res) => 
     await role.delete('Deleted via ArchiBot Web Dashboard');
     return res.json({ success: true, message: 'Role deleted successfully.' });
   } catch (err) {
+    console.error('Failed to delete role:', err);
     return res.status(500).json({ error: `Failed to delete role: ${err.message}` });
   }
 });

@@ -38,6 +38,7 @@ import {
   PageHeader,
   SurfaceCard,
   SwitchRow,
+  toast,
 } from '../components/ui';
 import { ChannelItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
@@ -142,12 +143,20 @@ const SortableChannelRow: React.FC<SortableChannelRowProps> = ({
 const DroppableCategoryCard: React.FC<{
   cat: ChannelItem;
   childrenChannels: ChannelItem[];
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   onAddChannel: (catId: string) => void;
   onDeleteCategory: (catId: string, name: string) => void;
   children: React.ReactNode;
 }> = ({
   cat,
   childrenChannels,
+  canMoveUp,
+  canMoveDown,
+  onMoveUp,
+  onMoveDown,
   onAddChannel,
   onDeleteCategory,
   children,
@@ -175,6 +184,22 @@ const DroppableCategoryCard: React.FC<{
         </div>
 
         <div className="flex items-center gap-1">
+          {onMoveUp && (
+            <MdIconButton
+              icon="arrow_upward"
+              title="Move Category Up"
+              disabled={!canMoveUp}
+              onClick={onMoveUp}
+            />
+          )}
+          {onMoveDown && (
+            <MdIconButton
+              icon="arrow_downward"
+              title="Move Category Down"
+              disabled={!canMoveDown}
+              onClick={onMoveDown}
+            />
+          )}
           <MdIconButton
             icon="add"
             title="Add Channel to Category"
@@ -444,11 +469,12 @@ export const ChannelsPage: React.FC = () => {
         setNewName('');
         setNewTopic('');
         fetchChannels();
+        toast.success(`Channel #${newName} created successfully.`);
       } else {
-        alert(data.error || 'Failed to create channel');
+        toast.error(data.error || 'Failed to create channel');
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setCreateLoading(false);
     }
@@ -473,11 +499,12 @@ export const ChannelsPage: React.FC = () => {
       if (data.success) {
         setEditChannel(null);
         fetchChannels();
+        toast.success(`Channel #${editName} updated successfully.`);
       } else {
-        alert(data.error || 'Failed to update channel');
+        toast.error(data.error || 'Failed to update channel');
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setEditLoading(false);
     }
@@ -512,20 +539,21 @@ export const ChannelsPage: React.FC = () => {
           setChannels((prev) =>
             prev.map((c) => (c.id === ch.id ? { ...c, isLocked: data.locked } : c))
           );
+          toast.success(`Channel #${ch.name} ${data.locked ? 'locked' : 'unlocked'}.`);
         }
       } else {
         // Rollback optimistic update on failure
         setChannels((prev) =>
           prev.map((c) => (c.id === ch.id ? { ...c, isLocked: prevLocked } : c))
         );
-        alert(data.error || 'Gagal mengubah status lock channel.');
+        toast.error(data.error || 'Gagal mengubah status lock channel.');
       }
     } catch (err: any) {
       // Rollback optimistic update on network error
       setChannels((prev) =>
         prev.map((c) => (c.id === ch.id ? { ...c, isLocked: prevLocked } : c))
       );
-      alert(`Lock error: ${err.message}`);
+      toast.error(`Lock error: ${err.message}`);
     } finally {
       // 4. Cooldown grace period (400ms) to ensure smooth transition and avoid Discord rate limits
       setTimeout(() => {
@@ -542,10 +570,14 @@ export const ChannelsPage: React.FC = () => {
         credentials: 'include',
       });
       const data = await res.json();
-      if (data.success) fetchChannels();
-      else alert(data.error || 'Failed to sync');
+      if (data.success) {
+        fetchChannels();
+        toast.success(`Channel #${ch.name} permissions synced.`);
+      } else {
+        toast.error(data.error || 'Failed to sync');
+      }
     } catch (err: any) {
-      alert(`Sync error: ${err.message}`);
+      toast.error(`Sync error: ${err.message}`);
     }
   };
 
@@ -560,11 +592,12 @@ export const ChannelsPage: React.FC = () => {
       if (data.success) {
         setDeleteId(null);
         fetchChannels();
+        toast.success('Channel deleted successfully.');
       } else {
-        alert(data.error || 'Failed to delete channel');
+        toast.error(data.error || 'Failed to delete channel');
       }
     } catch (err: any) {
-      alert(`Delete error: ${err.message}`);
+      toast.error(`Delete error: ${err.message}`);
     }
   };
 
@@ -738,15 +771,68 @@ export const ChannelsPage: React.FC = () => {
       if (!res.ok || !data?.success) {
         throw new Error(data?.error || `Server error (${res.status} ${res.statusText || 'Unknown'})`);
       }
+
+      if (targetParentKey !== currentParentKey) {
+        const cat = channels.find((c) => c.id === targetParentKey);
+        toast.success(`Channel #${sourceCh.name} berhasil dipindahkan ke kategori "${cat?.name || 'Tanpa Kategori'}".`);
+      } else {
+        toast.success(`Posisi channel #${sourceCh.name} berhasil diperbarui.`);
+      }
     } catch (err: any) {
       console.error('Channel @dnd-kit reorder error:', err);
       setChannels(previousChannels);
-      alert(`Gagal memindahkan posisi channel: ${err.message}`);
+      toast.error(`Gagal memindahkan posisi channel: ${err.message}`);
     } finally {
       if (reorderTimeoutRef.current) clearTimeout(reorderTimeoutRef.current);
       reorderTimeoutRef.current = setTimeout(() => {
         isReorderingRef.current = false;
       }, 700);
+    }
+  };
+
+  const handleMoveCategory = async (catId: string, direction: 'up' | 'down') => {
+    const catList = channels
+      .filter((c) => c.typeName === 'category')
+      .sort((a, b) => a.position - b.position);
+
+    const currentIndex = catList.findIndex((c) => c.id === catId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= catList.length) return;
+
+    const reordered = arrayMove(catList, currentIndex, targetIndex).map((cat, idx) => ({
+      ...cat,
+      position: idx,
+    }));
+
+    const otherChannels = channels.filter((c) => c.typeName !== 'category');
+    const previousChannels = [...channels];
+    const updatedChannels = [...otherChannels, ...reordered];
+
+    setChannels(updatedChannels);
+
+    const updates = reordered.map((c) => ({
+      id: c.id,
+      position: c.position,
+    }));
+
+    try {
+      const res = await fetch(`/api/guilds/${guildId}/channels/positions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ updates }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || 'Gagal mengubah posisi kategori');
+      }
+      const catObj = catList[currentIndex];
+      toast.success(`Posisi kategori "${catObj.name}" berhasil diperbarui.`);
+    } catch (err: any) {
+      setChannels(previousChannels);
+      toast.error(`Gagal memindahkan posisi kategori: ${err.message}`);
     }
   };
 
@@ -838,13 +924,17 @@ export const ChannelsPage: React.FC = () => {
           </DroppableUnparentedCard>
         )}
 
-        {categories.map((cat) => {
+        {categories.map((cat, catIdx) => {
           const children = filtered.filter((c) => c.parentId === cat.id);
           return (
             <DroppableCategoryCard
               key={cat.id}
               cat={cat}
               childrenChannels={children}
+              canMoveUp={catIdx > 0}
+              canMoveDown={catIdx < categories.length - 1}
+              onMoveUp={() => handleMoveCategory(cat.id, 'up')}
+              onMoveDown={() => handleMoveCategory(cat.id, 'down')}
               onAddChannel={(catId) => {
                 setCreateFromCatId(catId);
                 setNewParent(catId);

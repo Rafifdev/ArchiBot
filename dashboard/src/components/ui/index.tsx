@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId, useMemo, useCallback } from 'react';
 
 // Official Material Web Components (@material/web)
 import '@material/web/button/filled-button.js';
@@ -14,6 +14,7 @@ import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/switch/switch.js';
+import '@material/web/slider/slider.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/divider/divider.js';
 import '@material/web/chips/chip-set.js';
@@ -178,6 +179,7 @@ export const MdIconButton: React.FC<MdIconButtonProps> = ({
       disabled: disabled || undefined,
       title,
       class: className,
+      onClick,
     },
     <md-icon>{icon}</md-icon>
   );
@@ -350,6 +352,7 @@ export const MdTextField: React.FC<MdTextFieldProps> = ({
 export interface MdSelectOptionItem {
   value: string;
   label: string;
+  iconUrl?: string;
 }
 
 export interface MdSelectProps {
@@ -359,6 +362,7 @@ export interface MdSelectProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  placeholder?: string;
 }
 
 export const MdSelect: React.FC<MdSelectProps> = ({
@@ -366,45 +370,318 @@ export const MdSelect: React.FC<MdSelectProps> = ({
   value,
   options,
   onChange,
-  disabled,
+  disabled = false,
   className = 'w-full',
+  placeholder = 'Select an option...',
 }) => {
-  const ref = useRef<any>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [openUpwards, setOpenUpwards] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const handler = (e: Event) => {
-      onChange((e.target as any).value);
-    };
-    el.addEventListener('change', handler);
-    return () => el.removeEventListener('change', handler);
-  }, [onChange]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textFieldRef = useRef<any>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
+  // Normalize options to { value, label } items
+  const normalizedOptions = useMemo<MdSelectOptionItem[]>(() => {
+    return options.map((opt) => {
+      if (typeof opt === 'string') {
+        return { value: opt, label: opt };
+      }
+      return opt;
+    });
+  }, [options]);
+
+  // Search feature is automatically activated if dropdown contains 8 or more items
+  const isSearchable = normalizedOptions.length >= 8;
+
+  // Selected item
+  const selectedItem = useMemo(() => {
+    return normalizedOptions.find((opt) => opt.value === value);
+  }, [normalizedOptions, value]);
+
+  const selectedLabel = selectedItem ? selectedItem.label : (value || '');
+
+  // Filtered options based on search query typed directly into the field
+  const filteredOptions = useMemo(() => {
+    if (!isSearchable || !searchQuery.trim()) return normalizedOptions;
+    const q = searchQuery.toLowerCase().trim();
+    return normalizedOptions.filter(
+      (opt) =>
+        opt.label.toLowerCase().includes(q) ||
+        opt.value.toLowerCase().includes(q)
+    );
+  }, [normalizedOptions, isSearchable, searchQuery]);
+
+  // Display value: when searching show query, otherwise show selected option label
+  const displayValue = isOpen && isSearchable ? searchQuery : selectedLabel;
+
+  // Synchronize value and readOnly state with the <md-outlined-text-field> web component
   useEffect(() => {
-    if (ref.current && ref.current.value !== value) {
-      ref.current.value = value;
+    const el = textFieldRef.current;
+    if (el) {
+      if (el.value !== displayValue) {
+        el.value = displayValue;
+      }
+      el.readOnly = !isSearchable;
     }
-  }, [value]);
+  }, [displayValue, isSearchable]);
+
+  // Listen for real-time input events directly from <md-outlined-text-field>
+  useEffect(() => {
+    const el = textFieldRef.current;
+    if (!el) return;
+    const handleInput = (e: Event) => {
+      if (!isSearchable) return;
+      const target = e.target as HTMLInputElement;
+      setSearchQuery(target.value);
+      setHighlightedIndex(0);
+      if (!isOpen) setIsOpen(true);
+    };
+    el.addEventListener('input', handleInput);
+    return () => {
+      el.removeEventListener('input', handleInput);
+    };
+  }, [isSearchable, isOpen]);
+
+  // Scroll highlighted item into view during keyboard navigation
+  useEffect(() => {
+    if (!isOpen || !listRef.current) return;
+    const items = listRef.current.querySelectorAll('[role="option"]');
+    const highlightedEl = items[highlightedIndex] as HTMLElement;
+    if (highlightedEl) {
+      highlightedEl.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightedIndex, isOpen]);
+
+  // Check if dropdown should flip upwards when near bottom of viewport
+  const checkPosition = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow < 260 && spaceAbove > spaceBelow) {
+        setOpenUpwards(true);
+      } else {
+        setOpenUpwards(false);
+      }
+    }
+  };
+
+  const handleOpen = () => {
+    if (disabled) return;
+    checkPosition();
+    setHighlightedIndex(0);
+    setSearchQuery('');
+    setIsOpen(true);
+    if (textFieldRef.current) {
+      if (isSearchable) {
+        textFieldRef.current.value = '';
+      }
+      setTimeout(() => {
+        textFieldRef.current?.focus?.();
+        if (isSearchable) {
+          textFieldRef.current?.select?.();
+        }
+      }, 30);
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setSearchQuery('');
+    if (textFieldRef.current) {
+      textFieldRef.current.value = selectedLabel;
+      textFieldRef.current?.blur?.();
+    }
+  };
+
+  const handleFieldClick = () => {
+    if (disabled) return;
+    if (!isOpen) {
+      handleOpen();
+    } else if (!isSearchable) {
+      handleClose();
+    }
+  };
+
+  const handleTrailingIconClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (disabled) return;
+    if (isOpen) {
+      handleClose();
+    } else {
+      handleOpen();
+    }
+  };
+
+  // Click outside listener
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const handleSelectOption = (optValue: string) => {
+    onChange(optValue);
+    handleClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+
+    if (!isOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+        e.preventDefault();
+        handleOpen();
+      }
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      handleClose();
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1 < filteredOptions.length ? prev + 1 : 0));
+      return;
+    }
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev - 1 >= 0 ? prev - 1 : filteredOptions.length - 1));
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredOptions.length > 0 && highlightedIndex < filteredOptions.length) {
+        handleSelectOption(filteredOptions[highlightedIndex].value);
+      }
+    }
+  };
+
+  // Label and placeholder for authentic Material 3 notched outline
+  const effectiveLabel = label || placeholder || undefined;
+  const effectivePlaceholder = isOpen && isSearchable
+    ? (selectedLabel || placeholder || 'Type to search...')
+    : (!selectedLabel ? placeholder : undefined);
 
   return (
-    <md-outlined-select
-      ref={ref}
-      label={label || undefined}
-      value={value}
-      disabled={disabled || undefined}
-      class={className}
+    <div
+      ref={containerRef}
+      onKeyDown={handleKeyDown}
+      className={`relative select-none text-left ${className}`.trim()}
     >
-      {options.map((opt) => {
-        const val = typeof opt === 'string' ? opt : opt.value;
-        const lbl = typeof opt === 'string' ? opt : opt.label;
-        return (
-          <md-select-option key={val} value={val} selected={val === value || undefined}>
-            <div className="text-xs font-normal leading-5 truncate">{lbl}</div>
-          </md-select-option>
-        );
-      })}
-    </md-outlined-select>
+      <div onClick={handleFieldClick} className="w-full">
+        <md-outlined-text-field
+          ref={textFieldRef}
+          label={effectiveLabel}
+          value={displayValue}
+          placeholder={effectivePlaceholder}
+          disabled={disabled || undefined}
+          class={`w-full ${!isSearchable ? 'cursor-pointer' : ''}`.trim()}
+        >
+          {selectedItem?.iconUrl && (
+            <span
+              slot="leading-icon"
+              className="inline-flex items-center justify-center w-6 h-6 pointer-events-none select-none"
+            >
+              <img
+                src={selectedItem.iconUrl}
+                alt=""
+                className="w-5 h-3.5 object-cover rounded-[2px] border border-white/10 shadow-xs"
+              />
+            </span>
+          )}
+          <md-icon
+            slot="trailing-icon"
+            onClick={handleTrailingIconClick}
+            class={`cursor-pointer transition-transform duration-200 select-none ${
+              isOpen ? 'rotate-180 text-discord-blurple' : 'text-discord-muted hover:text-discord-white'
+            }`}
+          >
+            expand_more
+          </md-icon>
+        </md-outlined-text-field>
+      </div>
+
+      {/* Dropdown Menu Popover: Options list directly, NO nested search bar */}
+      {isOpen && (
+        <div
+          role="listbox"
+          className={`absolute left-0 right-0 z-50 bg-[#16181f] border border-discord-border rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col transition-all duration-150 ${
+            openUpwards
+              ? 'bottom-[calc(100%+6px)] origin-bottom'
+              : 'top-[calc(100%+6px)] origin-top'
+          }`}
+          style={{ minWidth: '220px' }}
+        >
+          <div
+            ref={listRef}
+            className="max-h-60 overflow-y-auto py-1 scrollbar-thin"
+          >
+            {filteredOptions.length === 0 ? (
+              <div className="px-4 py-4 text-xs font-normal text-discord-muted text-center flex flex-col items-center gap-1.5">
+                <MdIcon name="search_off" className="text-xl opacity-60" />
+                <span>No options matching &ldquo;{searchQuery}&rdquo;</span>
+              </div>
+            ) : (
+              filteredOptions.map((opt, idx) => {
+                const isSelected = opt.value === value;
+                const isHighlighted = idx === highlightedIndex;
+                return (
+                  <div
+                    key={opt.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    onClick={() => handleSelectOption(opt.value)}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    className={`px-3.5 py-2.5 text-xs font-normal flex items-center justify-between cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-discord-blurple/20 text-discord-white'
+                        : isHighlighted
+                        ? 'bg-discord-surface text-discord-white'
+                        : 'text-discord-text hover:text-discord-white hover:bg-discord-surface'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 mr-2">
+                      {opt.iconUrl && (
+                        <img
+                          src={opt.iconUrl}
+                          alt=""
+                          className="w-5 h-3.5 object-cover rounded-[2px] shrink-0 border border-white/10 shadow-xs"
+                        />
+                      )}
+                      <span className="truncate">{opt.label}</span>
+                    </div>
+                    {isSelected && (
+                      <MdIcon
+                        name="check"
+                        className="text-discord-blurple text-base shrink-0"
+                      />
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -438,6 +715,62 @@ export const MdSwitch: React.FC<{
       selected={checked ? true : undefined}
       disabled={disabled ? true : undefined}
       class={`shrink-0 cursor-pointer ${className}`.trim()}
+    />
+  );
+};
+
+export interface MdSliderProps {
+  value: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  labeled?: boolean;
+  disabled?: boolean;
+  ariaLabel?: string;
+  onChange: (value: number) => void;
+  className?: string;
+}
+
+export const MdSlider: React.FC<MdSliderProps> = ({
+  value,
+  min = 0,
+  max = 100,
+  step = 1,
+  labeled = false,
+  disabled = false,
+  ariaLabel,
+  onChange,
+  className = '',
+}) => {
+  const ref = useRef<any>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const handler = (e: Event) => {
+      onChange(Number((e.target as any).value));
+    };
+    el.addEventListener('input', handler);
+    return () => el.removeEventListener('input', handler);
+  }, [onChange]);
+
+  useEffect(() => {
+    if (ref.current && Number(ref.current.value) !== value) {
+      ref.current.value = value;
+    }
+  }, [value]);
+
+  return (
+    <md-slider
+      ref={ref}
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      labeled={labeled || undefined}
+      disabled={disabled || undefined}
+      aria-label={ariaLabel}
+      class={`w-full ${className}`.trim()}
     />
   );
 };
@@ -1034,45 +1367,610 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ category, title, descrip
   </div>
 );
 
-export interface NoticeBannerProps {
-  message: string;
-  tone?: 'success' | 'danger' | 'info' | 'warning';
+export type ToastVariant =
+  | 'success'
+  | 'danger'
+  | 'error'
+  | 'info'
+  | 'warning'
+  | 'loading'
+  | 'neutral'
+  | 'premium';
+
+export type ToastPosition =
+  | 'top-center'
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-center'
+  | 'bottom-right'
+  | 'bottom-left'
+  | 'center'
+  | 'center-left'
+  | 'center-right';
+
+export interface ToastOptions {
+  title?: string;
+  variant?: ToastVariant;
+  position?: ToastPosition;
   icon?: string;
+  durationMs?: number;
+  closable?: boolean;
+  onClose?: () => void;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
   className?: string;
 }
 
-export const NoticeBanner: React.FC<NoticeBannerProps> = ({
-  message,
-  tone = 'success',
-  icon,
-  className = '',
-}) => {
-  const toneMap = {
-    success: {
-      styles: 'bg-discord-green/15 border-discord-green/30 text-discord-green',
-      defaultIcon: 'check_circle',
-    },
-    danger: {
-      styles: 'bg-discord-red/15 border-discord-red/30 text-discord-red',
-      defaultIcon: 'error',
-    },
-    info: {
-      styles: 'bg-discord-blurple/15 border-discord-blurple/30 text-discord-blurple',
-      defaultIcon: 'info',
-    },
-    warning: {
-      styles: 'bg-discord-yellow/15 border-discord-yellow/30 text-discord-yellow',
-      defaultIcon: 'warning',
-    },
-  }[tone];
+export interface ToastRecord extends ToastOptions {
+  id: string;
+  message: string;
+  createdAt: number;
+  exiting?: boolean;
+}
+
+// Global Toast State Store (Supports stack & multi-toast emission)
+type ToastListener = () => void;
+let globalToastQueue: ToastRecord[] = [];
+const toastListeners = new Set<ToastListener>();
+
+function notifyToastListeners() {
+  toastListeners.forEach((listener) => listener());
+}
+
+export const toast = (message: string, options?: ToastOptions) => {
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const record: ToastRecord = {
+    id,
+    message,
+    title: options?.title,
+    variant: options?.variant || 'neutral',
+    position: options?.position,
+    icon: options?.icon,
+    durationMs: options?.durationMs ?? 4000,
+    closable: options?.closable ?? true,
+    action: options?.action,
+    className: options?.className,
+    onClose: options?.onClose,
+    createdAt: Date.now(),
+    exiting: false,
+  };
+
+  // Prepend newest toast to top of stack
+  globalToastQueue = [record, ...globalToastQueue];
+  notifyToastListeners();
+  return id;
+};
+
+toast.success = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'success' });
+toast.error = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'danger' });
+toast.danger = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'danger' });
+toast.info = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'info' });
+toast.warning = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'warning' });
+toast.loading = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'loading', durationMs: 0 });
+toast.neutral = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'neutral' });
+toast.premium = (message: string, options?: Omit<ToastOptions, 'variant'>) =>
+  toast(message, { ...options, variant: 'premium' });
+
+toast.dismiss = (id?: string) => {
+  if (id) {
+    globalToastQueue = globalToastQueue.map((t) => (t.id === id ? { ...t, exiting: true } : t));
+    notifyToastListeners();
+    setTimeout(() => {
+      const match = globalToastQueue.find((t) => t.id === id);
+      match?.onClose?.();
+      globalToastQueue = globalToastQueue.filter((t) => t.id !== id);
+      notifyToastListeners();
+    }, 380);
+  } else {
+    globalToastQueue = globalToastQueue.map((t) => ({ ...t, exiting: true }));
+    notifyToastListeners();
+    setTimeout(() => {
+      globalToastQueue.forEach((t) => t.onClose?.());
+      globalToastQueue = [];
+      notifyToastListeners();
+    }, 380);
+  }
+};
+
+export interface ToasterProps {
+  maxVisible?: number; // Configurable maximum stacked toasts (Default: 5)
+  position?: ToastPosition; // Default: 'top-right'
+  durationMs?: number;
+  className?: string;
+
+  // Optional direct props for backward compatibility
+  message?: string | null;
+  title?: string;
+  variant?: ToastVariant;
+  tone?: ToastVariant;
+  icon?: string;
+  closable?: boolean;
+  toastKey?: string | number;
+  onClose?: () => void;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+const variantConfig: Record<
+  ToastVariant,
+  {
+    containerBg: string;
+    iconColor: string;
+    textColor: string;
+    actionColor: string;
+    closeColor: string;
+    defaultIcon: string;
+  }
+> = {
+  // Discord UI Kit Figma: CTA Colors/Green (#3BA55C, Hover #2D7D46) & Gray/White (#FFFFFF)
+  success: {
+    containerBg: 'bg-[#3BA55C]',
+    iconColor: 'text-[#FFFFFF]',
+    textColor: 'text-[#FFFFFF]',
+    actionColor: 'text-[#FFFFFF] hover:bg-[#2D7D46]',
+    closeColor: 'text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-[#2D7D46]',
+    defaultIcon: 'check_circle',
+  },
+  // Discord UI Kit Figma: CTA Colors/Red (#ED4245, Hover #C03537) & Gray/White (#FFFFFF)
+  danger: {
+    containerBg: 'bg-[#ED4245]',
+    iconColor: 'text-[#FFFFFF]',
+    textColor: 'text-[#FFFFFF]',
+    actionColor: 'text-[#FFFFFF] hover:bg-[#C03537]',
+    closeColor: 'text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-[#C03537]',
+    defaultIcon: 'error',
+  },
+  error: {
+    containerBg: 'bg-[#ED4245]',
+    iconColor: 'text-[#FFFFFF]',
+    textColor: 'text-[#FFFFFF]',
+    actionColor: 'text-[#FFFFFF] hover:bg-[#C03537]',
+    closeColor: 'text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-[#C03537]',
+    defaultIcon: 'error',
+  },
+  // Discord UI Kit Figma: CTA Colors/Blurple/Main (#5865F2, Hover #4752C4) & Gray/White (#FFFFFF)
+  info: {
+    containerBg: 'bg-[#5865F2]',
+    iconColor: 'text-[#FFFFFF]',
+    textColor: 'text-[#FFFFFF]',
+    actionColor: 'text-[#FFFFFF] hover:bg-[#4752C4]',
+    closeColor: 'text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-[#4752C4]',
+    defaultIcon: 'info',
+  },
+  // Discord UI Kit Figma: Status Idle/Warning (#FAA61A) & Gray/Dark Mode/Tooltips (#18191C)
+  warning: {
+    containerBg: 'bg-[#FAA61A]',
+    iconColor: 'text-[#18191C]',
+    textColor: 'text-[#18191C]',
+    actionColor: 'text-[#18191C] hover:bg-black/15',
+    closeColor: 'text-[#18191C]/80 hover:text-[#18191C] hover:bg-black/15',
+    defaultIcon: 'warning',
+  },
+  // Discord UI Kit Figma: Gray/Dark Mode/Tooltips (#18191C), Text (#DCDDDE) & Blurple (#5865F2)
+  loading: {
+    containerBg: 'bg-[#18191C]',
+    iconColor: 'text-[#5865F2]',
+    textColor: 'text-[#DCDDDE]',
+    actionColor: 'text-[#5865F2] hover:bg-[#4F545C]/40',
+    closeColor: 'text-[#DCDDDE]/75 hover:text-[#FFFFFF] hover:bg-[#4F545C]/40',
+    defaultIcon: 'progress_activity',
+  },
+  // Discord UI Kit Figma: CTA Colors/Secondary (#4F545C, Hover #5D6269) & Gray/White (#FFFFFF)
+  neutral: {
+    containerBg: 'bg-[#4F545C]',
+    iconColor: 'text-[#FFFFFF]',
+    textColor: 'text-[#FFFFFF]',
+    actionColor: 'text-[#FFFFFF] hover:bg-[#5D6269]',
+    closeColor: 'text-[#DCDDDE] hover:text-[#FFFFFF] hover:bg-[#5D6269]',
+    defaultIcon: 'notifications',
+  },
+  // Discord UI Kit Figma: Nitro Boost Fuchsia (#EB459E) & Gray/White (#FFFFFF)
+  premium: {
+    containerBg: 'bg-[#EB459E]',
+    iconColor: 'text-[#FFFFFF]',
+    textColor: 'text-[#FFFFFF]',
+    actionColor: 'text-[#FFFFFF] hover:bg-black/15',
+    closeColor: 'text-[#FFFFFF]/85 hover:text-[#FFFFFF] hover:bg-black/15',
+    defaultIcon: 'auto_awesome',
+  },
+};
+
+const positionLayouts: Record<
+  ToastPosition,
+  {
+    container: string;
+    isBottom: boolean;
+    isCenter: boolean;
+    align: 'left' | 'right' | 'center';
+  }
+> = {
+  'top-right': {
+    container: 'fixed top-5 right-5 z-50 pointer-events-none',
+    isBottom: false,
+    isCenter: false,
+    align: 'right',
+  },
+  'top-center': {
+    container: 'fixed top-5 left-1/2 z-50 pointer-events-none',
+    isBottom: false,
+    isCenter: true,
+    align: 'center',
+  },
+  'top-left': {
+    container: 'fixed top-5 left-5 z-50 pointer-events-none',
+    isBottom: false,
+    isCenter: false,
+    align: 'left',
+  },
+  'bottom-right': {
+    container: 'fixed bottom-5 right-5 z-50 pointer-events-none',
+    isBottom: true,
+    isCenter: false,
+    align: 'right',
+  },
+  'bottom-center': {
+    container: 'fixed bottom-5 left-1/2 z-50 pointer-events-none',
+    isBottom: true,
+    isCenter: true,
+    align: 'center',
+  },
+  'bottom-left': {
+    container: 'fixed bottom-5 left-5 z-50 pointer-events-none',
+    isBottom: true,
+    isCenter: false,
+    align: 'left',
+  },
+  center: {
+    container: 'fixed top-1/2 left-1/2 z-50 pointer-events-none',
+    isBottom: false,
+    isCenter: true,
+    align: 'center',
+  },
+  'center-left': {
+    container: 'fixed top-1/2 left-5 z-50 pointer-events-none',
+    isBottom: false,
+    isCenter: false,
+    align: 'left',
+  },
+  'center-right': {
+    container: 'fixed top-1/2 right-5 z-50 pointer-events-none',
+    isBottom: false,
+    isCenter: false,
+    align: 'right',
+  },
+};
+
+// Individual Toast Item Card with Isolated Timer & Hover-to-Pause
+const ToastItemCard: React.FC<{
+  item: ToastRecord;
+  isBottom: boolean;
+  isCenter: boolean;
+  align?: 'left' | 'right' | 'center';
+  onDismiss: (id: string) => void;
+}> = ({ item, isBottom, isCenter, align = 'right', onDismiss }) => {
+  const [isPaused, setIsPaused] = useState(false);
+  const activeVariant = item.variant || 'neutral';
+  const cfg = variantConfig[activeVariant] || variantConfig.neutral;
+
+  // Stable dismiss callback ref so timer doesn't reset on parent re-renders
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  // Track remaining duration individually for this toast
+  const remainingTimeRef = useRef<number>(item.durationMs ?? 4000);
+  const lastStartRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    // If exiting, duration is 0, or loading variant, no auto-dismiss timer
+    if (item.exiting || item.durationMs === 0 || activeVariant === 'loading') {
+      return;
+    }
+
+    if (isPaused) {
+      // Deduct elapsed time before pause
+      const elapsed = Date.now() - lastStartRef.current;
+      remainingTimeRef.current = Math.max(300, remainingTimeRef.current - elapsed);
+      return;
+    }
+
+    // Start or resume countdown timer
+    lastStartRef.current = Date.now();
+    const timer = setTimeout(() => {
+      onDismissRef.current(item.id);
+    }, remainingTimeRef.current);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [item.id, item.exiting, isPaused, item.durationMs, activeVariant]);
+
+  // Direction-aware exit animation based on screen position
+  const exitAnimClass =
+    align === 'right'
+      ? 'rht-exit-right'
+      : align === 'left'
+      ? 'rht-exit-left'
+      : isBottom
+      ? 'rht-exit-bottom'
+      : isCenter
+      ? 'rht-exit-center'
+      : 'rht-exit-top';
+
+  const enterAnimClass = isBottom
+    ? 'rht-enter-bottom'
+    : isCenter
+    ? 'rht-enter-center'
+    : 'rht-enter-top';
+
+  const animClass = item.exiting ? exitAnimClass : enterAnimClass;
 
   return (
     <div
-      className={`flex items-center gap-2.5 rounded-lg border px-4 py-3 text-xs font-normal ${toneMap.styles} ${className}`.trim()}
+      role="status"
+      aria-live="polite"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className={`pointer-events-auto min-h-[48px] flex items-center gap-3 rounded-lg border-0 pl-4 pr-2.5 py-2.5 text-xs font-normal shadow-[0_8px_24px_rgba(0,0,0,0.42),0_2px_8px_rgba(0,0,0,0.28)] min-w-[260px] max-w-md w-max max-w-[calc(100vw-2.5rem)] ${animClass} ${cfg.containerBg} ${cfg.textColor} ${item.className || ''}`.trim()}
     >
-      <MdIcon name={icon || toneMap.defaultIcon} className="text-xl shrink-0" />
-      <span>{message}</span>
+      <md-elevation />
+
+      <span className={`inline-flex items-center justify-center shrink-0 rht-icon-pop ${cfg.iconColor}`}>
+        {activeVariant === 'loading' ? (
+          <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+        ) : (
+          <MdIcon name={item.icon || cfg.defaultIcon} className="text-xl leading-none" />
+        )}
+      </span>
+
+      <div className="flex flex-col min-w-0 flex-1 pr-1">
+        {item.title && (
+          <span className={`text-xs font-normal truncate ${cfg.textColor}`}>
+            {item.title}
+          </span>
+        )}
+        <span className={`text-xs font-normal leading-5 ${item.title ? 'opacity-90' : ''}`}>
+          {item.message}
+        </span>
+      </div>
+
+      {item.action && (
+        <button
+          type="button"
+          onClick={item.action.onClick}
+          className={`px-2.5 py-1.5 rounded-md border-0 bg-transparent text-xs font-normal cursor-pointer transition-colors shrink-0 ${cfg.actionColor}`}
+        >
+          {item.action.label}
+        </button>
+      )}
+
+      {item.closable && (
+        <button
+          type="button"
+          onClick={() => onDismiss(item.id)}
+          className={`w-8 h-8 rounded-full border-0 bg-transparent flex items-center justify-center cursor-pointer transition-colors shrink-0 ${cfg.closeColor}`}
+          title="Dismiss"
+        >
+          <MdIcon name="close" className="text-lg leading-none" />
+        </button>
+      )}
     </div>
+  );
+};
+
+export const globalToastConfig = {
+  maxVisible: 5,
+};
+
+export const Toaster: React.FC<ToasterProps> = ({
+  maxVisible = 5,
+  position = 'top-right',
+  durationMs = 4000,
+  className = '',
+  message,
+  title,
+  variant,
+  tone,
+  icon,
+  closable = true,
+  toastKey,
+  onClose,
+  action,
+}) => {
+  const [, setRenderTrigger] = useState(0);
+  const registeredToastIdRef = useRef<string | null>(null);
+  const [heights, setHeights] = useState<Record<string, number>>({});
+
+  // Sync maxVisible to globalToastConfig if specified
+  useEffect(() => {
+    if (typeof maxVisible === 'number' && maxVisible > 0) {
+      globalToastConfig.maxVisible = maxVisible;
+    }
+  }, [maxVisible]);
+
+  // Subscribe to global toast queue
+  useEffect(() => {
+    const handler = () => setRenderTrigger((n) => n + 1);
+    toastListeners.add(handler);
+    return () => {
+      toastListeners.delete(handler);
+    };
+  }, []);
+
+  // Backward compatibility: Handle single toast declared via props
+  useEffect(() => {
+    if (message) {
+      if (registeredToastIdRef.current) {
+        toast.dismiss(registeredToastIdRef.current);
+      }
+      const newId = toast(message, {
+        title,
+        variant: variant || tone || 'success',
+        position,
+        icon,
+        durationMs,
+        closable,
+        action,
+        onClose,
+      });
+      registeredToastIdRef.current = newId;
+    } else if (registeredToastIdRef.current) {
+      toast.dismiss(registeredToastIdRef.current);
+      registeredToastIdRef.current = null;
+    }
+  }, [message, title, variant, tone, position, icon, durationMs, closable, toastKey]);
+
+  // Stable dismiss handler
+  const handleDismiss = useCallback((id: string) => {
+    toast.dismiss(id);
+  }, []);
+
+  // Measure toast element height
+  const updateHeight = useCallback((id: string, h: number) => {
+    setHeights((prev) => (prev[id] === h ? prev : { ...prev, [id]: h }));
+  }, []);
+
+  // Clean up unused heights
+  useEffect(() => {
+    setHeights((prev) => {
+      const activeIds = new Set(globalToastQueue.map((t) => t.id));
+      let changed = false;
+      const next: Record<string, number> = {};
+      for (const id in prev) {
+        if (activeIds.has(id)) {
+          next[id] = prev[id];
+        } else {
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [globalToastQueue]);
+
+  // Group active toasts by position
+  const activeByPosition = useMemo(() => {
+    const map: Record<ToastPosition, ToastRecord[]> = {
+      'top-center': [],
+      'top-right': [],
+      'top-left': [],
+      'bottom-center': [],
+      'bottom-right': [],
+      'bottom-left': [],
+      'center': [],
+      'center-left': [],
+      'center-right': [],
+    };
+    for (const t of globalToastQueue) {
+      const pos = t.position || position || 'top-right';
+      if (map[pos]) {
+        map[pos].push(t);
+      } else {
+        map['top-right'].push(t);
+      }
+    }
+    return map;
+  }, [position, globalToastQueue]);
+
+  const effectiveMaxVisible = maxVisible ?? globalToastConfig.maxVisible ?? 5;
+
+  // Handle maxVisible limit per position: if stack exceeds limit, trim older excess toasts
+  useEffect(() => {
+    Object.values(activeByPosition).forEach((group) => {
+      const unexited = group.filter((t) => !t.exiting);
+      if (unexited.length > effectiveMaxVisible) {
+        const excess = unexited.slice(effectiveMaxVisible);
+        excess.forEach((t) => toast.dismiss(t.id));
+      }
+    });
+  }, [activeByPosition, effectiveMaxVisible]);
+
+  const activePositions = (Object.keys(activeByPosition) as ToastPosition[]).filter(
+    (pos) => activeByPosition[pos].length > 0
+  );
+
+  if (activePositions.length === 0) return null;
+
+  return (
+    <>
+      {activePositions.map((pos) => {
+        const layout = positionLayouts[pos] || positionLayouts['top-right'];
+        const groupToasts = activeByPosition[pos];
+        const displayToasts = groupToasts.slice(0, effectiveMaxVisible + 2);
+
+        const isBottom = layout.isBottom;
+        const isCenter = layout.align === 'center';
+        const isRight = layout.align === 'right';
+        const gutter = 12;
+
+        let currentOffset = 0;
+
+        return (
+          <div
+            key={pos}
+            className={`${layout.container} ${className}`.trim()}
+          >
+            {displayToasts.map((item) => {
+              const itemHeight = heights[item.id] || 52;
+              const offset = currentOffset;
+              currentOffset += itemHeight + gutter;
+
+              let transform = '';
+              if (pos === 'center') {
+                transform = `translate3d(-50%, calc(-50% + ${offset}px), 0)`;
+              } else if (pos === 'center-left' || pos === 'center-right') {
+                transform = `translate3d(0, calc(-50% + ${offset}px), 0)`;
+              } else if (isCenter) {
+                transform = `translate3d(-50%, ${isBottom ? -offset : offset}px, 0)`;
+              } else {
+                transform = `translate3d(0, ${isBottom ? -offset : offset}px, 0)`;
+              }
+
+              const wrapperStyle: React.CSSProperties = {
+                position: 'absolute',
+                [isBottom ? 'bottom' : 'top']: 0,
+                [isRight ? 'right' : 'left']: 0,
+                transform,
+                transition: 'transform 320ms cubic-bezier(0.21, 1.02, 0.73, 1)',
+              };
+
+              return (
+                <div
+                  key={item.id}
+                  ref={(el) => {
+                    if (el) {
+                      const h = el.offsetHeight;
+                      if (h > 0 && heights[item.id] !== h) {
+                        updateHeight(item.id, h);
+                      }
+                    }
+                  }}
+                  style={wrapperStyle}
+                  className="pointer-events-auto"
+                >
+                  <ToastItemCard
+                    item={item}
+                    isBottom={isBottom}
+                    isCenter={isCenter}
+                    align={layout.align}
+                    onDismiss={handleDismiss}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </>
   );
 };
 
@@ -1084,6 +1982,9 @@ export interface SurfaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   subtitle?: string;
   headerAction?: React.ReactNode;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  divider?: boolean;
   children: React.ReactNode;
   className?: string;
   noPadding?: boolean;
@@ -1094,30 +1995,122 @@ export const SurfaceCard = React.forwardRef<HTMLDivElement, SurfaceCardProps>(({
   title,
   subtitle,
   headerAction,
+  collapsible = false,
+  defaultOpen = true,
+  divider,
   children,
   className = '',
   noPadding = false,
   onClick,
   ...rest
-}, ref) => (
-  <div
-    ref={ref}
-    onClick={onClick}
-    className={`bg-discord-card border border-discord-border rounded-xl ${noPadding ? 'overflow-hidden' : 'p-5'} ${className}`.trim()}
-    {...rest}
-  >
-    {(title || subtitle || headerAction) && (
-      <div className={`flex items-start justify-between gap-3 ${noPadding ? 'px-5 pt-5 pb-3' : 'mb-4'}`}>
-        <div>
-          {title && <h2 className="text-base font-normal text-discord-white">{title}</h2>}
-          {subtitle && <p className="text-xs font-normal text-discord-muted mt-0.5">{subtitle}</p>}
+}, ref) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const contentId = useId();
+  const hasChildren = React.Children.toArray(children).some(Boolean);
+  const showBody = (!collapsible || isOpen) && hasChildren;
+  const hasDivider = divider ?? (Boolean(title || subtitle || headerAction || collapsible) && showBody);
+
+  return (
+    <div
+      ref={ref}
+      onClick={onClick}
+      className={`bg-discord-card border border-discord-border rounded-xl ${noPadding ? 'overflow-hidden' : 'p-5'} ${className}`.trim()}
+      {...rest}
+    >
+      {(title || subtitle || headerAction || collapsible) && (
+        <div
+          className={`flex items-center justify-between gap-4 ${
+            noPadding
+              ? `px-5 pt-5 ${hasDivider ? 'pb-4 border-b border-discord-border' : 'pb-3'}`
+              : hasDivider
+              ? 'pb-4 mb-4 border-b border-discord-border'
+              : showBody
+              ? 'mb-4'
+              : ''
+          }`}
+        >
+          {/* Left Title & Subtitle */}
+          <div
+            role={collapsible ? 'button' : undefined}
+            tabIndex={collapsible ? 0 : undefined}
+            aria-expanded={collapsible ? isOpen : undefined}
+            aria-controls={collapsible ? contentId : undefined}
+            onClick={
+              collapsible
+                ? (e) => {
+                    e.stopPropagation();
+                    setIsOpen((prev) => !prev);
+                  }
+                : undefined
+            }
+            onKeyDown={
+              collapsible
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setIsOpen((prev) => !prev);
+                    }
+                  }
+                : undefined
+            }
+            className={`flex-1 min-w-0 text-left ${
+              collapsible ? 'cursor-pointer group select-none focus-visible:outline-none' : ''
+            }`}
+          >
+            {title && (
+              <h2
+                className={`text-base font-normal text-discord-white ${
+                  collapsible ? 'group-hover:text-discord-text transition-colors' : ''
+                }`}
+              >
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p className="text-xs font-normal text-discord-muted mt-0.5">
+                {subtitle}
+              </p>
+            )}
+          </div>
+
+          {/* Right Controls: headerAction (toggle) on the left, Expand Icon on the right, aligned center */}
+          {(collapsible || headerAction) && (
+            <div className="flex items-center gap-3 shrink-0">
+              {headerAction && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center justify-center shrink-0"
+                >
+                  {headerAction}
+                </div>
+              )}
+              {collapsible && (
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-controls={contentId}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen((prev) => !prev);
+                  }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-surface/70 transition-colors cursor-pointer bg-transparent border-0 p-0 focus-visible:outline-none shrink-0"
+                  title={isOpen ? 'Collapse' : 'Expand'}
+                >
+                  <MdIcon name={isOpen ? 'expand_less' : 'expand_more'} className="text-xl leading-none" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
-        {headerAction && <div className="shrink-0">{headerAction}</div>}
-      </div>
-    )}
-    {children}
-  </div>
-));
+      )}
+      {showBody && (
+        <div id={collapsible ? contentId : undefined} className="contents">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+});
 SurfaceCard.displayName = 'SurfaceCard';
 
 export interface QuickActionCardProps {
@@ -1278,7 +2271,7 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
         type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 w-12 rounded-xl border border-discord-border bg-discord-surface cursor-pointer p-1 shrink-0 shadow-sm transition-transform hover:scale-105"
+        className="h-[56px] w-[56px] rounded-lg border border-discord-border bg-discord-surface cursor-pointer p-1.5 shrink-0 shadow-sm transition-colors hover:border-discord-border-hover focus:outline-none focus:border-discord-blurple"
         title="Choose color"
       />
     </div>
@@ -1287,3 +2280,70 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = ({
     </div>
   </div>
 );
+
+// ============================================================================
+// UNSAVED CHANGES FLOATING BAR (MODAL)
+// ============================================================================
+
+export interface UnsavedChangesBarProps {
+  show: boolean;
+  message?: string;
+  onReset: () => void;
+  onSave: () => void;
+  saving?: boolean;
+  saveLabel?: string;
+  resetLabel?: string;
+  className?: string;
+}
+
+export const UnsavedChangesBar: React.FC<UnsavedChangesBarProps> = ({
+  show,
+  message = 'You have unsaved changes',
+  onReset,
+  onSave,
+  saving = false,
+  saveLabel = 'Save Changes',
+  resetLabel = 'Reset',
+  className = '',
+}) => {
+  return (
+    <div
+      role="region"
+      aria-live="polite"
+      aria-label="Unsaved changes warning"
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between gap-6 sm:gap-10 px-5 py-3 rounded-xl bg-[#111319] border border-discord-border shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-md transition-all duration-300 ease-out transform w-[calc(100%-2rem)] max-w-lg sm:w-auto ${
+        show
+          ? 'translate-y-0 opacity-100 pointer-events-auto scale-100'
+          : 'translate-y-10 opacity-0 pointer-events-none scale-95'
+      } ${className}`.trim()}
+    >
+      <span className="text-sm font-normal text-discord-white select-none whitespace-nowrap">
+        {message}
+      </span>
+
+      <div className="flex items-center gap-3 shrink-0">
+        <button
+          type="button"
+          onClick={onReset}
+          disabled={saving}
+          className="text-sm font-normal text-discord-muted hover:text-discord-white transition-colors cursor-pointer bg-transparent border-0 px-2 py-1.5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {resetLabel}
+        </button>
+
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving}
+          className="bg-discord-blurple hover:bg-discord-blurple/90 active:scale-[0.98] text-white text-sm font-normal px-5 py-2 rounded-lg transition-all duration-150 cursor-pointer border-0 shadow-sm flex items-center justify-center gap-2 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {saving && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+          )}
+          <span>{saving ? 'Saving...' : saveLabel}</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+

@@ -38,6 +38,7 @@ declare global {
       'md-icon': any;
       'md-menu': any;
       'md-menu-item': any;
+      'md-slider': any;
     }
   }
 }

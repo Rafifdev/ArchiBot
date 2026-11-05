@@ -11,8 +11,12 @@ import { VoicePage } from './pages/VoicePage';
 import { EmbedsPage } from './pages/EmbedsPage';
 import { BackupsPage } from './pages/BackupsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { MilestonesPage } from './pages/MilestonesPage';
+import { AuditLogsPage } from './pages/AuditLogsPage';
+import { WelcomePage } from './pages/WelcomePage';
+import { GoodbyePage } from './pages/GoodbyePage';
 import { DashboardLayout } from './components/layout';
-import { MdLoading } from './components/ui';
+import { MdLoading, Toaster } from './components/ui';
 import { UserProfile } from './types/api';
 
 export const AppContent: React.FC = () => {
@@ -85,9 +89,14 @@ export const AppContent: React.FC = () => {
         <Route path="roles" element={<RolesPage />} />
         <Route path="members" element={<MembersPage />} />
         <Route path="architect" element={<ArchitectPage />} />
+        <Route path="welcome" element={<WelcomePage user={user} />} />
+        <Route path="goodbye" element={<GoodbyePage user={user} />} />
         <Route path="voice" element={<VoicePage />} />
         <Route path="embeds" element={<EmbedsPage />} />
         <Route path="backups" element={<BackupsPage />} />
+        <Route path="milestones" element={<MilestonesPage user={user} />} />
+        <Route path="audit" element={<AuditLogsPage />} />
+        <Route path="audit-logs" element={<Navigate to="audit" replace />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
@@ -104,6 +113,7 @@ export const App: React.FC = () => {
         v7_relativeSplatPath: true,
       }}
     >
+      <Toaster position="top-right" maxVisible={5} />
       <AppContent />
     </BrowserRouter>
   );

@@ -123,6 +123,15 @@ declare global {
         disabled?: boolean;
       }>;
       'md-elevation': CustomElement;
+      'md-slider': CustomElement<{
+        min?: number;
+        max?: number;
+        step?: number;
+        value?: number;
+        labeled?: boolean;
+        ticks?: boolean;
+        disabled?: boolean;
+      }>;
     }
   }
 }

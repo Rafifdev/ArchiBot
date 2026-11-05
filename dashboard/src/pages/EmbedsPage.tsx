@@ -8,10 +8,10 @@ import {
   EmbedsSkeleton,
   MdIcon,
   PageHeader,
-  NoticeBanner,
   SurfaceCard,
   SwitchRow,
   ColorPickerField,
+  toast,
 } from '../components/ui';
 import { DiscordEmbedPreview, EmbedData } from '../components/features';
 import { ChannelItem } from '../types/api';
@@ -23,7 +23,6 @@ export const EmbedsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { registerServerFetch } = useServerSwitch();
   const [sending, setSending] = useState(false);
-  const [successNotice, setSuccessNotice] = useState('');
 
   // Form State
   const [channelId, setChannelId] = useState('');
@@ -133,11 +132,10 @@ export const EmbedsPage: React.FC = () => {
 
   const handleSend = async () => {
     if (!channelId) {
-      alert('Please select a target channel.');
+      toast.warning('Please select a target channel.');
       return;
     }
     setSending(true);
-    setSuccessNotice('');
     try {
       const res = await fetch(`/api/guilds/${guildId}/embeds/send`, {
         method: 'POST',
@@ -151,12 +149,12 @@ export const EmbedsPage: React.FC = () => {
       });
       const data = await res.json();
       if (data.success) {
-        setSuccessNotice('Announcement sent successfully to Discord!');
+        toast.success('Announcement sent successfully to Discord!');
       } else {
-        alert(data.error || 'Failed to send message');
+        toast.error(data.error || 'Failed to send message');
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setSending(false);
     }
@@ -173,8 +171,6 @@ export const EmbedsPage: React.FC = () => {
         title="Visual Embed & Announcement Builder"
         description="Craft rich embeds with markdown, custom Discord color themes, and send them directly to any channel."
       />
-
-      {successNotice && <NoticeBanner message={successNotice} tone="success" />}
 
       {/* Preset Quick Chips */}
       <div className="flex flex-wrap items-center gap-2">

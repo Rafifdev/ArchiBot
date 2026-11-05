@@ -36,7 +36,6 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
   const topNavItems: NavEntry[] = [
     { to: `/guilds/${guildId}`, label: 'Home', icon: 'home', end: true },
     { to: `/guilds/${guildId}/architect`, label: 'Lego & Templates', icon: 'architecture' },
-    { to: `/guilds/${guildId}/settings`, label: 'Settings', icon: 'tune' },
   ];
 
   const sectionGroups: NavGroup[] = [
@@ -46,6 +45,14 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
         { to: `/guilds/${guildId}/channels`, label: 'Channels & Categories', icon: 'deployed_code' },
         { to: `/guilds/${guildId}/roles`, label: 'Roles & Permissions', icon: 'badge' },
         { to: `/guilds/${guildId}/members`, label: 'Members & Moderation', icon: 'group' },
+        { to: `/guilds/${guildId}/audit`, label: 'Discord Audit Logs', icon: 'history' },
+      ],
+    },
+    {
+      title: 'WELCOMER & LEAVE',
+      items: [
+        { to: `/guilds/${guildId}/welcome`, label: 'Welcome Message', icon: 'waving_hand' },
+        { to: `/guilds/${guildId}/goodbye`, label: 'Goodbye Message', icon: 'logout' },
       ],
     },
     {
@@ -59,8 +66,8 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
     {
       title: 'BACKUPS & MILESTONES',
       items: [
+        { to: `/guilds/${guildId}/milestones`, label: 'Member Milestones', icon: 'emoji_events' },
         { to: `/guilds/${guildId}/backups`, label: 'Layout Backups', icon: 'inventory_2' },
-        { to: `/guilds/${guildId}/settings?tab=milestone`, label: 'Member Milestones', icon: 'emoji_events' },
       ],
     },
   ];
@@ -471,14 +478,37 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
 
       {/* Sidebar Footer */}
       <div className="p-3 border-t border-discord-border">
-        <Link
-          to="/servers"
-          className="relative overflow-hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-discord-muted hover:text-discord-white hover:bg-discord-surface/50 no-underline transition-colors w-full"
-        >
-          <md-ripple />
-          <md-icon class="text-base text-discord-muted">swap_horiz</md-icon>
-          <span>Switch Server</span>
-        </Link>
+        {guildId ? (
+          <Link
+            to={`/guilds/${guildId}/settings`}
+            className={`relative overflow-hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-normal no-underline transition-colors w-full ${
+              location.pathname.startsWith(`/guilds/${guildId}/settings`)
+                ? 'bg-discord-surface text-discord-white'
+                : 'text-discord-muted hover:text-discord-white hover:bg-discord-surface/50'
+            }`}
+          >
+            <md-ripple />
+            <md-icon
+              class={`text-base shrink-0 ${
+                location.pathname.startsWith(`/guilds/${guildId}/settings`)
+                  ? 'text-discord-blurple'
+                  : 'text-discord-muted'
+              }`}
+            >
+              settings
+            </md-icon>
+            <span>Settings</span>
+          </Link>
+        ) : (
+          <Link
+            to="/servers"
+            className="relative overflow-hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-discord-muted hover:text-discord-white hover:bg-discord-surface/50 no-underline transition-colors w-full"
+          >
+            <md-ripple />
+            <md-icon class="text-base text-discord-muted">dns</md-icon>
+            <span>Select Server</span>
+          </Link>
+        )}
       </div>
     </aside>
   );
@@ -543,8 +573,13 @@ export const CommandSearchModal: React.FC<CommandSearchModalProps> = ({
     const formatGroupTitle = (title: string) =>
       title.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 
+    const generalNavItems = [
+      ...topNavItems,
+      { to: `/guilds/${guildId}/settings`, label: 'Settings', icon: 'settings' },
+    ];
+
     return [
-      { title: 'General', items: topNavItems },
+      { title: 'General', items: generalNavItems },
       ...sectionGroups.map((g) => ({
         title: formatGroupTitle(g.title),
         items: g.items,

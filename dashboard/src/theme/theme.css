@@ -157,6 +157,22 @@
   --md-switch-selected-hover-handle-color: #FFFFFF;
   --md-switch-selected-focus-track-color: var(--color-discord-blurple);
   --md-switch-selected-focus-handle-color: #FFFFFF;
+
+  /* Material Web Slider Tokens */
+  --md-slider-active-track-color: var(--color-discord-blurple);
+  --md-slider-inactive-track-color: #2E333D;
+  --md-slider-handle-color: var(--color-discord-blurple);
+  --md-slider-hover-handle-color: var(--color-discord-blurple);
+  --md-slider-focus-handle-color: var(--color-discord-blurple);
+  --md-slider-pressed-handle-color: var(--color-discord-blurple);
+  --md-slider-active-track-height: 4px;
+  --md-slider-inactive-track-height: 4px;
+  --md-slider-handle-width: 14px;
+  --md-slider-handle-height: 14px;
+  --md-slider-label-container-color: var(--color-discord-surface);
+  --md-slider-label-text-color: var(--color-discord-white);
+  --md-slider-label-text-size: 11px;
+  --md-slider-label-text-weight: 400;
 }
 
 /* Light theme override when toggled via header */
@@ -349,19 +365,205 @@ md-select-option .headline {
   will-change: transform, opacity;
 }
 
-/* Input-Matched Material Web Icon Button (matches 56px height & 8px container shape of textfield/select) */
+/* ==========================================================================
+   REACT-HOT-TOAST SPRING ANIMATIONS (Exact curves from react-hot-toast.com)
+   Enter: 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards
+   Exit:  0.40s cubic-bezier(0.06, 0.71, 0.55, 1) forwards
+   ========================================================================== */
+@keyframes rhtEnterTop {
+  0% {
+    transform: translate3d(0, -200%, 0) scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rhtExitTop {
+  0% {
+    transform: translate3d(0, 0, -1px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, -150%, -1px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes rhtEnterBottom {
+  0% {
+    transform: translate3d(0, 200%, 0) scale(0.6);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rhtExitBottom {
+  0% {
+    transform: translate3d(0, 0, -1px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 150%, -1px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes rhtEnterCenter {
+  0% {
+    transform: translate3d(0, -40%, 0) scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rhtExitCenter {
+  0% {
+    transform: translate3d(0, 0, -1px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, -40%, -1px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes rhtExitRight {
+  0% {
+    transform: translate3d(0, 0, -1px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(120%, 0, -1px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes rhtExitLeft {
+  0% {
+    transform: translate3d(0, 0, -1px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-120%, 0, -1px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes rhtIconPop {
+  0% {
+    transform: scale(0.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.rht-enter-top {
+  animation: rhtEnterTop 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.rht-exit-top {
+  animation: rhtExitTop 0.4s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.rht-enter-bottom {
+  animation: rhtEnterBottom 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.rht-exit-bottom {
+  animation: rhtExitBottom 0.4s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.rht-enter-center {
+  animation: rhtEnterCenter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.rht-exit-center {
+  animation: rhtExitCenter 0.4s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.rht-exit-right {
+  animation: rhtExitRight 0.35s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.rht-exit-left {
+  animation: rhtExitLeft 0.35s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.rht-icon-pop {
+  opacity: 0;
+  animation: rhtIconPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s forwards;
+}
+
+/* Input-Matched Material Web Icon Button (matches 56px height, 8px container shape & exact outline of textfield/select) */
 .input-matched-icon-button,
 md-outlined-icon-button.input-matched-icon-button {
   --md-outlined-icon-button-container-shape: 8px !important;
   --md-outlined-icon-button-container-width: 56px !important;
   --md-outlined-icon-button-container-height: 56px !important;
-  --md-outlined-icon-button-outline-color: var(--color-discord-border) !important;
-  --md-outlined-icon-button-hover-outline-color: var(--color-discord-border-hover) !important;
-  --md-outlined-icon-button-focus-outline-color: var(--color-discord-blurple) !important;
+  --md-outlined-icon-button-outline-color: var(--md-sys-color-outline) !important;
+  --md-outlined-icon-button-outline-width: 1px !important;
   --md-outlined-icon-button-icon-size: 24px !important;
   --md-outlined-icon-button-icon-color: var(--color-discord-white) !important;
+  --md-outlined-icon-button-hover-icon-color: var(--color-discord-white) !important;
+  --md-outlined-icon-button-focus-icon-color: var(--color-discord-white) !important;
   width: 56px !important;
   height: 56px !important;
   border-radius: 8px !important;
+}
+
+.input-matched-icon-button:hover,
+md-outlined-icon-button.input-matched-icon-button:hover {
+  --md-outlined-icon-button-outline-color: var(--md-sys-color-on-surface) !important;
+}
+
+.input-matched-icon-button:focus-within,
+md-outlined-icon-button.input-matched-icon-button:focus-within {
+  --md-outlined-icon-button-outline-color: var(--md-sys-color-primary) !important;
+}
+
+/* Color Picker Swatch Styling */
+input[type="color"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+
+input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 6px;
 }
 

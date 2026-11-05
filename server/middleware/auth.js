@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { PermissionFlagsBits } from 'discord.js';
 import { config } from '../config.js';
-import { client } from '../botClient.js';
+import { client, state } from '../botClient.js';
 
 export function signUserToken(payload) {
   return jwt.sign(payload, config.JWT_SECRET, { expiresIn: '7d' });
@@ -56,9 +56,18 @@ export async function verifyGuildAccess(req, res, next) {
     const hasAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
     const hasManageGuild = member.permissions.has(PermissionFlagsBits.ManageGuild);
 
-    if (!hasAdmin && !hasManageGuild) {
+    const cfg = state.guilds?.[guild.id] || {};
+    const hasAdminRole = Boolean(cfg.adminRoleId && member.roles.cache.has(cfg.adminRoleId));
+    const ac = cfg.accessControl || {};
+    const hasAccessControl = Boolean(
+      ac.enabled &&
+        ((Array.isArray(ac.memberIds) && ac.memberIds.includes(member.id)) ||
+          (Array.isArray(ac.roleIds) && ac.roleIds.some((rId) => member.roles.cache.has(rId))))
+    );
+
+    if (!hasAdmin && !hasManageGuild && !hasAdminRole && !hasAccessControl) {
       return res.status(403).json({
-        error: 'You need Administrator or Manage Server permissions to manage this server.',
+        error: 'You need Administrator, Manage Server, or an authorized Access Control rule to manage this server.',
       });
     }
 

@@ -9,10 +9,10 @@ import {
   MdDialog,
   ConfirmDialog,
   PageHeader,
-  NoticeBanner,
   SurfaceCard,
   SwitchRow,
   EmptyState,
+  toast,
 } from '../components/ui';
 import { BackupItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
@@ -22,7 +22,6 @@ export const BackupsPage: React.FC = () => {
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { registerServerFetch } = useServerSwitch();
-  const [actionNotice, setActionNotice] = useState('');
 
   // Take Snapshot Modal
   const [snapshotOpen, setSnapshotOpen] = useState(false);
@@ -60,7 +59,6 @@ export const BackupsPage: React.FC = () => {
 
   const handleTakeSnapshot = async () => {
     setSnapshotLoading(true);
-    setActionNotice('');
     try {
       const res = await fetch(`/api/guilds/${guildId}/backups`, {
         method: 'POST',
@@ -72,13 +70,13 @@ export const BackupsPage: React.FC = () => {
       if (data.success) {
         setSnapshotOpen(false);
         setSnapshotName('');
-        setActionNotice(data.message);
+        toast.success(data.message || 'Backup snapshot created successfully!');
         fetchBackups();
       } else {
-        alert(data.error || 'Failed to create backup');
+        toast.error(data.error || 'Failed to create backup');
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setSnapshotLoading(false);
     }
@@ -87,7 +85,6 @@ export const BackupsPage: React.FC = () => {
   const handleRestore = async () => {
     if (!restoreBackup) return;
     setRestoreLoading(true);
-    setActionNotice('');
     try {
       const res = await fetch(`/api/guilds/${guildId}/backups/${restoreBackup.slug}/restore`, {
         method: 'POST',
@@ -98,12 +95,12 @@ export const BackupsPage: React.FC = () => {
       const data = await res.json();
       if (data.success) {
         setRestoreBackup(null);
-        setActionNotice(data.message);
+        toast.success(data.message || 'Backup restored successfully!');
       } else {
-        alert(data.error || 'Failed to restore backup');
+        toast.error(data.error || 'Failed to restore backup');
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setRestoreLoading(false);
     }
@@ -122,10 +119,10 @@ export const BackupsPage: React.FC = () => {
       if (data.success) {
         setImportOpen(false);
         setImportJson('');
-        setActionNotice('Backup imported successfully!');
+        toast.success('Backup imported successfully!');
         fetchBackups();
       } else {
-        alert(data.error || 'Import failed');
+        toast.error(data.error || 'Import failed');
       }
     } catch (err: any) {
       alert(`Invalid JSON format: ${err.message}`);
@@ -190,8 +187,6 @@ export const BackupsPage: React.FC = () => {
           </>
         }
       />
-
-      {actionNotice && <NoticeBanner message={actionNotice} tone="success" />}
 
       <SurfaceCard>
         <h3 className="text-xs font-normal text-discord-white mb-4">Saved Snapshots ({backups.length})</h3>

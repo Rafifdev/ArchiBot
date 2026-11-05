@@ -9,9 +9,9 @@ import {
   MdTabs,
   ConfirmDialog,
   PageHeader,
-  NoticeBanner,
   SurfaceCard,
   SwitchRow,
+  toast,
 } from '../components/ui';
 import { ChannelItem, RoleItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
@@ -27,7 +27,6 @@ export const ArchitectPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { registerServerFetch } = useServerSwitch();
   const [executing, setExecuting] = useState(false);
-  const [resultNotice, setResultNotice] = useState('');
 
   const [replaceChannels, setReplaceChannels] = useState(false);
 
@@ -79,7 +78,6 @@ export const ArchitectPage: React.FC = () => {
 
   const handleBuildTemplate = async (templateKey: string) => {
     setExecuting(true);
-    setResultNotice('');
     try {
       const res = await fetch(`/api/guilds/${guildId}/architect/setup`, {
         method: 'POST',
@@ -91,10 +89,10 @@ export const ArchitectPage: React.FC = () => {
         }),
       });
       const data = await res.json();
-      if (data.success) setResultNotice(data.message);
-      else alert(data.error || 'Failed to build template');
+      if (data.success) toast.success(data.message);
+      else toast.error(data.error || 'Failed to build template');
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setExecuting(false);
     }
@@ -102,7 +100,6 @@ export const ArchitectPage: React.FC = () => {
 
   const handleBuildLego = async () => {
     setExecuting(true);
-    setResultNotice('');
     try {
       let customSpec = '';
       if (customCat.trim()) {
@@ -128,10 +125,10 @@ export const ArchitectPage: React.FC = () => {
         }),
       });
       const data = await res.json();
-      if (data.success) setResultNotice(data.message);
-      else alert(data.error || 'Failed to build custom layout');
+      if (data.success) toast.success(data.message);
+      else toast.error(data.error || 'Failed to build custom layout');
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setExecuting(false);
     }
@@ -139,11 +136,10 @@ export const ArchitectPage: React.FC = () => {
 
   const handleDeployPanel = async () => {
     if (!deployChannelId) {
-      alert('Please select a target channel.');
+      toast.warning('Please select a target channel.');
       return;
     }
     setExecuting(true);
-    setResultNotice('');
     try {
       const res = await fetch(`/api/guilds/${guildId}/architect/deploy-panel`, {
         method: 'POST',
@@ -160,10 +156,10 @@ export const ArchitectPage: React.FC = () => {
         }),
       });
       const data = await res.json();
-      if (data.success) setResultNotice(data.message);
-      else alert(data.error || 'Failed to deploy panel');
+      if (data.success) toast.success(data.message);
+      else toast.error(data.error || 'Failed to deploy panel');
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setExecuting(false);
     }
@@ -171,7 +167,6 @@ export const ArchitectPage: React.FC = () => {
 
   const handleClearServer = async () => {
     setExecuting(true);
-    setResultNotice('');
     try {
       const res = await fetch(`/api/guilds/${guildId}/architect/clear`, {
         method: 'POST',
@@ -180,10 +175,10 @@ export const ArchitectPage: React.FC = () => {
         body: JSON.stringify({ keepFreshGeneral: keepGeneral }),
       });
       const data = await res.json();
-      if (data.success) setResultNotice('All old channels cleared successfully.');
-      else alert(data.error || 'Failed to clear channels');
+      if (data.success) toast.success('All old channels cleared successfully.');
+      else toast.error(data.error || 'Failed to clear channels');
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
     } finally {
       setExecuting(false);
     }
@@ -201,8 +196,6 @@ export const ArchitectPage: React.FC = () => {
         title="Server Architect & Lego Builder"
         description="Build complete, structured Discord server environments in seconds with 1-click presets or Lego modular blocks."
       />
-
-      {resultNotice && <NoticeBanner message={resultNotice} tone="success" />}
 
       <MdTabs
         activeIndex={tabIndex}

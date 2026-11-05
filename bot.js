@@ -33,7 +33,7 @@ import {
   serializeGuildTemplate,
   TEMPLATES,
 } from './templates.js';
-import { generateCaptcha, generateMilestoneBanner } from './captcha.js';
+import { generateCaptcha, generateMilestoneBanner, generateWelcomeBanner } from './captcha.js';
 import {
   padVoiceLabel,
   renderVoiceEmojiPng,
@@ -694,6 +694,8 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildInvites,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
   ],
 });
 
@@ -1192,6 +1194,309 @@ export function buildMilestoneCardPayload({ count, next, remaining, userId, avat
   if (avatarUrl) embed.setThumbnail(avatarUrl);
 
   return { content: `🎉 <@${userId}>`, embeds: [embed], files: [file] };
+}
+
+export function formatGreetingTemplate(template, { userId, username, serverName, memberCount }) {
+  const mention = userId ? `<@${userId}>` : username || 'Member';
+  const name = username || 'Member';
+  const srv = serverName || 'Server';
+  const cnt = String(memberCount ?? 1);
+  return String(template || '')
+    .replaceAll('{user}', mention)
+    .replaceAll('{member.mention}', mention)
+    .replaceAll('{username}', name)
+    .replaceAll('{member.displayName}', name)
+    .replaceAll('{member.username}', name)
+    .replaceAll('{server}', srv)
+    .replaceAll('{guild.name}', srv)
+    .replaceAll('{memberCount}', cnt)
+    .replaceAll('{guild.memberCount}', cnt);
+}
+
+function resolveGreetingIconUrl(mode, customUrl, avatarUrl, guildIconUrl) {
+  if (mode === 'member') return avatarUrl || undefined;
+  if (mode === 'server') return guildIconUrl || undefined;
+  if (mode === 'custom' && customUrl && /^https?:\/\//i.test(String(customUrl).trim())) {
+    return String(customUrl).trim();
+  }
+  return undefined;
+}
+
+export function buildWelcomePayload({
+  userId,
+  username,
+  avatarUrl,
+  guild,
+  cfg = {},
+  msProgress = null,
+  target = 'channel',
+}) {
+  const wCfg = cfg.welcomeConfig || {};
+  const count = guild.memberCount;
+  const guildIconUrl = guild.iconURL?.() || undefined;
+  const tplVars = { userId, username, serverName: guild.name, memberCount: count };
+
+  const customOnboarding =
+    (wCfg.onboardingEnabled ?? true) && Array.isArray(wCfg.onboardingChannels) && wCfg.onboardingChannels.length > 0
+      ? wCfg.onboardingChannels
+          .filter((ch) => ch?.channelId && guild.channels.cache.has(ch.channelId))
+          .map((ch) => `${ch.action || 'check out'} <#${ch.channelId}>`)
+      : null;
+
+  const steps =
+    target === 'channel' && (wCfg.onboardingEnabled ?? true)
+      ? customOnboarding || [
+          cfg.rulesId && guild.channels.cache.has(cfg.rulesId) ? `read <#${cfg.rulesId}>` : null,
+          cfg.verifyId && guild.channels.cache.has(cfg.verifyId) ? `verify in <#${cfg.verifyId}>` : null,
+          cfg.rolesPickId && guild.channels.cache.has(cfg.rolesPickId) ? `pick your roles in <#${cfg.rolesPickId}>` : null,
+        ].filter(Boolean)
+      : [];
+  const guideLine = steps.length ? `\n\n📌 Quick start: ${steps.join(' • ')}.` : '';
+  const progressLine =
+    target === 'channel' &&
+    msProgress &&
+    (cfg.milestone?.enabled ?? true) !== false &&
+    msProgress.next !== null &&
+    !msProgress.reachedNow
+      ? `\n🎯 **${msProgress.remaining}** more to reach **${msProgress.next}** members.`
+      : '';
+
+  const delivery =
+    target === 'dm'
+      ? wCfg.dmDelivery || {
+          content: wCfg.dmMessage || 'Welcome to **{server}**, {username}!',
+          embed: { enabled: false },
+          cardEnabled: false,
+          cardPlacement: 'attachment',
+        }
+      : wCfg.channelDelivery || {
+          content: 'Welcome {user} to **{server}**! You are member **#{memberCount}**.',
+          embed: {
+            enabled: true,
+            color: wCfg.cardAccent || '#5865F2',
+            title: '🛬 Welcome to {server}!',
+            description: wCfg.message || 'Glad to have you with us, {user}!',
+            thumbnailMode: 'member',
+            footerText: '{server} • Member #{memberCount}',
+            footerIconMode: 'server',
+            timestamp: true,
+            fields: [],
+          },
+          cardEnabled: wCfg.cardEnabled !== false,
+          cardPlacement: 'attachment',
+        };
+
+  const accentHex = wCfg.cardAccent || '#5865F2';
+  const files = [];
+  const useCard = Boolean(delivery.cardEnabled);
+  const cardPlacement = delivery.cardPlacement === 'embed' ? 'embed' : 'attachment';
+
+  if (useCard) {
+    const pngBuffer = generateWelcomeBanner({
+      username,
+      memberCount: count,
+      layout: wCfg.cardLayout || 'centered',
+      bg: wCfg.cardBg || 'midnight',
+      customBg: wCfg.cardCustomBg || '#1E2238',
+      dim: wCfg.cardDim ?? 25,
+      accentColor: accentHex,
+      customTitle: wCfg.cardTitle || 'WELCOME',
+    });
+    files.push(new AttachmentBuilder(pngBuffer, { name: 'welcome-card.png' }));
+  }
+
+  let contentText = formatGreetingTemplate(delivery.content || '', tplVars).trim();
+  const embeds = [];
+  const embCfg = delivery.embed || {};
+
+  if (embCfg.enabled) {
+    const eColorHex = embCfg.color || accentHex || '#5865F2';
+    const colorInt = /^#?[0-9a-f]{6}$/i.test(eColorHex)
+      ? Number.parseInt(eColorHex.replace('#', ''), 16)
+      : 0x5865f2;
+
+    const eTitle = formatGreetingTemplate(embCfg.title || '', tplVars).trim().slice(0, 256);
+    const rawDesc = formatGreetingTemplate(embCfg.description || '', tplVars).trim();
+    const eDesc = `${rawDesc}${guideLine}${progressLine}`.trim().slice(0, 4096);
+    const eAuthor = formatGreetingTemplate(embCfg.authorName || '', tplVars).trim().slice(0, 256);
+    const eFooter = formatGreetingTemplate(embCfg.footerText || '', tplVars).trim().slice(0, 2048);
+    const validFields = Array.isArray(embCfg.fields)
+      ? embCfg.fields
+          .map((f) => ({
+            name: formatGreetingTemplate(f?.name || '', tplVars).trim().slice(0, 256),
+            value: formatGreetingTemplate(f?.value || '', tplVars).trim().slice(0, 1024),
+            inline: Boolean(f?.inline),
+          }))
+          .filter((f) => f.name && f.value)
+          .slice(0, 10)
+      : [];
+
+    const customBannerUrl =
+      embCfg.imageUrl && /^https?:\/\//i.test(String(embCfg.imageUrl).trim())
+        ? String(embCfg.imageUrl).trim()
+        : undefined;
+    const attachCardInsideEmbed = useCard && cardPlacement === 'embed';
+
+    const hasEmbedBody = Boolean(
+      eTitle || eDesc || eAuthor || eFooter || validFields.length > 0 || customBannerUrl || attachCardInsideEmbed
+    );
+
+    if (hasEmbedBody) {
+      const embed = new EmbedBuilder().setColor(colorInt);
+      if (eAuthor) {
+        const iconURL = resolveGreetingIconUrl(embCfg.authorIconMode, embCfg.authorIconUrl, avatarUrl, guildIconUrl);
+        embed.setAuthor(iconURL ? { name: eAuthor, iconURL } : { name: eAuthor });
+      }
+      if (eTitle) embed.setTitle(eTitle);
+      if (eDesc) embed.setDescription(eDesc);
+      if (validFields.length > 0) embed.addFields(validFields);
+
+      const thumbUrl = resolveGreetingIconUrl(
+        embCfg.thumbnailMode ?? 'none',
+        embCfg.thumbnailUrl,
+        avatarUrl,
+        guildIconUrl
+      );
+      if (thumbUrl) embed.setThumbnail(thumbUrl);
+
+      if (attachCardInsideEmbed) {
+        embed.setImage('attachment://welcome-card.png');
+      } else if (customBannerUrl) {
+        embed.setImage(customBannerUrl);
+      }
+
+      if (eFooter) {
+        const iconURL = resolveGreetingIconUrl(embCfg.footerIconMode, embCfg.footerIconUrl, avatarUrl, guildIconUrl);
+        embed.setFooter(iconURL ? { text: eFooter, iconURL } : { text: eFooter });
+      }
+      if (embCfg.timestamp) embed.setTimestamp();
+      embeds.push(embed);
+    } else if (guideLine || progressLine) {
+      contentText = `${contentText}${guideLine}${progressLine}`.trim();
+    }
+  } else if (guideLine || progressLine) {
+    contentText = `${contentText}${guideLine}${progressLine}`.trim();
+  }
+
+  if (!contentText && embeds.length === 0 && files.length === 0) {
+    contentText = formatGreetingTemplate('Welcome {user} to **{server}**!', tplVars);
+  }
+
+  return {
+    content: contentText || undefined,
+    embeds,
+    files,
+  };
+}
+
+export function buildGoodbyePayload({
+  userId,
+  username,
+  avatarUrl,
+  guild,
+  cfg = {},
+}) {
+  const gCfg = cfg.goodbyeConfig || {};
+  const count = guild.memberCount;
+  const guildIconUrl = guild.iconURL?.() || undefined;
+  const tplVars = { userId, username, serverName: guild.name, memberCount: count };
+
+  const delivery = gCfg.delivery || {
+    content: gCfg.message || '**{member.username}** has left **{guild.name}**.',
+    embed: {
+      enabled: false,
+      color: '#5865F2',
+      authorName: '',
+      authorIconMode: 'none',
+      authorIconUrl: '',
+      title: '',
+      description: '',
+      thumbnailMode: 'none',
+      thumbnailUrl: '',
+      imageUrl: '',
+      footerText: '',
+      footerIconMode: 'none',
+      footerIconUrl: '',
+      timestamp: false,
+      fields: [],
+    },
+    cardEnabled: false,
+    cardPlacement: 'attachment',
+  };
+
+  let contentText = formatGreetingTemplate(delivery.content ?? gCfg.message ?? '', tplVars).trim();
+  const embeds = [];
+  const embCfg = delivery.embed || {};
+
+  if (embCfg.enabled) {
+    const eColorHex = embCfg.color || '#5865F2';
+    const colorInt = /^#?[0-9a-f]{6}$/i.test(eColorHex)
+      ? Number.parseInt(eColorHex.replace('#', ''), 16)
+      : 0x5865f2;
+
+    const eTitle = formatGreetingTemplate(embCfg.title || '', tplVars).trim().slice(0, 256);
+    const rawDesc = formatGreetingTemplate(embCfg.description || '', tplVars).trim();
+    const eDesc = rawDesc.slice(0, 4096);
+    const eFooter = formatGreetingTemplate(embCfg.footerText || '', tplVars).trim().slice(0, 2048);
+
+    const hasAnyContent =
+      eTitle ||
+      eDesc ||
+      embCfg.authorName ||
+      embCfg.imageUrl ||
+      embCfg.thumbnailMode !== 'none' ||
+      (Array.isArray(embCfg.fields) && embCfg.fields.length > 0) ||
+      eFooter;
+
+    if (hasAnyContent) {
+      const embed = new EmbedBuilder().setColor(colorInt);
+      if (eTitle) embed.setTitle(eTitle);
+      if (eDesc) embed.setDescription(eDesc);
+
+      if (embCfg.authorName) {
+        const aName = formatGreetingTemplate(embCfg.authorName, tplVars).trim().slice(0, 256);
+        const iconURL = resolveGreetingIconUrl(embCfg.authorIconMode, embCfg.authorIconUrl, avatarUrl, guildIconUrl);
+        embed.setAuthor(iconURL ? { name: aName, iconURL } : { name: aName });
+      }
+
+      const thumbUrl = resolveGreetingIconUrl(embCfg.thumbnailMode, embCfg.thumbnailUrl, avatarUrl, guildIconUrl);
+      if (thumbUrl) embed.setThumbnail(thumbUrl);
+
+      if (embCfg.imageUrl && /^https?:\/\//i.test(String(embCfg.imageUrl).trim())) {
+        embed.setImage(String(embCfg.imageUrl).trim());
+      }
+
+      if (Array.isArray(embCfg.fields)) {
+        for (const f of embCfg.fields.slice(0, 25)) {
+          const fName = formatGreetingTemplate(f.name || '', tplVars).trim().slice(0, 256);
+          const fVal = formatGreetingTemplate(f.value || '', tplVars).trim().slice(0, 1024);
+          if (fName && fVal) {
+            embed.addFields({ name: fName, value: fVal, inline: Boolean(f.inline) });
+          }
+        }
+      }
+
+      if (eFooter) {
+        const iconURL = resolveGreetingIconUrl(embCfg.footerIconMode, embCfg.footerIconUrl, avatarUrl, guildIconUrl);
+        embed.setFooter(iconURL ? { text: eFooter, iconURL } : { text: eFooter });
+      }
+
+      if (embCfg.timestamp) embed.setTimestamp();
+      embeds.push(embed);
+    }
+  }
+
+  if (!contentText && embeds.length === 0) {
+    contentText = formatGreetingTemplate(
+      gCfg.message || '**{member.username}** has left **{guild.name}**.',
+      tplVars
+    );
+  }
+
+  return {
+    content: contentText || undefined,
+    embeds,
+  };
 }
 
 export function buildVerifyPanelMessage(roleId, minHours = 0, title = '🛡️ Account Verification') {
@@ -2383,39 +2688,63 @@ client.on(Events.GuildMemberAdd, async (member) => {
     return;
   }
 
-  const autoMemberRole =
-    (cfg.memberRoleId && member.guild.roles.cache.get(cfg.memberRoleId)) ||
-    member.guild.roles.cache.find((r) => !r.managed && r.name.toLowerCase() === 'member');
-  if (autoMemberRole && !autoMemberRole.permissions.any(DANGEROUS_PERMS)) {
-    await member.roles.add(autoMemberRole.id).catch(() => {});
+  const wCfg = cfg.welcomeConfig || {};
+  const welcomerActive =
+    wCfg.enabled !== undefined ? Boolean(wCfg.enabled) : Boolean(cfg.welcomeId || cfg.memberRoleId);
+
+  const roleIdsToAssign = new Set();
+  if (Array.isArray(wCfg.autoRoleIds)) {
+    for (const rId of wCfg.autoRoleIds) {
+      if (rId) roleIdsToAssign.add(rId);
+    }
+  }
+  if (cfg.memberRoleId) {
+    roleIdsToAssign.add(cfg.memberRoleId);
+  } else if (roleIdsToAssign.size === 0) {
+    const fallbackMemberRole = member.guild.roles.cache.find((r) => !r.managed && r.name.toLowerCase() === 'member');
+    if (fallbackMemberRole) roleIdsToAssign.add(fallbackMemberRole.id);
+  }
+
+  if (welcomerActive || cfg.memberRoleId) {
+    for (const rId of roleIdsToAssign) {
+      const role = member.guild.roles.cache.get(rId);
+      if (role && !role.managed && !role.permissions.any(DANGEROUS_PERMS)) {
+        await member.roles.add(role.id).catch(() => {});
+      }
+    }
   }
 
   const msCfg = cfg.milestone ?? { ...DEFAULT_MILESTONE };
   const count = member.guild.memberCount;
   const { reachedNow, next, remaining } = computeMilestoneProgress(count, msCfg);
 
-  if (cfg.welcomeId) {
-    const welcomeCh = member.guild.channels.cache.get(cfg.welcomeId);
+  const welcomeChId = wCfg.channelId || cfg.welcomeId;
+  const channelMsgEnabled = welcomerActive && (wCfg.messageEnabled !== undefined ? Boolean(wCfg.messageEnabled) : true);
+  if (channelMsgEnabled && welcomeChId) {
+    const welcomeCh = member.guild.channels.cache.get(welcomeChId);
     if (welcomeCh) {
-      const steps = [
-        cfg.rulesId && member.guild.channels.cache.has(cfg.rulesId) ? `read <#${cfg.rulesId}>` : null,
-        cfg.verifyId && member.guild.channels.cache.has(cfg.verifyId) ? `verify in <#${cfg.verifyId}>` : null,
-        cfg.rolesPickId && member.guild.channels.cache.has(cfg.rolesPickId) ? `pick your roles in <#${cfg.rolesPickId}>` : null,
-      ].filter(Boolean);
-      const guideLine = steps.length ? ` Make sure to ${steps.join(', ')}.` : '';
-      const progressLine =
-        msCfg.enabled !== false && next !== null && !reachedNow
-          ? ` — **${remaining}** more to reach **${next}** members`
-          : '';
-      const embed = new EmbedBuilder()
-        .setColor(0x2ecc71)
-        .setTitle(`🛬 Welcome to ${member.guild.name}!`)
-        .setDescription(
-          `Glad to have you with us, <@${member.id}>!${guideLine}\nYou are member **#${count}**${progressLine}.`
-        )
-        .setThumbnail(member.user.displayAvatarURL());
-      await welcomeCh.send({ content: `<@${member.id}>`, embeds: [embed] }).catch(() => {});
+      const payload = buildWelcomePayload({
+        userId: member.id,
+        username: member.user.globalName || member.user.username,
+        avatarUrl: member.user.displayAvatarURL(),
+        guild: member.guild,
+        cfg,
+        msProgress: { reachedNow, next, remaining },
+      });
+      await welcomeCh.send(payload).catch(() => {});
     }
+  }
+
+  if (welcomerActive && wCfg.dmEnabled) {
+    const dmPayload = buildWelcomePayload({
+      userId: member.id,
+      username: member.user.globalName || member.user.username,
+      avatarUrl: member.user.displayAvatarURL(),
+      guild: member.guild,
+      cfg,
+      target: 'dm',
+    });
+    await member.send(dmPayload).catch(() => {});
   }
 
   if (reachedNow) {
@@ -2515,13 +2844,234 @@ client.on(Events.GuildMemberRemove, async (member) => {
   if (!cfg) return;
   scheduleStatsSync(member.guild);
 
-  if (cfg.goodbyeId) {
-    const goodbyeCh = member.guild.channels.cache.get(cfg.goodbyeId);
+  const gCfg = cfg.goodbyeConfig || {};
+  const goodbyeActive = gCfg.enabled !== undefined ? Boolean(gCfg.enabled) : Boolean(cfg.goodbyeId);
+  const goodbyeChId = gCfg.channelId || cfg.goodbyeId;
+
+  if (goodbyeActive && goodbyeChId) {
+    const goodbyeCh = member.guild.channels.cache.get(goodbyeChId);
     if (goodbyeCh) {
       const name = member.user?.username ?? member.displayName ?? 'A member';
-      await goodbyeCh
-        .send(`👋🏻 **${name}** left the server. We now have **${member.guild.memberCount}** members.`)
-        .catch(() => {});
+      const avatarUrl = member.user?.displayAvatarURL?.() || undefined;
+      const payload = buildGoodbyePayload({
+        userId: member.id,
+        username: name,
+        avatarUrl,
+        guild: member.guild,
+        cfg,
+      });
+      await goodbyeCh.send(payload).catch(() => {});
+    }
+  }
+});
+
+// ============================================================================
+// AUTOMOD: ANTI-INVITE & ANTI-SPAM PROTECTION
+// ============================================================================
+const DISCORD_INVITE_REGEX =
+  /(?:https?:\/\/)?(?:www\.|ptb\.|canary\.)?(?:discord(?:app)?\.(?:gg|io|me|li)|discord(?:app)?\.com\/invite)\/([a-zA-Z0-9-]{2,32})/gi;
+
+const SPAM_WINDOW_MS = 5_000;
+const SPAM_MAX_MESSAGES = 5;
+const DUP_WINDOW_MS = 10_000;
+const DUP_MAX_MESSAGES = 3;
+const SPAM_WARN_COOLDOWN_MS = 10_000;
+
+// Map<"guildId:userId", { entries: Array<{ ts: number, content: string, msgId: string }>, lastWarnAt: number }>
+const spamTracker = new Map();
+
+function isAutomodExempt(message, cfg) {
+  const member = message.member;
+  if (!member) return false;
+
+  if (
+    member.permissions?.any([
+      PermissionFlagsBits.Administrator,
+      PermissionFlagsBits.ManageGuild,
+      PermissionFlagsBits.ManageMessages,
+    ])
+  ) {
+    return true;
+  }
+
+  if (cfg.adminRoleId && member.roles?.cache?.has(cfg.adminRoleId)) {
+    return true;
+  }
+
+  const ac = cfg.accessControl;
+  if (ac && ac.enabled) {
+    if (Array.isArray(ac.memberIds) && ac.memberIds.includes(message.author.id)) {
+      return true;
+    }
+    if (Array.isArray(ac.roleIds) && ac.roleIds.some((rId) => member.roles?.cache?.has(rId))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function sendAutomodLog(guild, cfg, { title, description, fields = [], color = 0xed4245 }) {
+  const logChannelId = cfg.logging?.generalChannelId || cfg.automod?.logChannelId;
+  if (!logChannelId) return;
+
+  const logCh = guild.channels.cache.get(logChannelId);
+  if (!logCh || !logCh.isTextBased()) return;
+
+  const customColorHex = cfg.customization?.embedColor;
+  const resolvedColor =
+    typeof color === 'number'
+      ? color
+      : customColorHex && /^#[0-9A-Fa-f]{6}$/.test(customColorHex)
+        ? parseInt(customColorHex.slice(1), 16)
+        : 0xed4245;
+
+  const embed = new EmbedBuilder()
+    .setColor(resolvedColor)
+    .setTitle(title)
+    .setDescription(description)
+    .setTimestamp();
+
+  if (fields.length > 0) {
+    embed.addFields(fields);
+  }
+
+  const footerText = cfg.customization?.footerText || `${guild.members.me?.displayName || 'ArchiBot'} • AutoMod`;
+  const footerIconUrl = cfg.customization?.footerIconUrl || undefined;
+  embed.setFooter({ text: footerText, ...(footerIconUrl ? { iconURL: footerIconUrl } : {}) });
+
+  await logCh.send({ embeds: [embed] }).catch(() => {});
+}
+
+client.on(Events.MessageCreate, async (message) => {
+  if (!message.guild || message.author?.bot || message.system || message.webhookId) return;
+
+  const cfg = state.guilds[message.guild.id];
+  if (!cfg?.automod) return;
+
+  const { antiInvite, antiSpam } = cfg.automod;
+  if (!antiInvite && !antiSpam) return;
+
+  if (isAutomodExempt(message, cfg)) return;
+
+  const content = String(message.content || '');
+
+  // 1. Anti-Invite Protection
+  if (antiInvite && content) {
+    DISCORD_INVITE_REGEX.lastIndex = 0;
+    const matches = [...content.matchAll(DISCORD_INVITE_REGEX)];
+    if (matches.length > 0) {
+      const knownGuildInvites = guildInvites.get(message.guild.id);
+      const vanityCode = message.guild.vanityURLCode?.toLowerCase();
+
+      const hasExternalInvite = matches.some((m) => {
+        const code = m[1];
+        if (!code) return false;
+        if (vanityCode && code.toLowerCase() === vanityCode) return false;
+        if (knownGuildInvites && knownGuildInvites.has(code)) return false;
+        return true;
+      });
+
+      if (hasExternalInvite) {
+        await message.delete().catch(() => {});
+
+        const warnMsg = await message.channel
+          .send(`⚠️ <@${message.author.id}>, posting external Discord server invite links is not allowed in this server.`)
+          .catch(() => null);
+        if (warnMsg) {
+          setTimeout(() => warnMsg.delete().catch(() => {}), 6_000).unref();
+        }
+
+        await sendAutomodLog(message.guild, cfg, {
+          title: '🛡️ AutoMod: Unauthorized Invite Blocked',
+          description: `Deleted a message containing an external Discord invite link from <@${message.author.id}> in <#${message.channel.id}>.`,
+          fields: [
+            { name: 'Member', value: `${message.author.tag} — \`${message.author.id}\``, inline: true },
+            { name: 'Channel', value: `<#${message.channel.id}>`, inline: true },
+            { name: 'Blocked Content', value: content.slice(0, 1000) || '*Empty*' },
+          ],
+          color: 0xed4245,
+        });
+        return;
+      }
+    }
+  }
+
+  // 2. Anti-Spam Protection
+  if (antiSpam) {
+    const now = Date.now();
+    const key = `${message.guild.id}:${message.author.id}`;
+    const normalizedContent = content.trim().toLowerCase();
+
+    let record = spamTracker.get(key);
+    if (!record) {
+      record = { entries: [], lastWarnAt: 0 };
+      spamTracker.set(key, record);
+    }
+
+    // Keep entries within the 10-second window
+    record.entries = record.entries.filter((e) => now - e.ts <= DUP_WINDOW_MS);
+    record.entries.push({ ts: now, content: normalizedContent, msgId: message.id });
+
+    const recentBurst = record.entries.filter((e) => now - e.ts <= SPAM_WINDOW_MS);
+    const duplicateBurst = normalizedContent
+      ? record.entries.filter((e) => e.content === normalizedContent)
+      : [];
+
+    const isRapidFlood = recentBurst.length >= SPAM_MAX_MESSAGES;
+    const isDuplicateFlood = duplicateBurst.length >= DUP_MAX_MESSAGES;
+
+    if (isRapidFlood || isDuplicateFlood) {
+      const reason = isRapidFlood
+        ? `Rapid message flooding — ${recentBurst.length} messages in 5s`
+        : `Repeated duplicate messages — ${duplicateBurst.length} identical messages`;
+
+      // Delete the triggering message
+      await message.delete().catch(() => {});
+
+      // Also clean up recent burst messages from this user in the channel
+      const burstIds = (isRapidFlood ? recentBurst : duplicateBurst)
+        .map((e) => e.msgId)
+        .filter((id) => id && id !== message.id);
+      if (burstIds.length > 0 && typeof message.channel.bulkDelete === 'function') {
+        await message.channel.bulkDelete(burstIds, true).catch(() => {});
+      }
+
+      // Reset burst entries after taking action
+      record.entries = [];
+
+      // Apply 60-second timeout if bot has permission and member is moderatable
+      let timedOut = false;
+      if (message.member?.moderatable) {
+        timedOut = await message.member
+          .timeout(60_000, `ArchiBot Anti-Spam: ${reason}`)
+          .then(() => true)
+          .catch(() => false);
+      }
+
+      if (now - record.lastWarnAt > SPAM_WARN_COOLDOWN_MS) {
+        record.lastWarnAt = now;
+        const warnText = timedOut
+          ? `🛑 <@${message.author.id}>, please stop spamming! You have been timed out for **60 seconds**.`
+          : `⚠️ <@${message.author.id}>, please slow down and avoid spamming messages.`;
+        const warnMsg = await message.channel.send(warnText).catch(() => null);
+        if (warnMsg) {
+          setTimeout(() => warnMsg.delete().catch(() => {}), 6_000).unref();
+        }
+      }
+
+      await sendAutomodLog(message.guild, cfg, {
+        title: '🛡️ AutoMod: Spam Detected',
+        description: `Prevented message flooding by <@${message.author.id}> in <#${message.channel.id}>.`,
+        fields: [
+          { name: 'Member', value: `${message.author.tag} — \`${message.author.id}\``, inline: true },
+          { name: 'Channel', value: `<#${message.channel.id}>`, inline: true },
+          { name: 'Action Taken', value: timedOut ? 'Deleted messages + 60s Timeout' : 'Deleted messages + Warning', inline: true },
+          { name: 'Trigger Reason', value: reason },
+          ...(content ? [{ name: 'Last Message', value: content.slice(0, 1000) }] : []),
+        ],
+        color: 0xfee75c,
+      });
     }
   }
 });
@@ -4262,7 +4812,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   client.login(token).catch((err) => {
     if (err?.code === 'DisallowedIntents' || /disallowed intents/i.test(String(err?.message))) {
       console.error(
-        '❌ Privileged Intents are disabled! Open Discord Developer Portal under Bot and Privileged Gateway Intents, turn ON Presence Intent and Server Members Intent, click Save Changes, then run npm start again.'
+        '❌ Privileged Intents are disabled! Open Discord Developer Portal under Bot and Privileged Gateway Intents, turn ON Presence Intent, Server Members Intent, and Message Content Intent, click Save Changes, then run npm start again.'
       );
     } else {
       console.error('❌ Login failed:', err.message);

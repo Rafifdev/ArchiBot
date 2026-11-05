@@ -1,124 +1,337 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
-  MdButton,
-  MdTextField,
+  ColorPickerField,
+  EmptyState,
+  MdChip,
+  MdDivider,
   MdSelect,
-  SettingsSkeleton,
-  MdIcon,
-  MdTabs,
+  MdSwitch,
+  MdTextField,
   PageHeader,
-  NoticeBanner,
+  SettingsSkeleton,
   SurfaceCard,
   SwitchRow,
-  EmptyState,
+  toast,
+  UnsavedChangesBar,
 } from '../components/ui';
-import { ChannelItem, RoleItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
+import { ChannelItem, MemberItem, RoleItem } from '../types/api';
 
-const TAB_MAP: Record<string, number> = {
-  general: 0,
-  bot: 0,
-  welcome: 1,
-  milestone: 2,
-  audit: 3,
-};
+interface SavedSettingsSnapshot {
+  botNickname: string;
+  serverName: string;
+  adminRoleId: string;
+  language: string;
+  footerText: string;
+  footerIconUrl: string;
+  embedColor: string;
+  generalLogChannelId: string;
+  inviteLogChannelId: string;
+  boosterLogChannelId: string;
+  accessControlEnabled: boolean;
+  accessRoleIds: string[];
+  accessMemberIds: string[];
+  antiInvite: boolean;
+  antiSpam: boolean;
+}
 
 export const SettingsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [searchParams] = useSearchParams();
-  const [tabIndex, setTabIndex] = useState(0);
-  const [channels, setChannels] = useState<ChannelItem[]>([]);
-  const [roles, setRoles] = useState<RoleItem[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const { registerServerFetch } = useServerSwitch();
-  const [saving, setSaving] = useState(false);
-  const [testingMilestone, setTestingMilestone] = useState(false);
-  const [notice, setNotice] = useState('');
 
-  // Settings State
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Reference Data
+  const [roles, setRoles] = useState<RoleItem[]>([]);
+  const [channels, setChannels] = useState<ChannelItem[]>([]);
+  const [members, setMembers] = useState<MemberItem[]>([]);
+
+  // 1. Admin Role & Language
+  const [adminRoleId, setAdminRoleId] = useState('');
+  const [language, setLanguage] = useState('en');
+
+  // 2. Identity & Customization
   const [botNickname, setBotNickname] = useState('');
   const [serverName, setServerName] = useState('');
+  const [serverInfo, setServerInfo] = useState<{
+    memberCount?: number;
+    serverIcon?: string | null;
+    botAvatar?: string | null;
+    botName?: string;
+  }>({});
+  const [footerText, setFooterText] = useState('');
+  const [footerIconUrl, setFooterIconUrl] = useState('');
+  const [embedColor, setEmbedColor] = useState('#5865F2');
 
-  // Welcome / Goodbye
-  const [welcomeEnabled, setWelcomeEnabled] = useState(false);
-  const [welcomeChannelId, setWelcomeChannelId] = useState('');
-  const [welcomeMessage, setWelcomeMessage] = useState('');
+  // 3. Logging Channels
+  const [generalLogChannelId, setGeneralLogChannelId] = useState('');
+  const [inviteLogChannelId, setInviteLogChannelId] = useState('');
+  const [boosterLogChannelId, setBoosterLogChannelId] = useState('');
 
-  const [goodbyeEnabled, setGoodbyeEnabled] = useState(false);
-  const [goodbyeChannelId, setGoodbyeChannelId] = useState('');
-  const [goodbyeMessage, setGoodbyeMessage] = useState('');
+  // 4. Access Control
+  const [accessControlEnabled, setAccessControlEnabled] = useState(false);
+  const [accessRoleIds, setAccessRoleIds] = useState<string[]>([]);
+  const [accessMemberIds, setAccessMemberIds] = useState<string[]>([]);
 
-  // Milestone
-  const [milestoneEnabled, setMilestoneEnabled] = useState(false);
-  const [milestoneEvery, setMilestoneEvery] = useState(50);
-  const [milestoneGoals, setMilestoneGoals] = useState('10, 25, 50, 100');
-  const [milestoneChannelId, setMilestoneChannelId] = useState('');
-  const [milestoneRoleId, setMilestoneRoleId] = useState('');
+  // 5. Server Protection
+  const [antiInvite, setAntiInvite] = useState(false);
+  const [antiSpam, setAntiSpam] = useState(false);
 
+  // Snapshot for dirty checking & reset
+  const [savedSnapshot, setSavedSnapshot] = useState<SavedSettingsSnapshot | null>(null);
+
+  // Backward compatibility: redirect ?tab=welcome, ?tab=milestone, and ?tab=audit to their dedicated routes
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && TAB_MAP[tabParam] !== undefined) {
-      setTabIndex(TAB_MAP[tabParam]);
+    if (tabParam === 'welcome') {
+      navigate(`/guilds/${guildId}/welcome`, { replace: true });
+      return;
     }
-  }, [searchParams]);
+    if (tabParam === 'milestone') {
+      navigate(`/guilds/${guildId}/milestones`, { replace: true });
+      return;
+    }
+    if (tabParam === 'audit') {
+      navigate(`/guilds/${guildId}/audit`, { replace: true });
+      return;
+    }
+  }, [searchParams, guildId, navigate]);
 
-  const fetchSettings = () => {
+  useEffect(() => {
+    if (!guildId) return;
     setLoading(true);
+
     const p = Promise.all([
       fetch(`/api/guilds/${guildId}/settings`, { credentials: 'include' }).then((r) => r.json()),
-      fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' }).then((r) => r.json()),
       fetch(`/api/guilds/${guildId}/roles`, { credentials: 'include' }).then((r) => r.json()),
-      fetch(`/api/guilds/${guildId}/audit`, { credentials: 'include' }).then((r) => r.json()),
+      fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' }).then((r) => r.json()),
+      fetch(`/api/guilds/${guildId}/members?limit=200`, { credentials: 'include' })
+        .then((r) => r.json())
+        .catch(() => ({ members: [] })),
     ])
-      .then(([setData, chanData, roleData, auditData]) => {
-        if (setData.general) {
-          setBotNickname(setData.general.botNickname || '');
-          setServerName(setData.general.name || '');
-        }
-        if (setData.welcome) {
-          setWelcomeEnabled(setData.welcome.enabled);
-          setWelcomeChannelId(setData.welcome.channelId || '');
-          setWelcomeMessage(setData.welcome.message || '');
-        }
-        if (setData.goodbye) {
-          setGoodbyeEnabled(setData.goodbye.enabled);
-          setGoodbyeChannelId(setData.goodbye.channelId || '');
-          setGoodbyeMessage(setData.goodbye.message || '');
-        }
-        if (setData.milestone) {
-          setMilestoneEnabled(setData.milestone.enabled);
-          setMilestoneEvery(setData.milestone.every || 50);
-          setMilestoneGoals((setData.milestone.goals || []).join(', '));
-          setMilestoneChannelId(setData.milestone.channelId || '');
-          setMilestoneRoleId(setData.milestone.roleId || '');
-        }
-        if (chanData.channels) {
-          setChannels(chanData.channels.filter((c: any) => c.typeName === 'text'));
-        }
-        if (roleData.roles) setRoles(roleData.roles);
-        if (auditData.logs) setAuditLogs(auditData.logs);
+      .then(([setData, roleData, chanData, memData]) => {
+        if (roleData?.roles) setRoles(roleData.roles);
+        if (chanData?.channels) setChannels(chanData.channels);
+        if (memData?.members) setMembers(memData.members);
+
+        const g = setData.general || {};
+        const c = setData.customization || {};
+        const l = setData.logging || {};
+        const ac = setData.accessControl || {};
+        const am = setData.automod || {};
+        const sc = setData.systemChannels || {};
+
+        const loadedNickname = g.botNickname || '';
+        const loadedServerName = g.name || '';
+        const loadedAdminRole = g.adminRoleId || '';
+        const loadedLanguage = g.language || 'en';
+
+        const loadedFooterText = c.footerText ?? `${g.botName || 'ArchiBot'} • Server Architect`;
+        const loadedFooterIcon = c.footerIconUrl || '';
+        const loadedEmbedColor = c.embedColor || '#5865F2';
+
+        const loadedGeneralLog = l.generalChannelId || am.logChannelId || '';
+        const loadedInviteLog = l.inviteChannelId || sc.inviteLogsId || '';
+        const loadedBoosterLog = l.boosterChannelId || sc.boosterLogsId || '';
+
+        const loadedAcEnabled = Boolean(ac.enabled);
+        const loadedAcRoles = Array.isArray(ac.roleIds) ? ac.roleIds : [];
+        const loadedAcMembers = Array.isArray(ac.memberIds) ? ac.memberIds : [];
+
+        const loadedAntiInvite = Boolean(am.antiInvite);
+        const loadedAntiSpam = Boolean(am.antiSpam);
+
+        setBotNickname(loadedNickname);
+        setServerName(loadedServerName);
+        setAdminRoleId(loadedAdminRole);
+        setLanguage(loadedLanguage);
+        setServerInfo({
+          memberCount: g.memberCount,
+          serverIcon: g.serverIcon,
+          botAvatar: g.botAvatar,
+          botName: g.botName,
+        });
+
+        setFooterText(loadedFooterText);
+        setFooterIconUrl(loadedFooterIcon);
+        setEmbedColor(loadedEmbedColor);
+
+        setGeneralLogChannelId(loadedGeneralLog);
+        setInviteLogChannelId(loadedInviteLog);
+        setBoosterLogChannelId(loadedBoosterLog);
+
+        setAccessControlEnabled(loadedAcEnabled);
+        setAccessRoleIds(loadedAcRoles);
+        setAccessMemberIds(loadedAcMembers);
+
+        setAntiInvite(loadedAntiInvite);
+        setAntiSpam(loadedAntiSpam);
+
+        setSavedSnapshot({
+          botNickname: loadedNickname,
+          serverName: loadedServerName,
+          adminRoleId: loadedAdminRole,
+          language: loadedLanguage,
+          footerText: loadedFooterText,
+          footerIconUrl: loadedFooterIcon,
+          embedColor: loadedEmbedColor,
+          generalLogChannelId: loadedGeneralLog,
+          inviteLogChannelId: loadedInviteLog,
+          boosterLogChannelId: loadedBoosterLog,
+          accessControlEnabled: loadedAcEnabled,
+          accessRoleIds: loadedAcRoles,
+          accessMemberIds: loadedAcMembers,
+          antiInvite: loadedAntiInvite,
+          antiSpam: loadedAntiSpam,
+        });
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        toast.error(`Failed to load settings: ${err.message}`);
+      })
       .finally(() => setLoading(false));
 
     registerServerFetch(p);
+  }, [guildId, registerServerFetch]);
+
+  const sortedRoles = useMemo(
+    () =>
+      roles
+        .filter((r) => !r.isEveryone && !r.managed)
+        .sort((a, b) => b.position - a.position),
+    [roles]
+  );
+
+  const adminRoleOptions = useMemo(
+    () => [
+      { value: '', label: 'Select a role...' },
+      ...sortedRoles.map((r) => ({ value: r.id, label: `@${r.name}` })),
+    ],
+    [sortedRoles]
+  );
+
+  const availableAccessRoleOptions = useMemo(
+    () => [
+      { value: '', label: 'Select a role...' },
+      ...sortedRoles
+        .filter((r) => !accessRoleIds.includes(r.id))
+        .map((r) => ({ value: r.id, label: `@${r.name}` })),
+    ],
+    [sortedRoles, accessRoleIds]
+  );
+
+  const availableAccessMemberOptions = useMemo(
+    () => [
+      { value: '', label: 'Search for a member...' },
+      ...members
+        .filter((m) => !m.bot && !accessMemberIds.includes(m.id))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }))
+        .map((m) => ({
+          value: m.id,
+          label: `${m.displayName} (@${m.username})`,
+        })),
+    ],
+    [members, accessMemberIds]
+  );
+
+  const textChannelOptions = useMemo(() => {
+    const textChans = channels
+      .filter((c) => c.typeName === 'text' || c.typeName === 'announcement')
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    return [
+      { value: '', label: 'None (Disabled)' },
+      ...textChans.map((c) => ({ value: c.id, label: `#${c.name}` })),
+    ];
+  }, [channels]);
+
+  const totalAccessRules = accessRoleIds.length + accessMemberIds.length;
+
+  const isDirty = useMemo(() => {
+    if (!savedSnapshot) return false;
+    if (botNickname !== savedSnapshot.botNickname) return true;
+    if (serverName !== savedSnapshot.serverName) return true;
+    if (adminRoleId !== savedSnapshot.adminRoleId) return true;
+    if (language !== savedSnapshot.language) return true;
+    if (footerText !== savedSnapshot.footerText) return true;
+    if (footerIconUrl !== savedSnapshot.footerIconUrl) return true;
+    if (embedColor !== savedSnapshot.embedColor) return true;
+    if (generalLogChannelId !== savedSnapshot.generalLogChannelId) return true;
+    if (inviteLogChannelId !== savedSnapshot.inviteLogChannelId) return true;
+    if (boosterLogChannelId !== savedSnapshot.boosterLogChannelId) return true;
+    if (accessControlEnabled !== savedSnapshot.accessControlEnabled) return true;
+    if (JSON.stringify(accessRoleIds) !== JSON.stringify(savedSnapshot.accessRoleIds)) return true;
+    if (JSON.stringify(accessMemberIds) !== JSON.stringify(savedSnapshot.accessMemberIds)) return true;
+    if (antiInvite !== savedSnapshot.antiInvite) return true;
+    if (antiSpam !== savedSnapshot.antiSpam) return true;
+    return false;
+  }, [
+    savedSnapshot,
+    botNickname,
+    serverName,
+    adminRoleId,
+    language,
+    footerText,
+    footerIconUrl,
+    embedColor,
+    generalLogChannelId,
+    inviteLogChannelId,
+    boosterLogChannelId,
+    accessControlEnabled,
+    accessRoleIds,
+    accessMemberIds,
+    antiInvite,
+    antiSpam,
+  ]);
+
+  if (loading && !savedSnapshot) {
+    return <SettingsSkeleton />;
+  }
+
+  const handleAddAccessRole = (roleId: string) => {
+    if (!roleId || accessRoleIds.includes(roleId) || totalAccessRules >= 10) return;
+    setAccessRoleIds((prev) => [...prev, roleId]);
   };
 
-  useEffect(() => {
-    fetchSettings();
-  }, [guildId]);
+  const handleRemoveAccessRole = (roleId: string) => {
+    setAccessRoleIds((prev) => prev.filter((id) => id !== roleId));
+  };
+
+  const handleAddAccessMember = (memberId: string) => {
+    if (!memberId || accessMemberIds.includes(memberId) || totalAccessRules >= 10) return;
+    setAccessMemberIds((prev) => [...prev, memberId]);
+  };
+
+  const handleRemoveAccessMember = (memberId: string) => {
+    setAccessMemberIds((prev) => prev.filter((id) => id !== memberId));
+  };
+
+  const handleReset = () => {
+    if (!savedSnapshot) return;
+    setBotNickname(savedSnapshot.botNickname);
+    setServerName(savedSnapshot.serverName);
+    setAdminRoleId(savedSnapshot.adminRoleId);
+    setLanguage(savedSnapshot.language);
+    setFooterText(savedSnapshot.footerText);
+    setFooterIconUrl(savedSnapshot.footerIconUrl);
+    setEmbedColor(savedSnapshot.embedColor);
+    setGeneralLogChannelId(savedSnapshot.generalLogChannelId);
+    setInviteLogChannelId(savedSnapshot.inviteLogChannelId);
+    setBoosterLogChannelId(savedSnapshot.boosterLogChannelId);
+    setAccessControlEnabled(savedSnapshot.accessControlEnabled);
+    setAccessRoleIds(savedSnapshot.accessRoleIds);
+    setAccessMemberIds(savedSnapshot.accessMemberIds);
+    setAntiInvite(savedSnapshot.antiInvite);
+    setAntiSpam(savedSnapshot.antiSpam);
+  };
 
   const handleSave = async () => {
+    if (!guildId) return;
     setSaving(true);
-    setNotice('');
-    try {
-      const goalsArr = milestoneGoals
-        .split(',')
-        .map((s) => Number.parseInt(s.trim(), 10))
-        .filter((n) => Number.isInteger(n) && n > 0);
 
+    try {
       const res = await fetch(`/api/guilds/${guildId}/settings`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -127,286 +340,375 @@ export const SettingsPage: React.FC = () => {
           general: {
             botNickname,
             name: serverName,
+            adminRoleId: adminRoleId || null,
+            language,
           },
-          welcome: {
-            enabled: welcomeEnabled,
-            channelId: welcomeChannelId,
-            message: welcomeMessage,
+          customization: {
+            footerText,
+            footerIconUrl,
+            embedColor,
           },
-          goodbye: {
-            enabled: goodbyeEnabled,
-            channelId: goodbyeChannelId,
-            message: goodbyeMessage,
+          logging: {
+            generalChannelId: generalLogChannelId || null,
+            inviteChannelId: inviteLogChannelId || null,
+            boosterChannelId: boosterLogChannelId || null,
           },
-          milestone: {
-            enabled: milestoneEnabled,
-            every: milestoneEvery,
-            goals: goalsArr,
-            channelId: milestoneChannelId,
-            roleId: milestoneRoleId,
+          accessControl: {
+            enabled: accessControlEnabled,
+            roleIds: accessRoleIds,
+            memberIds: accessMemberIds,
+          },
+          automod: {
+            antiInvite,
+            antiSpam,
+            logChannelId: generalLogChannelId || null,
+          },
+          systemChannels: {
+            inviteLogsId: inviteLogChannelId || null,
+            boosterLogsId: boosterLogChannelId || null,
           },
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        setNotice('Settings updated and saved successfully!');
+        setSavedSnapshot({
+          botNickname,
+          serverName,
+          adminRoleId,
+          language,
+          footerText,
+          footerIconUrl,
+          embedColor,
+          generalLogChannelId,
+          inviteLogChannelId,
+          boosterLogChannelId,
+          accessControlEnabled,
+          accessRoleIds,
+          accessMemberIds,
+          antiInvite,
+          antiSpam,
+        });
+        toast.success('Settings saved successfully.');
       } else {
-        alert(data.error || 'Failed to save settings');
+        toast.error(data.error || 'Failed to save settings.');
       }
     } catch (err: any) {
-      alert(`Save error: ${err.message}`);
+      toast.error(`Save error: ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleTestMilestone = async () => {
-    setTestingMilestone(true);
-    try {
-      const res = await fetch(`/api/guilds/${guildId}/milestone/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ channelId: milestoneChannelId }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert(data.message);
-      } else {
-        alert(data.error || 'Failed to send test banner');
-      }
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setTestingMilestone(false);
-    }
-  };
-
-  if (loading && channels.length === 0 && roles.length === 0) return <SettingsSkeleton />;
-
-  const channelOptions = [
-    { value: '', label: 'Select a channel...' },
-    ...channels.map((c) => ({ value: c.id, label: `#${c.name}` })),
-  ];
-
-  const roleOptions = [
-    { value: '', label: 'None (No reward role)' },
-    ...roles.filter((r) => !r.isEveryone && r.editable).map((r) => ({ value: r.id, label: r.name })),
-  ];
-
   return (
-    <div className="flex flex-col gap-6 max-w-5xl">
+    <div className="flex flex-col gap-6 w-full pb-16">
       <PageHeader
-        category="SETTINGS"
-        title="Bot & Server Settings"
-        description="Configure ArchiBot nickname, automated greetings, member milestones, and view Discord audit logs."
-        actions={
-          <MdButton variant="filled" icon="save" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Settings'}
-          </MdButton>
-        }
+        title="Settings"
+        description="Modify ArchiBot's general settings, customization, logging, and access control to your desire."
       />
 
-      {notice && <NoticeBanner message={notice} tone="success" />}
+      {/* 1. Admin Role */}
+      <SurfaceCard
+        title="Admin Role"
+        subtitle="Select a role that will be able to execute all commands and manage ArchiBot modules in your server."
+        className="flex flex-col gap-4"
+      >
+        <MdSelect
+          label="Administrator Role"
+          value={adminRoleId}
+          onChange={setAdminRoleId}
+          options={adminRoleOptions}
+        />
+      </SurfaceCard>
 
-      {/* Tabs (Only Real Bot Features) */}
-      <MdTabs
-        activeIndex={tabIndex}
-        onChange={setTabIndex}
-        tabs={[
-          { id: 'general', label: 'General & Bot', icon: 'smart_toy' },
-          { id: 'welcome', label: 'Welcome & Goodbye', icon: 'waving_hand' },
-          { id: 'milestone', label: 'Milestone Celebrations', icon: 'emoji_events' },
-          { id: 'audit', label: 'Discord Audit Logs', icon: 'history' },
-        ]}
-      />
+      {/* 2. Language */}
+      <SurfaceCard
+        title="Language"
+        subtitle="Choose one of the languages we offer for the best user experience."
+        className="flex flex-col gap-4"
+      >
+        <MdSelect
+          label="Bot Language"
+          value={language}
+          onChange={setLanguage}
+          options={[
+            {
+              value: 'en',
+              label: 'English',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23B22234"/><path d="M0,4.6h60M0,10.8h60M0,16.9h60M0,23.1h60M0,29.2h60M0,35.4h60" stroke="%23FFF" stroke-width="3.08"/><rect width="26" height="21.5" fill="%233C3B6E"/><g fill="%23FFF"><circle cx="4.5" cy="4" r="1.2"/><circle cx="10.2" cy="4" r="1.2"/><circle cx="15.8" cy="4" r="1.2"/><circle cx="21.5" cy="4" r="1.2"/><circle cx="7.3" cy="7.4" r="1.2"/><circle cx="13" cy="7.4" r="1.2"/><circle cx="18.7" cy="7.4" r="1.2"/><circle cx="4.5" cy="10.8" r="1.2"/><circle cx="10.2" cy="10.8" r="1.2"/><circle cx="15.8" cy="10.8" r="1.2"/><circle cx="21.5" cy="10.8" r="1.2"/><circle cx="7.3" cy="14.2" r="1.2"/><circle cx="13" cy="14.2" r="1.2"/><circle cx="18.7" cy="14.2" r="1.2"/><circle cx="4.5" cy="17.6" r="1.2"/><circle cx="10.2" cy="17.6" r="1.2"/><circle cx="15.8" cy="17.6" r="1.2"/><circle cx="21.5" cy="17.6" r="1.2"/></g></svg>',
+            },
+            {
+              value: 'id',
+              label: 'Bahasa Indonesia',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="20" fill="%23CE1126"/><rect y="20" width="60" height="20" fill="%23FFFFFF"/></svg>',
+            },
+            {
+              value: 'es',
+              label: 'Español (Spanyol)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23AA151B"/><rect y="10" width="60" height="20" fill="%23F1BF00"/><rect x="14" y="15" width="6" height="10" rx="2" fill="%23AA151B"/></svg>',
+            },
+            {
+              value: 'fr',
+              label: 'Français (Prancis)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="20" height="40" fill="%23002395"/><rect x="20" width="20" height="40" fill="%23FFFFFF"/><rect x="40" width="20" height="40" fill="%23ED2939"/></svg>',
+            },
+            {
+              value: 'de',
+              label: 'Deutsch (Jerman)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="13.33" fill="%23000000"/><rect y="13.33" width="60" height="13.33" fill="%23DD0000"/><rect y="26.66" width="60" height="13.34" fill="%23FFCE00"/></svg>',
+            },
+            {
+              value: 'pt-BR',
+              label: 'Português (Brasil)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23009B3A"/><polygon points="30,5 54,20 30,35 6,20" fill="%23FEDF00"/><circle cx="30" cy="20" r="8.5" fill="%23002776"/><path d="M22,18 Q30,15 38,21" stroke="%23FFFFFF" stroke-width="2" fill="none"/></svg>',
+            },
+            {
+              value: 'pt-PT',
+              label: 'Português (Portugal)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="24" height="40" fill="%23006600"/><rect x="24" width="36" height="40" fill="%23FF0000"/><circle cx="24" cy="20" r="7.5" fill="%23FFCC00"/><rect x="20.5" y="16.5" width="7" height="7" rx="1.5" fill="%23FFFFFF" stroke="%23FF0000" stroke-width="1.5"/></svg>',
+            },
+            {
+              value: 'zh',
+              label: '中文 (Mandarin)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23DE2910"/><circle cx="12" cy="12" r="5" fill="%23FFDE00"/><circle cx="22" cy="5" r="1.8" fill="%23FFDE00"/><circle cx="25" cy="9" r="1.8" fill="%23FFDE00"/><circle cx="25" cy="15" r="1.8" fill="%23FFDE00"/><circle cx="22" cy="19" r="1.8" fill="%23FFDE00"/></svg>',
+            },
+            {
+              value: 'ja',
+              label: '日本語 (Jepang)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23FFFFFF"/><circle cx="30" cy="20" r="11" fill="%23BC002D"/></svg>',
+            },
+            {
+              value: 'ko',
+              label: '한국어 (Korea)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23FFFFFF"/><circle cx="30" cy="20" r="9.5" fill="%23CD2E3A"/><path d="M20.5,20 A9.5,9.5 0 0,0 39.5,20 A4.75,4.75 0 0,0 30,20 A4.75,4.75 0 0,1 20.5,20 Z" fill="%230047A0"/><g stroke="%23000" stroke-width="1.6"><line x1="13" y1="8" x2="18" y2="14"/><line x1="42" y1="8" x2="47" y2="14"/><line x1="13" y1="32" x2="18" y2="26"/><line x1="42" y1="32" x2="47" y2="26"/></g></svg>',
+            },
+            {
+              value: 'it',
+              label: 'Italiano (Italia)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="20" height="40" fill="%23009246"/><rect x="20" width="20" height="40" fill="%23FFFFFF"/><rect x="40" width="20" height="40" fill="%23CE2B37"/></svg>',
+            },
+            {
+              value: 'nl',
+              label: 'Nederlands (Belanda)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="13.33" fill="%23AE1C28"/><rect y="13.33" width="60" height="13.33" fill="%23FFFFFF"/><rect y="26.66" width="60" height="13.34" fill="%2321468B"/></svg>',
+            },
+            {
+              value: 'ru',
+              label: 'Русский (Rusia)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="13.33" fill="%23FFFFFF"/><rect y="13.33" width="60" height="13.33" fill="%230039A6"/><rect y="26.66" width="60" height="13.34" fill="%23D52B1E"/></svg>',
+            },
+            {
+              value: 'sv',
+              label: 'Svenska (Swedia)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23006AA7"/><rect x="18" width="7" height="40" fill="%23FECC02"/><rect y="16.5" width="60" height="7" fill="%23FECC02"/></svg>',
+            },
+            {
+              value: 'no',
+              label: 'Norsk (Norwegia)',
+              iconUrl:
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="%23BA0C2F"/><rect x="16" width="10" height="40" fill="%23FFFFFF"/><rect y="15" width="60" height="10" fill="%23FFFFFF"/><rect x="18.5" width="5" height="40" fill="%2300205B"/><rect y="17.5" width="60" height="5" fill="%2300205B"/></svg>',
+            },
+          ]}
+        />
+      </SurfaceCard>
 
-      {/* Tab 0: General & Bot */}
-      {tabIndex === 0 && (
-        <SurfaceCard className="flex flex-col gap-4">
-          <h3 className="text-xs font-normal text-discord-white">ArchiBot Profile in this Server</h3>
+      {/* 3. Customization */}
+      <SurfaceCard
+        title="Customization"
+        subtitle="Customize ArchiBot's identity in your server and give its responses the look of your dreams."
+        className="flex flex-col gap-5"
+      >
+        {/* Bot & Server Identity */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <MdTextField
-            label="ArchiBot Server Nickname"
+            label="Bot Server Nickname"
             value={botNickname}
             onChange={setBotNickname}
-            placeholder="e.g. ArchiBot Architect"
+            placeholder={serverInfo.botName || 'ArchiBot'}
+            supportingText="Optional custom display nickname for ArchiBot in this server."
           />
-
-          <h3 className="text-xs font-normal text-discord-white mt-2">Discord Server Name</h3>
-          <MdTextField label="Server Name" value={serverName} onChange={setServerName} />
-        </SurfaceCard>
-      )}
-
-      {/* Tab 1: Welcome & Goodbye */}
-      {tabIndex === 1 && (
-        <div className="flex flex-col gap-5">
-          {/* Welcome Card */}
-          <SurfaceCard className="flex flex-col gap-4">
-            <SwitchRow
-              label="Welcome Message System"
-              description="Automatically greet new members when they join the server."
-              checked={welcomeEnabled}
-              onChange={setWelcomeEnabled}
-            />
-
-            {welcomeEnabled && (
-              <>
-                <MdSelect
-                  label="Welcome Channel"
-                  value={welcomeChannelId}
-                  onChange={setWelcomeChannelId}
-                  options={channelOptions}
-                />
-                <MdTextField
-                  label="Welcome Message Template"
-                  value={welcomeMessage}
-                  onChange={setWelcomeMessage}
-                  type="textarea"
-                  rows={3}
-                />
-                <div className="text-xs text-discord-muted font-normal">
-                  <span className="font-normal text-discord-text">Supported variables:</span>{' '}
-                  <code className="bg-discord-surface px-1.5 py-0.5 rounded text-discord-text">{'{user}'}</code> (mention),{' '}
-                  <code className="bg-discord-surface px-1.5 py-0.5 rounded text-discord-text">{'{username}'}</code> (name),{' '}
-                  <code className="bg-discord-surface px-1.5 py-0.5 rounded text-discord-text">{'{server}'}</code> (server name),{' '}
-                  <code className="bg-discord-surface px-1.5 py-0.5 rounded text-discord-text">{'{memberCount}'}</code> (total member count).
-                </div>
-              </>
-            )}
-          </SurfaceCard>
-
-          {/* Goodbye Card */}
-          <SurfaceCard className="flex flex-col gap-4">
-            <SwitchRow
-              label="Goodbye Message System"
-              description="Post an alert when a member leaves the server."
-              checked={goodbyeEnabled}
-              onChange={setGoodbyeEnabled}
-            />
-
-            {goodbyeEnabled && (
-              <>
-                <MdSelect
-                  label="Goodbye Channel"
-                  value={goodbyeChannelId}
-                  onChange={setGoodbyeChannelId}
-                  options={channelOptions}
-                />
-                <MdTextField
-                  label="Goodbye Message Template"
-                  value={goodbyeMessage}
-                  onChange={setGoodbyeMessage}
-                  type="textarea"
-                  rows={2}
-                />
-              </>
-            )}
-          </SurfaceCard>
+          <MdTextField
+            label="Server Name"
+            value={serverName}
+            onChange={setServerName}
+            placeholder="Discord Server Name"
+            supportingText="Public name of your Discord server (requires Manage Server)."
+          />
         </div>
-      )}
 
-      {/* Tab 2: Milestone Celebrations */}
-      {tabIndex === 2 && (
-        <SurfaceCard className="flex flex-col gap-4">
-          <SwitchRow
-            label="Member Milestone Celebrations"
-            description="ArchiBot generates a custom celebration card and posts it whenever your server hits target member milestones."
-            checked={milestoneEnabled}
-            onChange={setMilestoneEnabled}
+        <MdDivider />
+
+        {/* General Message Footer */}
+        <div className="flex flex-col gap-3">
+          <div className="text-xs font-normal text-discord-white">General Message Footer</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MdTextField
+              label="Footer Text"
+              value={footerText}
+              onChange={setFooterText}
+              placeholder="ArchiBot • Server Architect"
+            />
+            <MdTextField
+              label="Footer Icon URL"
+              value={footerIconUrl}
+              onChange={setFooterIconUrl}
+              placeholder="https://example.com/icon.png"
+            />
+          </div>
+        </div>
+
+        {/* General Embed Color */}
+        <div className="max-w-md">
+          <ColorPickerField
+            label="General Embed Color"
+            value={embedColor}
+            onChange={setEmbedColor}
           />
+        </div>
+      </SurfaceCard>
 
-          {milestoneEnabled && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <MdSelect
-                  label="Celebration Announcement Channel"
-                  value={milestoneChannelId}
-                  onChange={setMilestoneChannelId}
-                  options={channelOptions}
+      {/* 4. Logging */}
+      <SurfaceCard
+        title="Logging"
+        subtitle="Track general actions, member invites, and server boosts in dedicated channels."
+        className="flex flex-col gap-4"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <MdSelect
+            label="Logging Channel"
+            value={generalLogChannelId}
+            onChange={setGeneralLogChannelId}
+            options={textChannelOptions}
+          />
+          <MdSelect
+            label="Invite Logs Channel"
+            value={inviteLogChannelId}
+            onChange={setInviteLogChannelId}
+            options={textChannelOptions}
+          />
+          <MdSelect
+            label="Booster Logs Channel"
+            value={boosterLogChannelId}
+            onChange={setBoosterLogChannelId}
+            options={textChannelOptions}
+          />
+        </div>
+        <p className="text-xs font-normal text-discord-muted">
+          With no channel selected, events left on default will not be logged. This covers moderation actions, invite tracking, and server boosts.
+        </p>
+      </SurfaceCard>
+
+      {/* 5. Access Control */}
+      <SurfaceCard
+        title="Access Control"
+        subtitle="Grant dashboard and moderation access per role or member."
+        headerAction={
+          <MdSwitch
+            checked={accessControlEnabled}
+            onChange={setAccessControlEnabled}
+          />
+        }
+        className="flex flex-col gap-4"
+      >
+        <div className="flex items-center justify-between text-xs font-normal">
+          <span className="text-discord-white">Access Rules</span>
+          <span className="text-discord-muted">{totalAccessRules}/10</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <MdSelect
+            label="Add Role Rule"
+            value=""
+            onChange={handleAddAccessRole}
+            options={availableAccessRoleOptions}
+            disabled={!accessControlEnabled || totalAccessRules >= 10}
+          />
+          <MdSelect
+            label="Add Member Rule"
+            value=""
+            onChange={handleAddAccessMember}
+            options={availableAccessMemberOptions}
+            disabled={!accessControlEnabled || totalAccessRules >= 10}
+          />
+        </div>
+
+        {totalAccessRules === 0 ? (
+          <EmptyState
+            icon="group"
+            title="No rules yet"
+            description="Pick a role or a member above to give them dashboard access."
+          />
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {accessRoleIds.map((rId) => {
+              const roleObj = roles.find((r) => r.id === rId);
+              return (
+                <MdChip
+                  key={`role-${rId}`}
+                  variant="assist"
+                  icon="close"
+                  label={`Role: @${roleObj ? roleObj.name : rId}`}
+                  onClick={() => handleRemoveAccessRole(rId)}
                 />
-                <MdSelect
-                  label="Optional Reward Role Granted"
-                  value={milestoneRoleId}
-                  onChange={setMilestoneRoleId}
-                  options={roleOptions}
+              );
+            })}
+            {accessMemberIds.map((mId) => {
+              const memObj = members.find((m) => m.id === mId);
+              return (
+                <MdChip
+                  key={`mem-${mId}`}
+                  variant="assist"
+                  icon="close"
+                  label={`Member: ${memObj ? `${memObj.displayName} (@${memObj.username})` : mId}`}
+                  onClick={() => handleRemoveAccessMember(mId)}
                 />
-              </div>
+              );
+            })}
+          </div>
+        )}
+      </SurfaceCard>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <MdTextField
-                  label="Interval (e.g. Every N members)"
-                  value={milestoneEvery}
-                  onChange={(val) => setMilestoneEvery(Number(val) || 0)}
-                  type="number"
-                />
-                <div className="md:col-span-2">
-                  <MdTextField
-                    label="Custom Goal Targets (comma-separated)"
-                    value={milestoneGoals}
-                    onChange={setMilestoneGoals}
-                    placeholder="10, 25, 50, 100, 250, 500"
-                  />
-                </div>
-              </div>
+      {/* 6. Server Protection */}
+      <SurfaceCard
+        title="Server Protection"
+        subtitle="Configure automated chat protection against unauthorized invite links and message flooding."
+        className="flex flex-col gap-3"
+      >
+        <SwitchRow
+          label="Anti-Invite Protection"
+          description="Automatically block unauthorized Discord server invite links posted by non-admins."
+          checked={antiInvite}
+          onChange={setAntiInvite}
+        />
+        <SwitchRow
+          label="Anti-Spam Protection"
+          description="Detect and prevent rapid message flooding in text channels."
+          checked={antiSpam}
+          onChange={setAntiSpam}
+        />
+      </SurfaceCard>
 
-              <div className="flex flex-wrap items-center gap-3 mt-1">
-                <MdButton
-                  variant="tonal"
-                  icon="celebration"
-                  onClick={handleTestMilestone}
-                  disabled={testingMilestone || !milestoneChannelId}
-                >
-                  {testingMilestone ? 'Sending Test...' : 'Send Test Milestone Card to Discord'}
-                </MdButton>
-                <span className="text-xs text-discord-muted">
-                  Generates an image banner and sends it to the selected channel.
-                </span>
-              </div>
-            </>
-          )}
-        </SurfaceCard>
-      )}
-
-      {/* Tab 3: Audit Logs */}
-      {tabIndex === 3 && (
-        <SurfaceCard>
-          <h3 className="text-xs font-normal text-discord-white mb-4">
-            Recent Discord Server Audit Logs ({auditLogs.length})
-          </h3>
-
-          {auditLogs.length === 0 ? (
-            <EmptyState icon="history" description="No audit log entries found." className="py-6" />
-          ) : (
-            <md-list>
-              {auditLogs.map((log) => (
-                <md-list-item key={log.id} class="rounded-lg mb-1 bg-discord-surface border border-discord-border">
-                  {log.executor?.avatar ? (
-                    <img
-                      slot="start"
-                      src={log.executor.avatar}
-                      alt="executor"
-                      className="w-7 h-7 rounded-full object-cover"
-                    />
-                  ) : (
-                    <MdIcon name="person" slot="start" />
-                  )}
-                  <span className="text-xs text-discord-text">
-                    <span className="font-normal">{log.executor?.username || 'System'}</span> performed action{' '}
-                    <code className="bg-discord-canvas px-1.5 py-0.5 rounded text-discord-blurple">{log.action}</code>
-                  </span>
-                  <div slot="supporting-text" className="text-xs text-discord-muted">
-                    Reason: {log.reason}
-                  </div>
-                  <div slot="trailing-supporting-text" className="text-xs text-discord-muted">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </div>
-                </md-list-item>
-              ))}
-            </md-list>
-          )}
-        </SurfaceCard>
-      )}
+      {/* Floating Unsaved Changes Modal Bar at Bottom Center */}
+      <UnsavedChangesBar
+        show={isDirty}
+        onReset={handleReset}
+        onSave={handleSave}
+        saving={saving}
+      />
     </div>
   );
 };
