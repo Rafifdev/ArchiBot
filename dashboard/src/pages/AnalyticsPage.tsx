@@ -521,6 +521,7 @@ export const AnalyticsPage: React.FC = () => {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [chartLoading, setChartLoading] = useState<boolean>(false);
 
   const activeModule = MODULE_TABS[activeTabIndex]?.id || 'verification';
 
@@ -529,11 +530,15 @@ export const AnalyticsPage: React.FC = () => {
       if (!guildId) return;
       if (isManualRefresh) {
         setRefreshing(true);
+        setChartLoading(true);
       } else if (!data) {
         setLoading(true);
+      } else {
+        setChartLoading(true);
       }
 
-      const promise = fetch(`/api/guilds/${guildId}/analytics?period=${selectedPeriod}`, {
+      const minDelay = data ? new Promise((res) => setTimeout(res, 260)) : Promise.resolve();
+      const apiFetch = fetch(`/api/guilds/${guildId}/analytics?period=${selectedPeriod}`, {
         credentials: 'include',
       })
         .then(async (r) => {
@@ -542,9 +547,11 @@ export const AnalyticsPage: React.FC = () => {
           }
           // Fallback to aggregating live data from existing mounted routes
           return buildAnalyticsFromExistingRoutes(guildId, selectedPeriod);
-        })
-        .then((resData: AnalyticsData) => {
-          setData(resData);
+        });
+
+      const promise = Promise.all([apiFetch, minDelay])
+        .then(([resData]) => {
+          setData(resData as AnalyticsData);
           if (isManualRefresh) {
             toast.success('Analytics data refreshed.');
           }
@@ -555,6 +562,7 @@ export const AnalyticsPage: React.FC = () => {
         .finally(() => {
           setLoading(false);
           setRefreshing(false);
+          setChartLoading(false);
         });
 
       if (!data && !isManualRefresh) {
@@ -1838,7 +1846,11 @@ export const AnalyticsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 transition-all duration-300 ease-out ${
+            chartLoading ? 'filter blur-[1.5px] opacity-60 pointer-events-none' : 'filter-none opacity-100'
+          }`}
+        >
           {moduleView.snapshots.map((snap) => (
             <SurfaceCard key={snap.label} className="!p-4 flex flex-col justify-between">
               <div className="flex items-center gap-2">
@@ -1913,81 +1925,101 @@ export const AnalyticsPage: React.FC = () => {
                   })}
                 </div>
               }
-              className="flex flex-col justify-between min-h-[290px]"
+              className="flex flex-col justify-between min-h-[290px] relative overflow-hidden"
             >
-              {totalActivity === 0 || chart.points.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center py-6">
-                  <EmptyState
-                    icon={chart.emptyIcon}
-                    description={chart.emptyText}
-                    className="py-8"
+              {/* Subtle Blur & Loading Animation Overlay */}
+              {chartLoading && (
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2.5 bg-discord-card/50 backdrop-blur-[2px] transition-all duration-300">
+                  <md-circular-progress
+                    indeterminate
+                    class="scale-90"
+                    style={{ '--md-circular-progress-active-indicator-color': '#5865F2' } as any}
                   />
-                </div>
-              ) : (
-                <div className="flex flex-col justify-end flex-1 pt-6 pb-1">
-                  {/* Interactive Bar Chart Visualization */}
-                  <div className="h-44 flex items-end gap-1.5 sm:gap-2 px-1 border-b border-discord-border pb-2">
-                    {chart.points.map((pt, idx) => {
-                      const primaryPct = Math.max(
-                        pt.primary > 0 ? 8 : 2,
-                        Math.round((pt.primary / maxVal) * 100)
-                      );
-                      const secondaryPct =
-                        pt.secondary !== undefined
-                          ? Math.max(
-                              pt.secondary > 0 ? 8 : 0,
-                              Math.round((pt.secondary / maxVal) * 100)
-                            )
-                          : 0;
-
-                      return (
-                        <div
-                          key={`${pt.label}-${idx}`}
-                          className="flex-1 flex flex-col items-center justify-end h-full group relative min-w-0"
-                        >
-                          {/* Hover Tooltip */}
-                          <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity absolute -top-8 left-1/2 -translate-x-1/2 z-20 px-2 py-1 rounded-md bg-discord-sidebar border border-discord-border text-[10px] font-normal text-discord-white whitespace-nowrap shadow-lg">
-                            {pt.label}: {pt.primary}
-                            {pt.secondary !== undefined ? ` / ${pt.secondary}` : ''}
-                          </div>
-
-                          <div className="w-full flex items-end justify-center gap-1 h-full">
-                            <div
-                              style={{ height: `${primaryPct}%` }}
-                              className={`w-full max-w-[18px] rounded-t-sm transition-all duration-300 ${
-                                pt.primary > 0
-                                  ? chart.primaryColorClass
-                                  : 'bg-discord-surface/60'
-                              }`}
-                            />
-                            {pt.secondary !== undefined && chart.secondaryColorClass && (
-                              <div
-                                style={{ height: `${secondaryPct}%` }}
-                                className={`w-full max-w-[18px] rounded-t-sm transition-all duration-300 ${
-                                  pt.secondary > 0
-                                    ? chart.secondaryColorClass
-                                    : 'bg-discord-surface/40'
-                                }`}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* X-Axis Labels */}
-                  <div className="flex items-center justify-between pt-2 px-1 text-[10px] font-normal text-discord-muted">
-                    <span>{chart.points[0]?.label}</span>
-                    {chart.points.length > 2 && (
-                      <span>
-                        {chart.points[Math.floor(chart.points.length / 2)]?.label}
-                      </span>
-                    )}
-                    <span>{chart.points[chart.points.length - 1]?.label}</span>
-                  </div>
+                  <span className="text-xs font-normal text-discord-muted animate-pulse">
+                    Memuat data grafik...
+                  </span>
                 </div>
               )}
+
+              <div
+                className={`flex-1 flex flex-col justify-between transition-all duration-300 ease-out ${
+                  chartLoading ? 'filter blur-[1.5px] opacity-40 select-none pointer-events-none' : 'filter-none opacity-100'
+                }`}
+              >
+                {totalActivity === 0 || chart.points.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center py-6">
+                    <EmptyState
+                      icon={chart.emptyIcon}
+                      description={chart.emptyText}
+                      className="py-8"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col justify-end flex-1 pt-6 pb-1">
+                    {/* Interactive Bar Chart Visualization */}
+                    <div className="h-44 flex items-end gap-1.5 sm:gap-2 px-1 border-b border-discord-border pb-2">
+                      {chart.points.map((pt, idx) => {
+                        const primaryPct = Math.max(
+                          pt.primary > 0 ? 8 : 2,
+                          Math.round((pt.primary / maxVal) * 100)
+                        );
+                        const secondaryPct =
+                          pt.secondary !== undefined
+                            ? Math.max(
+                                pt.secondary > 0 ? 8 : 0,
+                                Math.round((pt.secondary / maxVal) * 100)
+                              )
+                            : 0;
+
+                        return (
+                          <div
+                            key={`${pt.label}-${idx}`}
+                            className="flex-1 flex flex-col items-center justify-end h-full group relative min-w-0"
+                          >
+                            {/* Hover Tooltip */}
+                            <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity absolute -top-8 left-1/2 -translate-x-1/2 z-20 px-2 py-1 rounded-md bg-discord-sidebar border border-discord-border text-[10px] font-normal text-discord-white whitespace-nowrap shadow-lg">
+                              {pt.label}: {pt.primary}
+                              {pt.secondary !== undefined ? ` / ${pt.secondary}` : ''}
+                            </div>
+
+                            <div className="w-full flex items-end justify-center gap-1 h-full">
+                              <div
+                                style={{ height: `${primaryPct}%` }}
+                                className={`w-full max-w-[18px] rounded-t-sm transition-all duration-300 ${
+                                  pt.primary > 0
+                                    ? chart.primaryColorClass
+                                    : 'bg-discord-surface/60'
+                                }`}
+                              />
+                              {pt.secondary !== undefined && chart.secondaryColorClass && (
+                                <div
+                                  style={{ height: `${secondaryPct}%` }}
+                                  className={`w-full max-w-[18px] rounded-t-sm transition-all duration-300 ${
+                                    pt.secondary > 0
+                                      ? chart.secondaryColorClass
+                                      : 'bg-discord-surface/40'
+                                  }`}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* X-Axis Labels */}
+                    <div className="flex items-center justify-between pt-2 px-1 text-[10px] font-normal text-discord-muted">
+                      <span>{chart.points[0]?.label}</span>
+                      {chart.points.length > 2 && (
+                        <span>
+                          {chart.points[Math.floor(chart.points.length / 2)]?.label}
+                        </span>
+                      )}
+                      <span>{chart.points[chart.points.length - 1]?.label}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </SurfaceCard>
           );
         })}
