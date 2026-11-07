@@ -41,6 +41,7 @@ export interface DiscordEmbedPreviewProps {
   botAvatar?: string | null;
   attachmentSlot?: React.ReactNode;
   embedBannerSlot?: React.ReactNode;
+  componentsSlot?: React.ReactNode;
   className?: string;
 }
 
@@ -51,6 +52,7 @@ export const DiscordEmbedPreview: React.FC<DiscordEmbedPreviewProps> = ({
   botAvatar,
   attachmentSlot,
   embedBannerSlot,
+  componentsSlot,
   className = 'bg-discord-sidebar rounded-xl p-4 font-sans text-discord-text border border-discord-border',
 }) => {
   const hasEmbedContent = Boolean(
@@ -164,6 +166,8 @@ export const DiscordEmbedPreview: React.FC<DiscordEmbedPreviewProps> = ({
           )}
         </div>
       )}
+
+      {componentsSlot && <div className="mt-2.5 pl-11">{componentsSlot}</div>}
     </div>
   );
 };

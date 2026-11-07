@@ -239,34 +239,32 @@ export const GoodbyePage: React.FC<GoodbyePageProps> = ({ user }) => {
           />
         }
       >
-        {goodbyeEnabled && (
-          <DiscordMessageComposer
-            value={delivery}
-            onChange={setDelivery}
-            botName={botName}
-            botAvatar={botAvatar}
-            previewUser={previewUser}
-            serverName={serverName}
-            memberCount={Math.max(1, memberCount - 1)}
-            showCardSection={false}
-            contentPlaceholder="**{member.username}** has left **{guild.name}**."
-            leadingSlot={
-              <MdSelect
-                label="Leave Channel"
-                value={goodbyeChannelId}
-                onChange={setGoodbyeChannelId}
-                options={channelOptions}
-              />
-            }
-            testAction={{
-              label: 'Send Test',
-              loading: testingGoodbye,
-              disabled: !goodbyeChannelId,
-              icon: 'outbox',
-              onClick: handleTestGoodbye,
-            }}
-          />
-        )}
+        <DiscordMessageComposer
+          value={delivery}
+          onChange={setDelivery}
+          botName={botName}
+          botAvatar={botAvatar}
+          previewUser={previewUser}
+          serverName={serverName}
+          memberCount={Math.max(1, memberCount - 1)}
+          showCardSection={false}
+          contentPlaceholder="**{member.username}** has left **{guild.name}**."
+          leadingSlot={
+            <MdSelect
+              label="Leave Channel"
+              value={goodbyeChannelId}
+              onChange={setGoodbyeChannelId}
+              options={channelOptions}
+            />
+          }
+          testAction={{
+            label: 'Send Test',
+            loading: testingGoodbye,
+            disabled: !goodbyeChannelId,
+            icon: 'outbox',
+            onClick: handleTestGoodbye,
+          }}
+        />
       </SurfaceCard>
 
       {/* Floating Unsaved Changes Modal Bar at Bottom Center */}

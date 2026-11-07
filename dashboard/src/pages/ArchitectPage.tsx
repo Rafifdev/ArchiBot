@@ -187,7 +187,14 @@ export const ArchitectPage: React.FC = () => {
   if (loading && templates.length === 0 && legoModules.length === 0) return <ArchitectSkeleton />;
 
   const channelOptions = channels.map((c) => ({ value: c.id, label: `#${c.name}` }));
-  const roleOptions = [{ value: '', label: 'Auto (Verified Role)' }, ...roles.map((r) => ({ value: r.id, label: r.name }))];
+  const roleOptions = [
+    { value: '', label: 'Auto (Verified Role)' },
+    ...roles.map((r) => ({
+      value: r.id,
+      label: r.name,
+      color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+    })),
+  ];
 
   return (
     <div className="flex flex-col gap-6">

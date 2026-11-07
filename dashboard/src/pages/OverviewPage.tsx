@@ -141,6 +141,12 @@ export const OverviewPage: React.FC = () => {
       to: `/guilds/${guildId}/goodbye`,
     },
     {
+      title: 'Giveaways',
+      description: 'Host interactive server giveaways with role requirements and automatic winner draws',
+      icon: 'redeem',
+      to: `/guilds/${guildId}/giveaways`,
+    },
+    {
       title: 'Layout Backups',
       description: 'Snapshot server structure, export JSON, or restore saved layouts',
       icon: 'inventory_2',

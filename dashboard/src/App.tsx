@@ -16,6 +16,7 @@ import { MilestonesPage } from './pages/MilestonesPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { WelcomePage } from './pages/WelcomePage';
 import { GoodbyePage } from './pages/GoodbyePage';
+import { GiveawaysPage } from './pages/GiveawaysPage';
 import { DashboardLayout } from './components/layout';
 import { MdLoading, Toaster } from './components/ui';
 import { UserProfile } from './types/api';
@@ -93,6 +94,8 @@ export const AppContent: React.FC = () => {
         <Route path="architect" element={<ArchitectPage />} />
         <Route path="welcome" element={<WelcomePage user={user} />} />
         <Route path="goodbye" element={<GoodbyePage user={user} />} />
+        <Route path="giveaways" element={<GiveawaysPage mode="management" />} />
+        <Route path="giveaways/config" element={<GiveawaysPage mode="config" />} />
         <Route path="voice" element={<VoicePage />} />
         <Route path="embeds" element={<EmbedsPage />} />
         <Route path="backups" element={<BackupsPage />} />

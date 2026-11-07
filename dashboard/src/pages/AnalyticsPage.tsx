@@ -520,7 +520,6 @@ export const AnalyticsPage: React.FC = () => {
   const [period, setPeriod] = useState<PeriodOption>(7);
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [chartLoading, setChartLoading] = useState<boolean>(false);
 
   const activeModule = MODULE_TABS[activeTabIndex]?.id || 'verification';
@@ -529,7 +528,6 @@ export const AnalyticsPage: React.FC = () => {
     (selectedPeriod: PeriodOption, isManualRefresh = false) => {
       if (!guildId) return;
       if (isManualRefresh) {
-        setRefreshing(true);
         setChartLoading(true);
       } else if (!data) {
         setLoading(true);
@@ -561,7 +559,6 @@ export const AnalyticsPage: React.FC = () => {
         })
         .finally(() => {
           setLoading(false);
-          setRefreshing(false);
           setChartLoading(false);
         });
 
@@ -1771,17 +1768,6 @@ export const AnalyticsPage: React.FC = () => {
       <PageHeader
         title="Analytics"
         description="Track how every module on your server is performing."
-        actions={
-          <MdButton
-            variant="tonal"
-            size="sm"
-            icon="refresh"
-            loading={refreshing}
-            onClick={() => fetchAnalytics(period, true)}
-          >
-            Refresh
-          </MdButton>
-        }
       />
 
       {/* 2. Standardized Material 3 Module Tabs Molecule */}
@@ -2032,7 +2018,7 @@ export const AnalyticsPage: React.FC = () => {
         headerAction={
           <MdButton
             variant="tonal"
-            size="xs"
+            size="sm"
             icon="open_in_new"
             onClick={() => navigate(moduleView.panelSection.actionTo)}
             className="font-normal"
@@ -2067,7 +2053,7 @@ export const AnalyticsPage: React.FC = () => {
                       {row.metric}
                     </span>
                     <StatusBadge
-                      size="xs"
+                      size="sm"
                       tone={row.statusTone}
                       label={row.statusLabel}
                     />

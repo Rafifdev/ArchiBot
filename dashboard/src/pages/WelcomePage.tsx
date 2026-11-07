@@ -435,7 +435,11 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
       { value: '', label: 'Select roles...' },
       ...sortedAssignableRoles
         .filter((r) => !autoRoleIds.includes(r.id))
-        .map((r) => ({ value: r.id, label: r.name })),
+        .map((r) => ({
+          value: r.id,
+          label: r.name,
+          color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+        })),
     ],
     [sortedAssignableRoles, autoRoleIds]
   );

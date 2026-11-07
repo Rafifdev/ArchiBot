@@ -65,6 +65,12 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
       ],
     },
     {
+      title: 'GIVEAWAYS',
+      items: [
+        { to: `/guilds/${guildId}/giveaways`, label: 'Giveaway Management', icon: 'celebration' },
+      ],
+    },
+    {
       title: 'BACKUPS & MILESTONES',
       items: [
         { to: `/guilds/${guildId}/milestones`, label: 'Member Milestones', icon: 'emoji_events' },

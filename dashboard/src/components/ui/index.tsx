@@ -2402,3 +2402,328 @@ export const UnsavedChangesBar: React.FC<UnsavedChangesBarProps> = ({
   );
 };
 
+// ============================================================================
+// EMOJI PICKER FIELD (DROPDOWN / POPOVER WITH SEARCH)
+// ============================================================================
+
+export interface EmojiPickerFieldProps {
+  label?: string;
+  value: string;
+  onChange: (emoji: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+const DEFAULT_POPULAR_EMOJIS = [
+  '🎉', '🎁', '🏆', '💎', '⭐', '🔥',
+  '🎈', '✨', '🎫', '🚀', '👑', '🥳',
+  '💰', '🪙', '🎊', '🍰', '🎮', '🔔',
+];
+
+export const EmojiPickerField: React.FC<EmojiPickerFieldProps> = ({
+  label = 'Emoji',
+  value,
+  onChange,
+  placeholder = '',
+  className = '',
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textFieldRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  useEffect(() => {
+    const el = textFieldRef.current;
+    if (el) {
+      if (el.value !== (value || '')) {
+        el.value = value || '';
+      }
+      if (!value) {
+        el.blur?.();
+        el.shadowRoot?.querySelector('input')?.blur?.();
+      }
+    }
+  }, [value]);
+
+  const filteredEmojis = useMemo(() => {
+    if (!search.trim()) return DEFAULT_POPULAR_EMOJIS;
+    const q = search.trim().toLowerCase();
+    return DEFAULT_POPULAR_EMOJIS.filter((e) => e.includes(q));
+  }, [search]);
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onChange('');
+    setIsOpen(false);
+    if (textFieldRef.current) {
+      textFieldRef.current.value = '';
+      textFieldRef.current.blur?.();
+      textFieldRef.current.shadowRoot?.querySelector('input')?.blur?.();
+    }
+  };
+
+  return (
+    <div ref={containerRef} className={`relative select-none text-left ${className}`.trim()}>
+      <div
+        onClick={() => {
+          setIsOpen((prev) => !prev);
+          if (!value && textFieldRef.current) {
+            textFieldRef.current.blur?.();
+            textFieldRef.current.shadowRoot?.querySelector('input')?.blur?.();
+          }
+        }}
+        onMouseDown={(e) => {
+          // Prevent focusing internal input when clicking so empty label doesn't float
+          e.preventDefault();
+        }}
+        className="w-full"
+      >
+        <md-outlined-text-field
+          ref={textFieldRef}
+          label={label}
+          value={value || ''}
+          readOnly
+          onFocus={(e: any) => {
+            if (!value) {
+              e.target.blur?.();
+              e.target.shadowRoot?.querySelector('input')?.blur?.();
+            }
+          }}
+          class="w-full cursor-pointer"
+        >
+          {value ? (
+            <md-icon
+              slot="trailing-icon"
+              onClick={handleClear}
+              onMouseDown={(e: any) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              class="cursor-pointer text-discord-muted hover:text-discord-red transition-colors select-none"
+              title="Remove emoji"
+            >
+              close
+            </md-icon>
+          ) : (
+            <md-icon
+              slot="trailing-icon"
+              class={`cursor-pointer transition-transform duration-200 select-none ${
+                isOpen ? 'rotate-180 text-discord-blurple' : 'text-discord-muted hover:text-discord-white'
+              }`}
+            >
+              mood
+            </md-icon>
+          )}
+        </md-outlined-text-field>
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-[calc(100%+6px)] left-0 z-50 p-3 rounded-2xl bg-[#16181f] border border-discord-border shadow-[0_12px_36px_rgba(0,0,0,0.7)] flex flex-col gap-2.5 w-72">
+          <div className="relative">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearch(val);
+                if (val && [...val].length === 1 && !DEFAULT_POPULAR_EMOJIS.includes(val)) {
+                  onChange(val);
+                  setIsOpen(false);
+                }
+              }}
+              placeholder="Search or paste emoji..."
+              className="w-full h-8 px-2.5 pr-8 rounded-lg bg-discord-surface border border-discord-border text-xs text-discord-white font-normal focus:outline-none focus:border-discord-blurple placeholder:text-discord-muted"
+              autoFocus
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-discord-muted hover:text-discord-white"
+              >
+                <MdIcon name="close" className="text-xs" />
+              </button>
+            )}
+          </div>
+
+          <div className="text-[11px] font-normal text-discord-muted uppercase tracking-wider px-1">
+            Popular Emojis
+          </div>
+
+          <div className="grid grid-cols-6 gap-1 max-h-48 overflow-y-auto scrollbar-thin p-1">
+            {filteredEmojis.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  onChange(emoji);
+                  setIsOpen(false);
+                }}
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-xl cursor-pointer transition-colors hover:bg-discord-surface text-discord-white"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+
+          {value && (
+            <div className="pt-2 border-t border-discord-border flex justify-between items-center text-xs">
+              <span className="text-discord-muted">Selected: {value}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange('');
+                  setIsOpen(false);
+                  if (textFieldRef.current) {
+                    textFieldRef.current.value = '';
+                    textFieldRef.current.blur?.();
+                    textFieldRef.current.shadowRoot?.querySelector('input')?.blur?.();
+                  }
+                }}
+                className="text-discord-red hover:underline cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// IMAGE UPLOAD BOX (FILE UPLOAD WITH PREVIEW & OPTIONAL FLOATING LABEL)
+// ============================================================================
+
+export interface ImageUploadBoxProps {
+  label?: string;
+  value?: string | null;
+  onChange: (value: string) => void;
+  size?: 'sm' | 'md' | 'lg';
+  tooltip?: string;
+  floatingLabel?: boolean;
+  className?: string;
+}
+
+export const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
+  label,
+  value,
+  onChange,
+  size = 'md',
+  tooltip,
+  floatingLabel = false,
+  className = '',
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) onChange(result);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const sizeClasses =
+    size === 'sm' ? 'w-14 h-14' : size === 'lg' ? 'w-28 h-28' : 'w-20 h-20';
+  const iconSize = size === 'sm' ? 'text-lg' : 'text-2xl';
+
+  return (
+    <div
+      className={`${
+        floatingLabel ? 'relative w-fit shrink-0' : 'flex flex-col gap-1.5 w-fit'
+      } group ${className}`.trim()}
+    >
+      {label && !floatingLabel && (
+        <div className="flex items-center gap-1.5 text-xs font-normal text-discord-white select-none">
+          <span>{label}</span>
+          {tooltip && (
+            <span title={tooltip}>
+              <MdIcon name="info" className="text-sm text-discord-muted cursor-help" />
+            </span>
+          )}
+        </div>
+      )}
+
+      {label && floatingLabel && (
+        <span
+          title={tooltip}
+          className="absolute -top-2 left-2.5 px-1 bg-discord-card text-[11px] font-normal text-discord-muted select-none pointer-events-none z-10 transition-colors group-hover:text-discord-text"
+        >
+          {label}
+        </span>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="sr-only"
+      />
+
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        className={`relative ${sizeClasses} rounded-xl border ${
+          value
+            ? 'border-[var(--md-sys-color-outline)] hover:border-[var(--md-sys-color-on-surface)]'
+            : 'border-dashed border-[#343A4D] hover:border-discord-blurple'
+        } bg-discord-surface/30 hover:bg-discord-surface/60 transition-colors flex flex-col items-center justify-center cursor-pointer overflow-hidden select-none shrink-0`}
+        title={value ? 'Click to change image' : 'Click to upload image'}
+      >
+        {value ? (
+          <>
+            <img src={value} alt="" className="w-full h-full object-cover rounded-xl" />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
+                className="w-7 h-7 rounded-lg bg-discord-surface hover:bg-discord-card text-discord-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Replace image"
+              >
+                <MdIcon name="file_upload" className="text-sm" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange('');
+                }}
+                className="w-7 h-7 rounded-lg bg-discord-surface hover:bg-discord-red text-discord-white flex items-center justify-center transition-colors cursor-pointer"
+                title="Remove image"
+              >
+                <MdIcon name="close" className="text-sm" />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-discord-muted group-hover:text-discord-blurple transition-colors">
+            <MdIcon name="upload_file" className={iconSize} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+

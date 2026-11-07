@@ -208,7 +208,11 @@ export const SettingsPage: React.FC = () => {
   const adminRoleOptions = useMemo(
     () => [
       { value: '', label: 'Select a role...' },
-      ...sortedRoles.map((r) => ({ value: r.id, label: `@${r.name}` })),
+      ...sortedRoles.map((r) => ({
+        value: r.id,
+        label: r.name,
+        color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+      })),
     ],
     [sortedRoles]
   );
@@ -218,7 +222,11 @@ export const SettingsPage: React.FC = () => {
       { value: '', label: 'Select a role...' },
       ...sortedRoles
         .filter((r) => !accessRoleIds.includes(r.id))
-        .map((r) => ({ value: r.id, label: `@${r.name}` })),
+        .map((r) => ({
+          value: r.id,
+          label: r.name,
+          color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+        })),
     ],
     [sortedRoles, accessRoleIds]
   );

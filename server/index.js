@@ -18,6 +18,7 @@ import voiceRoutes from './routes/voice.js';
 import embedsRoutes from './routes/embeds.js';
 import backupsRoutes from './routes/backups.js';
 import settingsRoutes from './routes/settings.js';
+import giveawaysRoutes from './routes/giveaways.js';
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/guilds', voiceRoutes);
 app.use('/api/guilds', embedsRoutes);
 app.use('/api/guilds', backupsRoutes);
 app.use('/api/guilds', settingsRoutes);
+app.use('/api/guilds', giveawaysRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

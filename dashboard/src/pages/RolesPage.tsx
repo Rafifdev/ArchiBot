@@ -161,7 +161,11 @@ export const RolesPage: React.FC = () => {
         .filter((r) => !r.isEveryone)
         .slice()
         .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-        .map((r) => ({ value: r.id, label: r.name })),
+        .map((r) => ({
+          value: r.id,
+          label: r.name,
+          color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+        })),
     ],
     [roles]
   );

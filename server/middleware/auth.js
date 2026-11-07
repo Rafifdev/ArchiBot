@@ -65,7 +65,11 @@ export async function verifyGuildAccess(req, res, next) {
           (Array.isArray(ac.roleIds) && ac.roleIds.some((rId) => member.roles.cache.has(rId))))
     );
 
-    if (!hasAdmin && !hasManageGuild && !hasAdminRole && !hasAccessControl) {
+    const giveawayMgrRole = cfg.giveawayConfig?.managerRoleId;
+    const isGiveawayRoute = (req.baseUrl || '').includes('giveaways') || (req.path || '').includes('giveaways');
+    const hasGiveawayRole = Boolean(isGiveawayRoute && giveawayMgrRole && member.roles.cache.has(giveawayMgrRole));
+
+    if (!hasAdmin && !hasManageGuild && !hasAdminRole && !hasAccessControl && !hasGiveawayRole) {
       return res.status(403).json({
         error: 'You need Administrator, Manage Server, or an authorized Access Control rule to manage this server.',
       });

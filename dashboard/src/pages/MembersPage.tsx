@@ -261,7 +261,14 @@ export const MembersPage: React.FC = () => {
                 label="Filter by Role"
                 value={selectedRoleFilter}
                 onChange={setSelectedRoleFilter}
-                options={[{ value: '', label: 'All Roles' }, ...roles.map((r) => ({ value: r.id, label: r.name }))]}
+                options={[
+                  { value: '', label: 'All Roles' },
+                  ...roles.map((r) => ({
+                    value: r.id,
+                    label: r.name,
+                    color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+                  })),
+                ]}
               />
             </div>
           </div>

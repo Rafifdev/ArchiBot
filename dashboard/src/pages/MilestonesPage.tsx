@@ -115,7 +115,11 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = () => {
   const roleOptions = useMemo(
     () => [
       { value: '', label: 'None (No reward role)' },
-      ...sortedAssignableRoles.map((r) => ({ value: r.id, label: r.name })),
+      ...sortedAssignableRoles.map((r) => ({
+        value: r.id,
+        label: r.name,
+        color: r.color && r.color !== '#000000' ? r.color : '#80848e',
+      })),
     ],
     [sortedAssignableRoles]
   );
