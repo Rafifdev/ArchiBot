@@ -1120,7 +1120,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       {[
                         { label: 'Web Dashboard Studio', href: dashboardHref, external: true },
                         { label: 'Interactive Showcase', href: '#showcase-section', external: false },
-                        { label: 'Latest Blogs', href: '#latest-blogs', external: false },
+                        { label: 'Latest Blogs', href: '/blog', external: false },
                         { label: 'Server Snapshots & Backups', href: '#feature-explorer', external: false },
                       ].map((item, idx) => (
                         <a
@@ -2456,9 +2456,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="grid-container">
             <div className="landing-latest-blogs-header">
               <h2 className="heading-4 !text-4xl">{isID ? 'Blog Terbaru' : 'Latest Blogs'}</h2>
-              <a href={dashboardHref} className="button button-secondary">
+              <Link to="/blog" className="button button-secondary">
                 <span>{isID ? 'Lihat blog' : 'View blog'}</span>
-              </a>
+              </Link>
             </div>
 
             <div
@@ -2626,7 +2626,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   <a href="#feature-explorer" className="call-to-action call-to-action--nav">Docs</a>
                   <a href="#latest-blogs" className="call-to-action call-to-action--nav">Changelog</a>
                   <a href="#latest-blogs" className="call-to-action call-to-action--nav">Releases</a>
-                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Blog</a>
+                  <Link to="/blog" className="call-to-action call-to-action--nav">Blog</Link>
                   <a href="#latest-blogs" className="call-to-action call-to-action--nav">Newsletter</a>
                   <a href={dashboardHref} className="call-to-action call-to-action--nav">Pricing</a>
                   <a href="#use-cases-section" className="call-to-action call-to-action--nav">Use Cases</a>
