@@ -2468,7 +2468,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                         <time>{blog.date}</time>
                         <span>{blog.category}</span>
                       </div>
-                      <span className="call-to-action--nav arrow-link" style={{ marginTop: '4px' }}>
+                      <span className="call-to-action--nav arrow-link caption" style={{ marginTop: '4px' }}>
                         <span>Read blog</span>
                       </span>
                     </div>
