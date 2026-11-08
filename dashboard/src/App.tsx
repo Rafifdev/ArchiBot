@@ -61,6 +61,7 @@ export const AppContent: React.FC = () => {
       <Route path="/" element={<LandingPage user={user} />} />
       <Route path="/id" element={<LandingPage user={user} />} />
       <Route path="/blog" element={<LandingPage user={user} initialView="blog" />} />
+      <Route path="/blog/:slug" element={<LandingPage user={user} initialView="article" />} />
       <Route path="/blog/*" element={<LandingPage user={user} initialView="blog" />} />
 
       {/* Redirect /login ke landing page / servers karena login page telah ditiadakan */}

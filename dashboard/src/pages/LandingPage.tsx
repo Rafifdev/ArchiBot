@@ -9,7 +9,7 @@ import { AntigravityParticles } from './landing/AntigravityParticles';
 
 interface LandingPageProps {
   user?: UserProfile | null;
-  initialView?: 'landing' | 'blog';
+  initialView?: 'landing' | 'blog' | 'article';
 }
 
 /* ==========================================================================
@@ -333,132 +333,172 @@ const USE_CASES = [
    ========================================================================== */
 interface BlogPostItem {
   id: string;
+  slug: string;
   title: string;
   date: string;
   readTime: string;
   tags: string[];
-  gradient: string;
-  icon: string;
+  summary: string;
+  paragraphs: string[];
 }
 
 const FEATURED_BLOG_POST: BlogPostItem = {
   id: 'featured-1',
+  slug: 'lorem-ipsum-dolor-sit-amet',
   title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore',
   date: '6 Nov 2026',
   readTime: '7 min read',
   tags: ['Product'],
-  gradient: 'linear-gradient(135deg, #1e2230 0%, #0f1015 100%)',
-  icon: 'auto_awesome',
+  summary:
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat.',
+  paragraphs: [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
+    'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.',
+  ],
 };
 
 const ALL_BLOG_POSTS: BlogPostItem[] = [
   {
     id: 'post-1',
+    slug: 'consectetur-adipiscing-elit-tempor',
     title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor',
     date: '6 Nov 2026',
     readTime: '7 min read',
     tags: ['Product'],
-    gradient: 'linear-gradient(135deg, #2b3248 0%, #171922 100%)',
-    icon: 'record_voice_over',
+    summary: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+    paragraphs: [
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum.',
+      'Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.',
+      'Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem.',
+    ],
   },
   {
     id: 'post-2',
+    slug: 'quis-nostrud-exercitation-ullamco',
     title: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip',
     date: '3 Nov 2026',
     readTime: '9 min read',
     tags: ['Research', 'Engineering'],
-    gradient: 'linear-gradient(135deg, #213547 0%, #131d27 100%)',
-    icon: 'science',
+    summary: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+    paragraphs: [
+      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.',
+      'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
+      'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.',
+    ],
   },
   {
     id: 'post-3',
+    slug: 'reprehenderit-in-voluptate-velit',
     title: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat',
     date: '29 Oct 2026',
     readTime: '6 min read',
     tags: ['Product', 'Architecture'],
-    gradient: 'linear-gradient(135deg, #322b48 0%, #191427 100%)',
-    icon: 'extension',
+    summary: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.',
+    paragraphs: [
+      'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.',
+      'Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.',
+      'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus.',
+    ],
   },
   {
     id: 'post-4',
+    slug: 'excepteur-sint-occaecat-cupidatat',
     title: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt',
     date: '26 Oct 2026',
     readTime: '10 min read',
     tags: ['Research', 'Engineering'],
-    gradient: 'linear-gradient(135deg, #1f3b34 0%, #11241f 100%)',
-    icon: 'hub',
+    summary: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates.',
+    paragraphs: [
+      'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae.',
+      'Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.',
+      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam eaque ipsa quae ab illo inventore veritatis.',
+    ],
   },
   {
     id: 'post-5',
+    slug: 'perspiciatis-unde-omnis-iste-natus',
     title: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque',
     date: '23 Oct 2026',
     readTime: '5 min read',
     tags: ['Engineering', 'Architecture'],
-    gradient: 'linear-gradient(135deg, #3b2a1f 0%, #241911 100%)',
-    icon: 'memory',
+    summary: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur.',
+    paragraphs: [
+      'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
+      'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt.',
+      'Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.',
+    ],
   },
   {
     id: 'post-6',
+    slug: 'nemo-enim-ipsam-voluptatem-quia',
     title: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia',
     date: '19 Oct 2026',
     readTime: '8 min read',
     tags: ['Community', 'Product'],
-    gradient: 'linear-gradient(135deg, #2a203b 0%, #181224 100%)',
-    icon: 'diversity_3',
+    summary: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.',
+    paragraphs: [
+      'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?',
+      'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi.',
+      'Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.',
+    ],
   },
   {
     id: 'post-7',
+    slug: 'at-vero-eos-et-accusamus-iusto',
     title: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium',
     date: '14 Oct 2026',
     readTime: '6 min read',
     tags: ['Announcements'],
-    gradient: 'linear-gradient(135deg, #1e3345 0%, #101e2b 100%)',
-    icon: 'campaign',
+    summary: 'Nam libero tempore cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod.',
+    paragraphs: [
+      'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est.',
+      'Omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae.',
+      'Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.',
+    ],
   },
   {
     id: 'post-8',
+    slug: 'nam-libero-tempore-cum-soluta',
     title: 'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus',
     date: '9 Oct 2026',
     readTime: '4 min read',
     tags: ['Architecture'],
-    gradient: 'linear-gradient(135deg, #233b2a 0%, #132418 100%)',
-    icon: 'account_tree',
+    summary: 'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis voluptatibus maiores alias.',
+    paragraphs: [
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.',
+      'Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.',
+      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    ],
   },
   {
     id: 'post-9',
+    slug: 'temporibus-autem-quibusdam-et-aut',
     title: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe',
     date: '2 Oct 2026',
     readTime: '7 min read',
     tags: ['Engineering'],
-    gradient: 'linear-gradient(135deg, #3d2a35 0%, #24171f 100%)',
-    icon: 'terminal',
+    summary: 'Et harum quidem rerum facilis est et expedita distinctio nam libero tempore cum soluta nobis est.',
+    paragraphs: [
+      'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.',
+      'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.',
+      'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt.',
+    ],
   },
   {
     id: 'post-10',
+    slug: 'itaque-earum-rerum-hic-tenetur',
     title: 'Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores',
     date: '24 Sep 2026',
     readTime: '5 min read',
     tags: ['Research'],
-    gradient: 'linear-gradient(135deg, #272c42 0%, #151827 100%)',
-    icon: 'biotech',
-  },
-  {
-    id: 'post-11',
-    title: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae',
-    date: '15 Sep 2026',
-    readTime: '6 min read',
-    tags: ['Community'],
-    gradient: 'linear-gradient(135deg, #383421 0%, #242112 100%)',
-    icon: 'groups',
-  },
-  {
-    id: 'post-12',
-    title: 'Et harum quidem rerum facilis est et expedita distinctio nam libero tempore cum soluta',
-    date: '5 Sep 2026',
-    readTime: '8 min read',
-    tags: ['Product', 'Announcements'],
-    gradient: 'linear-gradient(135deg, #2c3821 0%, #1a2412 100%)',
-    icon: 'rocket_launch',
+    summary: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.',
+    paragraphs: [
+      'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?',
+      'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi.',
+      'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.',
+    ],
   },
 ];
 
@@ -468,6 +508,7 @@ const LATEST_BLOGS = ALL_BLOG_POSTS.slice(0, 6).map((p) => ({
   title: p.title,
   date: p.date,
   category: p.tags[0],
+  slug: p.slug,
 }));
 
 const BLOG_COUNT = LATEST_BLOGS.length;
@@ -482,19 +523,45 @@ const INFINITE_BLOGS = [
 export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [internalView, setInternalView] = useState<'landing' | 'blog'>(
-    initialView || (location.pathname.startsWith('/blog') ? 'blog' : 'landing')
-  );
+  const getInitialView = (): 'landing' | 'blog' | 'article' => {
+    if (initialView) return initialView;
+    if (location.pathname === '/blog') return 'blog';
+    if (location.pathname.startsWith('/blog/')) return 'article';
+    return 'landing';
+  };
+
+  const [internalView, setInternalView] = useState<'landing' | 'blog' | 'article'>(getInitialView);
+  const [activeArticleSlug, setActiveArticleSlug] = useState<string>(() => {
+    if (location.pathname.startsWith('/blog/')) {
+      return location.pathname.replace(/^\/blog\/?/, '') || 'lorem-ipsum-dolor-sit-amet';
+    }
+    return 'lorem-ipsum-dolor-sit-amet';
+  });
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    if (location.pathname.startsWith('/blog')) {
+    if (location.pathname === '/blog') {
       setInternalView('blog');
+    } else if (location.pathname.startsWith('/blog/')) {
+      const slug = location.pathname.replace(/^\/blog\/?/, '');
+      setInternalView('article');
+      if (slug) setActiveArticleSlug(slug);
     } else if (location.pathname === '/' || location.pathname === '/id') {
       setInternalView('landing');
     }
   }, [location.pathname]);
 
-  const isBlogView = location.pathname.startsWith('/blog') || internalView === 'blog';
+  const isArticleView = location.pathname.startsWith('/blog/') || internalView === 'article';
+  const isBlogView = (location.pathname === '/blog' || internalView === 'blog') && !isArticleView;
+
+  const currentArticle =
+    activeArticleSlug === 'featured' ||
+    activeArticleSlug === FEATURED_BLOG_POST.slug ||
+    activeArticleSlug === FEATURED_BLOG_POST.id
+      ? FEATURED_BLOG_POST
+      : ALL_BLOG_POSTS.find((p) => p.slug === activeArticleSlug || p.id === activeArticleSlug) || FEATURED_BLOG_POST;
+
   const [activeBlogTab, setActiveBlogTab] = useState('All');
   const blogTabsListRef = useRef<HTMLUListElement>(null);
   const [blogTabIndicatorStyle, setBlogTabIndicatorStyle] = useState({ left: 0, width: 0 });
@@ -516,12 +583,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
 
   const lenisRef = useRef<Lenis | null>(null);
 
+  const openArticleView = (slug: string, e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
+    setOpenDropdown(null);
+    setMobileMenuOpen(false);
+    setActiveArticleSlug(slug);
+    setInternalView('article');
+    navigate(`/blog/${slug}`);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    lenisRef.current?.scrollTo(0, { immediate: true });
+  };
+
   const openBlogView = (e?: React.SyntheticEvent) => {
     if (e) e.preventDefault();
     setOpenDropdown(null);
     setMobileMenuOpen(false);
     setInternalView('blog');
-    if (!location.pathname.startsWith('/blog')) {
+    if (location.pathname !== '/blog') {
       navigate('/blog');
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -547,7 +625,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
       lenisRef.current?.resize();
     }, 50);
     return () => window.clearTimeout(timer);
-  }, [isBlogView]);
+  }, [isBlogView, isArticleView]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const openDropdownRef = useRef<string | null>(null);
   openDropdownRef.current = openDropdown;
@@ -1370,7 +1448,202 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
           MAIN SMOOTH CONTENT
           ==================================================================== */}
       <main>
-        {isBlogView ? (
+        {isArticleView ? (
+          <div className="grid-container post" data-blog-post-page>
+            {/* Breadcrumb Navigation */}
+            <div className="breadcrumb-wrapper">
+              <nav className="blog-breadcrumbs" aria-label="Breadcrumbs">
+                <a
+                  href="/blog"
+                  className="breadcrumb-back-link"
+                  onClick={openBlogView}
+                >
+                  <svg className="symbol" viewBox="0 -960 960 960" width="16px" height="16px" fill="currentColor">
+                    <path d="M266.31-457.31L512-212l-32,32L180-480L480-780l32,32L266.31-502.69H780v45.38H266.31Z" />
+                  </svg>
+                  <span>All posts</span>
+                </a>
+                <span className="breadcrumb-divider">/</span>
+                <span className="breadcrumb-current">{currentArticle.tags[0]}</span>
+              </nav>
+            </div>
+
+            {/* Header Section */}
+            <div className="header-section">
+              <h1 className="heading-2 post-title">{currentArticle.title}</h1>
+              <div className="post-meta-bar">
+                <div className="meta-left">
+                  <div className="authors-group">
+                    <div className="author-item">
+                      <div className="author-avatar-placeholder">
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>smart_toy</span>
+                      </div>
+                      <span className="author-name">
+                        ArchiBot Team<span className="author-title">, Core Engineering</span>
+                      </span>
+                    </div>
+                  </div>
+                  <span className="meta-separator">·</span>
+                  <span className="date">{currentArticle.date}</span>
+                  <span className="meta-separator">·</span>
+                  <span className="reading-time">{currentArticle.readTime}</span>
+                </div>
+
+                <div className="meta-right">
+                  <div className="share-dropdown-wrapper">
+                    <button
+                      type="button"
+                      className="share-trigger-btn"
+                      onClick={() => setShareMenuOpen((prev) => !prev)}
+                      aria-expanded={shareMenuOpen}
+                      title="Share options"
+                    >
+                      <svg className="share-icon" viewBox="0 -960 960 960" width="16px" height="16px" fill="currentColor">
+                        <path d="M676.68-100q-42.79,0-72.97-30.24t-30.17-72.99q0-7.67 5.38-33.62L281.46-412.23q-14.66,16.62-34.82,26.04t-43.79,9.42q-42.6,0-72.72-30.01T100-480.09t30.12-73.22t72.6-29.92q22.87,0 42.76,8.91q19.9,8.91 34.36,25.32L578.92-722.77q-2.38-8-3.88-16.5t-1.5-17.55q0-42.7 30.26-72.94T676.86-860t72.97,30.26T780-756.68t-30.24,72.97t-73.11,30.17q-22.36,0-41.58-9t-33.69-24L300.46-515.23q3,8 4.5,17.12t1.5,17.81t-1.19,16.38t-3.58,15.69L602.38-274.08q14.6-15 33.53-23.69t40.95-8.69q43.15,0 73.14,30.26T780-203.14t-30.26,72.97T676.68-100Zm0.19-45.38q24.63,0 41.19-16.66q16.56-16.66 16.56-41.29t-16.66-41.19t-41.29-16.56t-41.19,16.66t-16.56,41.29t16.66,41.19t41.29,16.56ZM202.95-422.15q24.79,0 41.46-16.76t16.67-41.19t-16.77-41.09t-41.56-16.65q-24.46,0-40.91,16.76q-16.45,16.76-16.45,41.19t16.55,41.09t41.01,16.65ZM717.96-715.58q16.65-16.66 16.65-41.29t-16.66-41.19q-16.66-16.56-41.29-16.56t-41.19,16.66t-16.56,41.29t16.76,41.19t41.19,16.56t41.09-16.66ZM676.77-203.23ZM203.23-480Z" />
+                      </svg>
+                      <span className="share-trigger-label">Share</span>
+                      <svg className="arrow-icon" viewBox="0 -960 960 960" width="16px" height="16px" fill="currentColor">
+                        <path d="M480-357.85L253.85-584l32.61-32.61L480-423.08L673.54-616.61L706.15-584L480-357.85Z" />
+                      </svg>
+                    </button>
+
+                    {shareMenuOpen && (
+                      <div className="share-dropdown-menu">
+                        <button
+                          type="button"
+                          className="share-menu-item"
+                          onClick={() => {
+                            navigator.clipboard?.writeText(window.location.href).catch(() => {});
+                            setCopiedLink(true);
+                            setTimeout(() => setCopiedLink(false), 1500);
+                          }}
+                        >
+                          <span className="item-icon">
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                              {copiedLink ? 'check' : 'link'}
+                            </span>
+                          </span>
+                          <span className="item-label">{copiedLink ? 'Copied!' : 'Copy link'}</span>
+                        </button>
+                        <a
+                          href={`https://x.com/intent/tweet?text=${encodeURIComponent(currentArticle.title)}&url=${encodeURIComponent(window.location.href)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="share-menu-item"
+                        >
+                          <span className="item-icon">
+                            <svg viewBox="0 0 57 56" height="16" width="16" fill="currentColor">
+                              <path d="M40.8274 10.5H47.2677L33.1976 26.1977L49.75 47.5588H36.7896L26.6386 34.6034L15.0236 47.5588H8.57933L23.6288 30.7683L7.75 10.5H21.0393L30.215 22.3417L40.8274 10.5ZM38.5672 43.7959H42.1357L19.1003 14.0652H15.2708L38.5672 43.7959Z" />
+                            </svg>
+                          </span>
+                          <span className="item-label">Share on X</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Media 16:9 Placeholder */}
+            <div className="hero-image-wrapper">
+              <div
+                className="post-main-media placeholder-hero"
+                style={{
+                  aspectRatio: '16 / 9',
+                  background: 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '14px',
+                  color: '#8a92a6',
+                  borderRadius: 'var(--shape-corner-xl, 24px)',
+                  width: '100%',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '64px', fontWeight: 300 }}>
+                  image
+                </span>
+                <span style={{ fontSize: '15px', color: '#6b7280', fontWeight: 500 }}>
+                  Placeholder Image
+                </span>
+              </div>
+            </div>
+
+            {/* Article Content Section (1:1 with Antigravity article body) */}
+            <div className="content-section">
+              <p>
+                <strong>{currentArticle.summary}</strong>
+              </p>
+              {currentArticle.paragraphs.map((para, i) => (
+                <p key={i}>{para}</p>
+              ))}
+
+              <h2>Quis nostrud exercitation ullamco laboris</h2>
+              <p>
+                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+              </p>
+
+              <blockquote>
+                <p>
+                  "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
+                  totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae."
+                </p>
+              </blockquote>
+
+              <h3>Excepteur sint occaecat cupidatat</h3>
+              <p>
+                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni
+                dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
+              </p>
+
+              <div className="article-code-box">
+                <pre>
+                  <code>{`// Example ArchiBot configuration snippet
+import { createArchiBotEngine } from '@archibot/core';
+
+const engine = createArchiBotEngine({
+  guildId: process.env.DISCORD_GUILD_ID,
+  features: ['architect', 'voice', 'giveaways', 'backup'],
+  analytics: { enabled: true, tracking: 'high-accuracy' }
+});
+
+await engine.start();`}</code>
+                </pre>
+              </div>
+
+              <p>
+                At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti
+                atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique
+                sunt in culpa qui officia deserunt mollitia animi.
+              </p>
+            </div>
+
+            {/* Article Footer & Tags */}
+            <div className="post-footer">
+              <div className="tags-row">
+                <span className="tags-label">Tags:</span>
+                {currentArticle.tags.map((t) => (
+                  <span key={t} className="tag-chip">
+                    {t}
+                  </span>
+                ))}
+              </div>
+              <div className="back-to-blogs">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={openBlogView}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
+                  <span>Back to all posts</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : isBlogView ? (
           <div className="blog" data-blog-page>
             <div className="grid-container">
               {/* 1:1 Featured Blog Article */}
@@ -1379,9 +1652,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 <div className="main-element">
                   <div className="left-content">
                     <a
-                      href="#"
+                      href={`/blog/${FEATURED_BLOG_POST.slug}`}
                       className="featured-title-link"
-                      onClick={(e) => e.preventDefault()}
+                      onClick={(e) => openArticleView(FEATURED_BLOG_POST.slug, e)}
                     >
                       <h1 className="heading-3 featured-title">
                         {FEATURED_BLOG_POST.title}
@@ -1403,7 +1676,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         <button
                           type="button"
                           className="button button-secondary"
-                          onClick={(e) => e.preventDefault()}
+                          onClick={(e) => openArticleView(FEATURED_BLOG_POST.slug, e)}
                         >
                           <span>Read blog</span>
                         </button>
@@ -1413,9 +1686,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
 
                   <div className="right-content">
                     <a
-                      href="#"
+                      href={`/blog/${FEATURED_BLOG_POST.slug}`}
                       className="featured-article-image"
-                      onClick={(e) => e.preventDefault()}
+                      onClick={(e) => openArticleView(FEATURED_BLOG_POST.slug, e)}
                     >
                       <div
                         className="featured-img-inner"
@@ -1453,7 +1726,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 </div>
               </div>
 
-              {/* Latest Blogs Section with Category Tabs + RSS */}
+              {/* Latest Blogs Section with Category Tabs (RSS Feed Removed) */}
               <div className="latest-blogs">
                 <div className="toolbar-header">
                   <div className="tabs">
@@ -1477,21 +1750,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                       }}
                     />
                   </div>
-
-                  <button
-                    type="button"
-                    className="rss-feed-button"
-                    onClick={() => {
-                      navigator.clipboard?.writeText(window.location.origin + '/rss.xml').catch(() => {});
-                      alert('RSS feed link copied to clipboard: ' + window.location.origin + '/rss.xml');
-                    }}
-                    title="RSS Feed"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
-                      rss_feed
-                    </span>
-                    <span>RSS Feed</span>
-                  </button>
                 </div>
 
                 <div className="blog-cards">
@@ -1499,9 +1757,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     <article key={post.id} className="featured-card">
                       <div className="texts">
                         <a
-                          href="#"
+                          href={`/blog/${post.slug}`}
                           className="card-title-link"
-                          onClick={(e) => e.preventDefault()}
+                          onClick={(e) => openArticleView(post.slug, e)}
                         >
                           <h3>{post.title}</h3>
                         </a>
@@ -1518,10 +1776,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                             ))}
                           </div>
                           <a
-                            href="#"
+                            href={`/blog/${post.slug}`}
                             className="call-to-action--nav arrow-link caption"
                             style={{ marginTop: '12px' }}
-                            onClick={(e) => e.preventDefault()}
+                            onClick={(e) => openArticleView(post.slug, e)}
                           >
                             <span>Read blog</span>
                           </a>
@@ -1529,9 +1787,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                       </div>
 
                       <a
-                        href="#"
+                        href={`/blog/${post.slug}`}
                         className="card-img-link"
-                        onClick={(e) => e.preventDefault()}
+                        onClick={(e) => openArticleView(post.slug, e)}
                         aria-label={post.title}
                       >
                         <div className="img">
@@ -2895,7 +3153,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 {INFINITE_BLOGS.map((blog, idx) => (
                   <a
                     key={idx}
-                    href="/blog"
+                    href={`/blog/${blog.slug}`}
                     className="list-item"
                     draggable={false}
                     onClick={(e) => {
@@ -2903,7 +3161,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         e.preventDefault();
                         return;
                       }
-                      openBlogView(e);
+                      openArticleView(blog.slug, e);
                     }}
                   >
                     <div className="list-image-wrapper">
