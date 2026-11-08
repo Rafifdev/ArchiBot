@@ -1584,88 +1584,48 @@ html.lenis, html.lenis body {
 
 .agy-landing .footer-main-content {
   width: 100%;
-  margin-block-end: 48px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  margin-block-end: 20px;
+}
+
+.agy-landing .footer-inner {
   flex-wrap: wrap;
-  gap: 40px;
+  display: flex;
 }
 
-.agy-landing .footer-liftoff-col {
-  flex: 0 0 auto;
-}
-
-.agy-landing .footer-links-col {
-  margin-left: auto;
-  flex: 0 0 auto;
-}
-
-.agy-landing .footer-liftoff-title {
-  font-size: 34px;
-  font-weight: 600;
-  line-height: 1.22;
-  letter-spacing: -0.02em;
+.agy-landing .footer-title {
   color: #121317;
   margin: 0;
   font-family: 'Google Sans Flex', 'Google Sans', sans-serif;
+  font-weight: 500;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
 }
 
-.agy-landing .footer-links-grid {
-  display: flex;
-  gap: 84px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-@media (width <= 767px) {
-  .agy-landing .footer-main-content {
-    flex-direction: column;
-    gap: 36px;
-  }
-  .agy-landing .footer-links-col {
-    margin-left: 0;
-    width: 100%;
-  }
-  .agy-landing .footer-links-grid {
-    justify-content: flex-start;
-    gap: 48px;
-  }
-}
-
-.agy-landing .footer-column {
+.agy-landing .footer-nav-section {
   display: flex;
   flex-direction: column;
-  min-width: 140px;
+  align-items: flex-start;
+  max-width: 288px;
 }
 
-.agy-landing .footer-column-heading {
-  font-size: 14px;
-  font-weight: 600;
-  color: #5f6368;
-  margin-bottom: 22px;
-  letter-spacing: -0.005em;
+.agy-landing .footer-nav-section .caption {
+  color: var(--theme-surface-on-surface-variant);
+  margin: 0 0 var(--space-md);
+  font-weight: 500;
 }
 
-.agy-landing .footer-column-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.agy-landing .footer-link-item {
-  font-size: 14px;
-  font-weight: 550;
-  color: #121317;
+.agy-landing .footer-nav-section .call-to-action--nav {
+  padding: var(--space-xs) 0;
+  color: var(--theme-surface-on-surface);
+  margin: 0;
+  font-weight: 500;
   text-decoration: none;
-  transition: color 0.25s cubic-bezier(0.2, 0, 0, 1);
-  display: inline-block;
-  line-height: 1.4;
+  display: block;
 }
 
-.agy-landing .footer-link-item:hover {
-  color: var(--palette-blue-600);
+.agy-landing .footer-nav-section .call-to-action--nav:hover {
   text-decoration: underline;
+  color: var(--palette-blue-600);
 }
 
 .agy-landing .footer-img-container {

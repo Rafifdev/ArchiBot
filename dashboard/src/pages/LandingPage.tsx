@@ -431,6 +431,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const isBlogDraggingRef = useRef(false);
   const blogDragStartXRef = useRef(0);
   const blogHasMovedRef = useRef(false);
+  const blogViewportRef = useRef<HTMLDivElement>(null);
+  const blogTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!enableBlogTransition) {
@@ -445,18 +447,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
   const handleBlogTransitionEnd = (e: React.TransitionEvent) => {
     if (e.target !== e.currentTarget || e.propertyName !== 'transform') return;
-    if (blogSlideIndex >= BLOG_COUNT * 3) {
+    const normalized = BLOG_COUNT * 2 + (((blogSlideIndex % BLOG_COUNT) + BLOG_COUNT) % BLOG_COUNT);
+    if (blogSlideIndex !== normalized) {
       setEnableBlogTransition(false);
-      setBlogSlideIndex((prev) => prev - BLOG_COUNT * 2);
-    } else if (blogSlideIndex < BLOG_COUNT) {
-      setEnableBlogTransition(false);
-      setBlogSlideIndex((prev) => prev + BLOG_COUNT * 2);
+      setBlogSlideIndex(normalized);
     }
   };
 
   const dashboardHref = user ? '/servers' : '/auth/discord';
   const isID = selectedLang === 'id';
   const activeLanguageObj = LANGUAGE_OPTIONS.find((l) => l.value === selectedLang) || LANGUAGE_OPTIONS[0];
+
+  const getBlogCardPitch = () => {
+    const track = blogTrackRef.current;
+    if (track && track.children.length >= 2) {
+      const c0 = track.children[0] as HTMLElement;
+      const c1 = track.children[1] as HTMLElement;
+      const p = c1.offsetLeft - c0.offsetLeft;
+      if (p > 50) return p;
+    }
+    const vp = blogViewportRef.current;
+    if (vp && vp.clientWidth > 0) {
+      return (vp.clientWidth + 32) / visibleBlogCols;
+    }
+    return 310;
+  };
 
   const handleBlogPointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -476,7 +491,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     if (Math.abs(delta) > 5) {
       blogHasMovedRef.current = true;
     }
-    setBlogDragOffset(delta);
+    const pitch = getBlogCardPitch();
+    const maxDrag = (visibleBlogCols + 0.5) * pitch;
+    const clampedDelta = Math.max(-maxDrag, Math.min(maxDrag, delta));
+    setBlogDragOffset(clampedDelta);
   };
 
   const handleBlogPointerUp = (e: React.PointerEvent) => {
@@ -488,13 +506,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     } catch (_) {}
 
     const delta = e.clientX - blogDragStartXRef.current;
-    const threshold = 40;
-    setEnableBlogTransition(true);
-    if (delta < -threshold) {
-      setBlogSlideIndex((prev) => prev + 1);
-    } else if (delta > threshold) {
-      setBlogSlideIndex((prev) => prev - 1);
+    const pitch = getBlogCardPitch();
+    const rawMoved = -delta / pitch;
+    let cardsToMove = Math.round(rawMoved);
+
+    // If small flick/drag, advance by at least 1 card in drag direction
+    if (cardsToMove === 0 && Math.abs(delta) >= 35) {
+      cardsToMove = delta < 0 ? 1 : -1;
     }
+
+    cardsToMove = Math.max(-visibleBlogCols, Math.min(visibleBlogCols, cardsToMove));
+
+    setEnableBlogTransition(true);
+    setBlogSlideIndex((prev) => prev + cardsToMove);
     setBlogDragOffset(0);
   };
 
@@ -2438,6 +2462,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             </div>
 
             <div
+              ref={blogViewportRef}
               className="blogs-slider-viewport"
               onPointerDown={handleBlogPointerDown}
               onPointerMove={handleBlogPointerMove}
@@ -2450,6 +2475,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               }}
             >
               <div
+                ref={blogTrackRef}
                 className="blogs-slider-track"
                 onTransitionEnd={handleBlogTransitionEnd}
                 style={{
@@ -2572,103 +2598,104 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           SECTION 8: FOOTER & GIANT CENTERED "ARCHIBOT" WORDMARK
           ==================================================================== */}
       <footer className="footer">
-        <div className="grid-container">
-          <div className="footer-main-content">
-            <div className="footer-liftoff-col">
-              <h2 className="footer-liftoff-title">
-                Experience liftoff
-              </h2>
-            </div>
+        <div className="footer-main-content">
+          <div className="grid-container">
+            <div className="grid-row footer-inner">
+              <div className="grid-col col-xs-4 col-sm-8 col-md-4">
+                <p className="footer-title heading-5">
+                  Experience liftoff
+                </p>
+              </div>
 
-            <div className="footer-links-col">
-              <div className="footer-links-grid">
-                <div className="footer-column">
-                  <span className="footer-column-heading">Product</span>
-                  <nav className="footer-column-nav">
-                    <a href="#feature-explorer" className="footer-link-item">Product</a>
-                    <a href={dashboardHref} className="footer-link-item">Download</a>
-                    <a href="#feature-explorer" className="footer-link-item">ArchiBot App</a>
-                    <a href="#feature-explorer" className="footer-link-item">ArchiBot Extensions</a>
-                    <a href="#feature-explorer" className="footer-link-item">ArchiBot CLI</a>
-                    <a href="#feature-explorer" className="footer-link-item">ArchiBot IDE</a>
-                    <a href="#feature-explorer" className="footer-link-item">ArchiBot SDK</a>
-                  </nav>
+              <div className="grid-col col-xs-4 col-sm-4 col-md-3 col-md-offset-2">
+                <div className="footer-nav-section">
+                  <p className="caption">Product</p>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">Product</a>
+                  <a href={dashboardHref} className="call-to-action call-to-action--nav">Download</a>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot App</a>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot Extensions</a>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot CLI</a>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot IDE</a>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot SDK</a>
                 </div>
+              </div>
 
-                <div className="footer-column">
-                  <span className="footer-column-heading">Resources</span>
-                  <nav className="footer-column-nav">
-                    <a href="#feature-explorer" className="footer-link-item">Docs</a>
-                    <a href="#latest-blogs" className="footer-link-item">Changelog</a>
-                    <a href="#latest-blogs" className="footer-link-item">Releases</a>
-                    <a href="#latest-blogs" className="footer-link-item">Blog</a>
-                    <a href="#latest-blogs" className="footer-link-item">Newsletter</a>
-                    <a href={dashboardHref} className="footer-link-item">Pricing</a>
-                    <a href="#use-cases-section" className="footer-link-item">Use Cases</a>
-                    <a href="#latest-blogs" className="footer-link-item">Press</a>
-                  </nav>
+              <div className="grid-col col-xs-4 col-sm-4 col-md-3">
+                <div className="footer-nav-section">
+                  <p className="caption">Resources</p>
+                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">Docs</a>
+                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Changelog</a>
+                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Releases</a>
+                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Blog</a>
+                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Newsletter</a>
+                  <a href={dashboardHref} className="call-to-action call-to-action--nav">Pricing</a>
+                  <a href="#use-cases-section" className="call-to-action call-to-action--nav">Use Cases</a>
+                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Press</a>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Giant Full-Bleed Centered "ArchiBot" CamelCase Wordmark */}
-          <div className="footer-img-container grid-row">
-            <div className="grid-col col-xs-4 col-sm-8 col-md-12">
-              <div id="antigravity-footer-wrapper" ref={footerWordmarkRef}>
-                <svg
-                  className="footer-antigravity"
-                  viewBox="0 0 1140 230"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  role="img"
-                  aria-label="ArchiBot"
+        {/* Giant Full-Bleed Centered "ArchiBot" CamelCase Wordmark */}
+        <div className="footer-img-container">
+          <div className="grid-container">
+            <div id="antigravity-footer-wrapper" ref={footerWordmarkRef}>
+              <svg
+                className="footer-antigravity"
+                viewBox="0 0 946 250"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                role="img"
+                aria-label="ArchiBot"
+              >
+                <text
+                  x="0"
+                  y="198"
+                  fill="#121317"
+                  style={{
+                    fontFamily: "'Google Sans Flex', 'Google Sans', sans-serif",
+                    fontSize: '252px',
+                    fontWeight: 650,
+                    letterSpacing: '-0.015em',
+                    fontVariationSettings: '"wdth" 100, "wght" 650, "opsz" 144',
+                    userSelect: 'none',
+                  }}
                 >
-                  <text
-                    x="50%"
-                    y="185"
-                    textAnchor="middle"
-                    fill="#121317"
-                    style={{
-                      fontFamily: "'Google Sans Flex', 'Google Sans', sans-serif",
-                      fontSize: '250px',
-                      fontWeight: 500,
-                      letterSpacing: '0.005em',
-                      fontVariationSettings: '"wdth" 100, "wght" 500, "opsz" 144',
-                      userSelect: 'none',
-                    }}
-                  >
-                    ArchiBot
-                  </text>
-                </svg>
-              </div>
+                  ArchiBot
+                </text>
+              </svg>
             </div>
           </div>
+        </div>
 
-          {/* Bottom Legal / Brand Bar (Pure ArchiBot) */}
-          <div className="footer-google-links grid-row" style={{ alignItems: 'center' }}>
-            <div className="grid-col col-xs-4 col-sm-3 col-md-5">
-              <Link to="/" className="footer-google-logo" aria-label="ArchiBot">
-                <ArchiBrandMark size={20} />
-                <span>ArchiBot</span>
-              </Link>
-            </div>
-            <div className="footer-google-nav grid-col col-xs-4 col-sm-5 col-md-7">
-              <a href="#hero" className="caption">
-                <span>About ArchiBot</span>
-              </a>
-              <a href="#feature-explorer" className="caption">
-                <span>Modules</span>
-              </a>
-              <a href={dashboardHref} className="caption">
-                <span>Web Studio</span>
-              </a>
-              <a href="#latest-blogs" className="caption">
-                <span>Privacy &amp; Security</span>
-              </a>
-              <a href="#latest-blogs" className="caption">
-                <span>Terms</span>
-              </a>
+        {/* Bottom Legal / Brand Bar (Pure ArchiBot) */}
+        <div className="footer-google-links">
+          <div className="grid-container">
+            <div className="grid-row" style={{ alignItems: 'center' }}>
+              <div className="grid-col col-xs-4 col-sm-3 col-md-5">
+                <Link to="/" className="footer-google-logo" aria-label="ArchiBot">
+                  <ArchiBrandMark size={20} />
+                  <span>ArchiBot</span>
+                </Link>
+              </div>
+              <div className="footer-google-nav grid-col col-xs-4 col-sm-5 col-md-7">
+                <a href="#hero" className="caption">
+                  <span>About ArchiBot</span>
+                </a>
+                <a href="#feature-explorer" className="caption">
+                  <span>Modules</span>
+                </a>
+                <a href={dashboardHref} className="caption">
+                  <span>Web Studio</span>
+                </a>
+                <a href="#latest-blogs" className="caption">
+                  <span>Privacy &amp; Security</span>
+                </a>
+                <a href="#latest-blogs" className="caption">
+                  <span>Terms</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
