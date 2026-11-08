@@ -1722,8 +1722,10 @@ html.lenis, html.lenis body {
 }
 
 .agy-landing .blog .main-left-container .featured-label {
+  grid-column: 1 / -1;
   color: var(--theme-surface-on-surface, #121317);
-  margin-block-end: var(--space-lg, 24px);
+  margin: 0;
+  margin-block-end: 0;
   font-weight: 500;
 }
 
@@ -1742,7 +1744,9 @@ html.lenis, html.lenis body {
 
 .agy-landing .blog .main-left-container .featured-title {
   color: var(--theme-surface-on-surface, #121317);
+  margin: 0;
   margin-block-end: 0;
+  margin-block-start: 0;
   font-weight: 500;
   line-height: 1.25;
 }
