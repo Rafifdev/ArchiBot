@@ -2280,9 +2280,9 @@ html.lenis, html.lenis body {
 
 .agy-landing .post .hero-image-wrapper {
   width: 100%;
-  margin: 0 auto var(--space-2xl, 48px);
+  margin: var(--space-xl, 32px) auto var(--space-3xl, 56px);
   border-radius: var(--shape-corner-xl, 24px);
-  grid-column: 2 / span 10;
+  grid-column: 3 / span 8;
   overflow: hidden;
 }
 
