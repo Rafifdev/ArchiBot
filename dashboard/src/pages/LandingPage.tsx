@@ -46,6 +46,15 @@ const ArrowUpRightSvg: React.FC = () => (
 );
 
 /* ==========================================================================
+   Theme Mode Options (Auto / Light / Dark)
+   ========================================================================== */
+const THEME_OPTIONS: { value: 'auto' | 'light' | 'dark'; label: string; icon: string }[] = [
+  { value: 'auto', label: 'Auto', icon: 'brightness_auto' },
+  { value: 'light', label: 'Light', icon: 'light_mode' },
+  { value: 'dark', label: 'Dark', icon: 'dark_mode' },
+];
+
+/* ==========================================================================
    Exact 15 Language Options from SettingsPage.tsx
    ========================================================================== */
 const LANGUAGE_OPTIONS = [
@@ -647,6 +656,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const shareDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Theme Mode State (auto / light / dark, default auto from browser)
+  const [themeMode, setThemeMode] = useState<'auto' | 'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('archibot_theme_mode') as 'auto' | 'light' | 'dark' | null;
+      if (saved === 'auto' || saved === 'light' || saved === 'dark') return saved;
+    }
+    return 'auto';
+  });
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  });
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
+
   // Hero & Showcase Scroll-Scrub Refs
   const heroParticlesRef = useRef<HTMLDivElement>(null);
   const videoSectionRef = useRef<HTMLElement>(null);
@@ -841,6 +867,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [shareMenuOpen]);
+
+  // Sync Theme Mode (auto / light / dark) and update data-theme on html & body
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = (isDark: boolean) => {
+      const mode = isDark ? 'dark' : 'light';
+      setResolvedTheme(mode);
+      document.documentElement.setAttribute('data-theme', mode);
+      if (mode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem('archibot_theme', mode);
+    };
+
+    if (themeMode === 'auto') {
+      applyTheme(mediaQuery.matches);
+    } else {
+      applyTheme(themeMode === 'dark');
+    }
+
+    localStorage.setItem('archibot_theme_mode', themeMode);
+
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      if (themeMode === 'auto') {
+        applyTheme(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleMediaChange);
+    return () => mediaQuery.removeEventListener('change', handleMediaChange);
+  }, [themeMode]);
+
+  // Close theme dropdown on outside click or Escape
+  useEffect(() => {
+    if (!themeDropdownOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(e.target as Node)) {
+        setThemeDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setThemeDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [themeDropdownOpen]);
 
   // Responsive column count for Latest Blogs slider
   useEffect(() => {
@@ -1084,7 +1164,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
   }, []);
 
   return (
-    <div className="agy-landing">
+    <div className={`agy-landing ${resolvedTheme === 'dark' ? 'dark' : ''}`} data-theme={resolvedTheme}>
       {/* ====================================================================
           SECTION 0: FIXED HEADER & ANNOUNCEMENT PILL
           ==================================================================== */}
@@ -1106,7 +1186,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     fontSize: '20.5px',
                     fontWeight: 500,
                     letterSpacing: '-0.02em',
-                    color: '#121317',
+                    color: 'var(--theme-surface-on-surface, #121317)',
                     display: 'inline-flex',
                     alignItems: 'center',
                   }}
@@ -1182,85 +1262,160 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
               </div>
             </div>
 
-            {/* Right Language Dropdown (Exact 15 Languages from SettingsPage + MdSelect Animation) */}
-            <div className="header-actions-right" ref={langDropdownRef}>
-              <button
-                type="button"
-                className={`language-selector ${langDropdownOpen ? 'open' : ''}`}
-                onClick={() => setLangDropdownOpen((prev) => !prev)}
-                aria-expanded={langDropdownOpen}
-                aria-haspopup="listbox"
-                title="Select Language"
-              >
-                <img
-                  src={activeLanguageObj.iconUrl}
-                  alt=""
-                  style={{
-                    width: '18px',
-                    height: '13px',
-                    objectFit: 'cover',
-                    borderRadius: '2px',
-                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
-                  }}
-                />
-                <span>{activeLanguageObj.short}</span>
-                <ChevronDownSvg
-                  style={{
-                    width: '15px',
-                    height: '15px',
-                    transition: 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
-                    transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                  }}
-                />
-              </button>
+            {/* Right Theme & Language Dropdowns */}
+            <div className="header-actions-right">
+              {/* Theme Mode Selector (Immediately to the Left of Language Button) */}
+              <div className="theme-dropdown-wrapper" ref={themeDropdownRef}>
+                <button
+                  type="button"
+                  className={`language-selector theme-selector ${themeDropdownOpen ? 'open' : ''}`}
+                  onClick={() => setThemeDropdownOpen((prev) => !prev)}
+                  aria-expanded={themeDropdownOpen}
+                  aria-haspopup="listbox"
+                  title="Theme Mode"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'inherit' }}>
+                    {themeMode === 'auto'
+                      ? 'brightness_auto'
+                      : themeMode === 'dark'
+                      ? 'dark_mode'
+                      : 'light_mode'}
+                  </span>
+                  <span>{themeMode === 'auto' ? 'Auto' : themeMode === 'dark' ? 'Dark' : 'Light'}</span>
+                  <ChevronDownSvg
+                    style={{
+                      width: '15px',
+                      height: '15px',
+                      transition: 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      transform: themeDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }}
+                  />
+                </button>
 
-              <div
-                role="listbox"
-                data-lenis-prevent
-                className={`lang-dropdown-menu ${langDropdownOpen ? 'open' : 'closed'}`}
-                onWheel={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-              >
-                {LANGUAGE_OPTIONS.map((option) => {
-                  const isSelected = option.value === selectedLang;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      className={`lang-dropdown-option ${isSelected ? 'selected' : ''}`}
-                      onClick={() => {
-                        setSelectedLang(option.value);
-                        setLangDropdownOpen(false);
-                      }}
-                    >
-                      <img
-                        src={option.iconUrl}
-                        alt=""
-                        style={{
-                          width: '20px',
-                          height: '14px',
-                          objectFit: 'cover',
-                          borderRadius: '2px',
-                          flexShrink: 0,
-                          boxShadow: '0 0 0 1px rgba(0,0,0,0.08)',
+                <div
+                  role="listbox"
+                  data-lenis-prevent
+                  className={`lang-dropdown-menu theme-dropdown-menu ${themeDropdownOpen ? 'open' : 'closed'}`}
+                  onWheel={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                  style={{ width: '160px', right: 0 }}
+                >
+                  {THEME_OPTIONS.map((opt) => {
+                    const isSelected = opt.value === themeMode;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        className={`lang-dropdown-option ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          setThemeMode(opt.value);
+                          setThemeDropdownOpen(false);
                         }}
-                      />
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {option.label}
-                      </span>
-                      {isSelected && (
-                        <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: '17px', color: '#3279f9', flexShrink: 0 }}
-                        >
-                          check
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                          {opt.icon}
                         </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        <span style={{ flex: 1 }}>{opt.label}</span>
+                        {isSelected && (
+                          <span
+                            className="material-symbols-outlined"
+                            style={{
+                              fontSize: '17px',
+                              color: 'var(--theme-primary-primary, #5865F2)',
+                              flexShrink: 0,
+                            }}
+                          >
+                            check
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Language Selector */}
+              <div className="language-dropdown-wrapper" ref={langDropdownRef}>
+                <button
+                  type="button"
+                  className={`language-selector ${langDropdownOpen ? 'open' : ''}`}
+                  onClick={() => setLangDropdownOpen((prev) => !prev)}
+                  aria-expanded={langDropdownOpen}
+                  aria-haspopup="listbox"
+                  title="Select Language"
+                >
+                  <img
+                    src={activeLanguageObj.iconUrl}
+                    alt=""
+                    style={{
+                      width: '18px',
+                      height: '13px',
+                      objectFit: 'cover',
+                      borderRadius: '2px',
+                      boxShadow: '0 0 0 1px rgba(0,0,0,0.1)',
+                    }}
+                  />
+                  <span>{activeLanguageObj.short}</span>
+                  <ChevronDownSvg
+                    style={{
+                      width: '15px',
+                      height: '15px',
+                      transition: 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    }}
+                  />
+                </button>
+
+                <div
+                  role="listbox"
+                  data-lenis-prevent
+                  className={`lang-dropdown-menu ${langDropdownOpen ? 'open' : 'closed'}`}
+                  onWheel={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                >
+                  {LANGUAGE_OPTIONS.map((option) => {
+                    const isSelected = option.value === selectedLang;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        className={`lang-dropdown-option ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          setSelectedLang(option.value);
+                          setLangDropdownOpen(false);
+                        }}
+                      >
+                        <img
+                          src={option.iconUrl}
+                          alt=""
+                          style={{
+                            width: '20px',
+                            height: '14px',
+                            objectFit: 'cover',
+                            borderRadius: '2px',
+                            flexShrink: 0,
+                            boxShadow: '0 0 0 1px rgba(0,0,0,0.08)',
+                          }}
+                        />
+                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {option.label}
+                        </span>
+                        {isSelected && (
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: '17px', color: 'var(--theme-primary-primary, #5865F2)', flexShrink: 0 }}
+                          >
+                            check
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -1617,33 +1772,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
               </p>
 
-              <blockquote>
-                <p>
-                  "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
-                  totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae."
-                </p>
-              </blockquote>
-
               <h3>Excepteur sint occaecat cupidatat</h3>
               <p>
                 Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni
                 dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
               </p>
-
-              <div className="article-code-box">
-                <pre>
-                  <code>{`// Example ArchiBot configuration snippet
-import { createArchiBotEngine } from '@archibot/core';
-
-const engine = createArchiBotEngine({
-  guildId: process.env.DISCORD_GUILD_ID,
-  features: ['architect', 'voice', 'giveaways', 'backup'],
-  analytics: { enabled: true, tracking: 'high-accuracy' }
-});
-
-await engine.start();`}</code>
-                </pre>
-              </div>
 
               <p>
                 At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti
@@ -1866,7 +1999,7 @@ await engine.start();`}</code>
                 ================================================================== */}
         <section className="welcome-wrapper" id="hero">
           <div className="hero-video-wrapper" ref={heroParticlesRef}>
-            <AntigravityParticles theme="light" variant="ring" density={230} />
+            <AntigravityParticles theme={resolvedTheme === 'dark' ? 'dark' : 'light'} variant="ring" density={230} />
           </div>
 
           <div className="welcome-section">
