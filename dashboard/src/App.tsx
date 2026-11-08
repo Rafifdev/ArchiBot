@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { LandingPage } from './pages/LandingPage';
-import { BlogPage } from './pages/BlogPage';
 import { ServerSelectPage } from './pages/ServerSelectPage';
 import { OverviewPage } from './pages/OverviewPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
@@ -47,7 +46,7 @@ export const AppContent: React.FC = () => {
     navigate('/');
   };
 
-  const isLandingRoute = location.pathname === '/' || location.pathname === '/id' || location.pathname === '/blog';
+  const isLandingRoute = location.pathname === '/' || location.pathname === '/id' || location.pathname.startsWith('/blog');
 
   if (loading && !isLandingRoute) {
     return (
@@ -61,7 +60,8 @@ export const AppContent: React.FC = () => {
     <Routes>
       <Route path="/" element={<LandingPage user={user} />} />
       <Route path="/id" element={<LandingPage user={user} />} />
-      <Route path="/blog" element={<BlogPage user={user} />} />
+      <Route path="/blog" element={<LandingPage user={user} initialView="blog" />} />
+      <Route path="/blog/*" element={<LandingPage user={user} initialView="blog" />} />
 
       {/* Redirect /login ke landing page / servers karena login page telah ditiadakan */}
       <Route

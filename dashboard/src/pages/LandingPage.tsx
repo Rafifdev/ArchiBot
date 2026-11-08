@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import './landing/antigravity.css';
@@ -9,6 +9,7 @@ import { AntigravityParticles } from './landing/AntigravityParticles';
 
 interface LandingPageProps {
   user?: UserProfile | null;
+  initialView?: 'landing' | 'blog';
 }
 
 /* ==========================================================================
@@ -327,38 +328,147 @@ const USE_CASES = [
 /* ==========================================================================
    Latest Blogs Placeholder Data (Lorem Ipsum + Clean Placeholders)
    ========================================================================== */
-const LATEST_BLOGS = [
+/* ==========================================================================
+   Blog Posts Data (1:1 Antigravity Structure + Lorem Ipsum)
+   ========================================================================== */
+interface BlogPostItem {
+  id: string;
+  title: string;
+  date: string;
+  readTime: string;
+  tags: string[];
+  gradient: string;
+  icon: string;
+}
+
+const FEATURED_BLOG_POST: BlogPostItem = {
+  id: 'featured-1',
+  title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore',
+  date: '6 Nov 2026',
+  readTime: '7 min read',
+  tags: ['Product'],
+  gradient: 'linear-gradient(135deg, #1e2230 0%, #0f1015 100%)',
+  icon: 'auto_awesome',
+};
+
+const ALL_BLOG_POSTS: BlogPostItem[] = [
   {
+    id: 'post-1',
     title: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit sed do eiusmod tempor',
-    date: 'Nov 7, 2026',
-    category: 'Product',
+    date: '6 Nov 2026',
+    readTime: '7 min read',
+    tags: ['Product'],
+    gradient: 'linear-gradient(135deg, #2b3248 0%, #171922 100%)',
+    icon: 'record_voice_over',
   },
   {
+    id: 'post-2',
     title: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip',
-    date: 'Nov 2, 2026',
-    category: 'Engineering',
+    date: '3 Nov 2026',
+    readTime: '9 min read',
+    tags: ['Research', 'Engineering'],
+    gradient: 'linear-gradient(135deg, #213547 0%, #131d27 100%)',
+    icon: 'science',
   },
   {
+    id: 'post-3',
     title: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat',
-    date: 'Oct 28, 2026',
-    category: 'Architecture',
+    date: '29 Oct 2026',
+    readTime: '6 min read',
+    tags: ['Product', 'Architecture'],
+    gradient: 'linear-gradient(135deg, #322b48 0%, #191427 100%)',
+    icon: 'extension',
   },
   {
+    id: 'post-4',
     title: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt',
-    date: 'Oct 19, 2026',
-    category: 'Announcements',
+    date: '26 Oct 2026',
+    readTime: '10 min read',
+    tags: ['Research', 'Engineering'],
+    gradient: 'linear-gradient(135deg, #1f3b34 0%, #11241f 100%)',
+    icon: 'hub',
   },
   {
+    id: 'post-5',
     title: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque',
-    date: 'Oct 11, 2026',
-    category: 'Community',
+    date: '23 Oct 2026',
+    readTime: '5 min read',
+    tags: ['Engineering', 'Architecture'],
+    gradient: 'linear-gradient(135deg, #3b2a1f 0%, #241911 100%)',
+    icon: 'memory',
   },
   {
+    id: 'post-6',
     title: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia',
-    date: 'Oct 3, 2026',
-    category: 'Research',
+    date: '19 Oct 2026',
+    readTime: '8 min read',
+    tags: ['Community', 'Product'],
+    gradient: 'linear-gradient(135deg, #2a203b 0%, #181224 100%)',
+    icon: 'diversity_3',
+  },
+  {
+    id: 'post-7',
+    title: 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium',
+    date: '14 Oct 2026',
+    readTime: '6 min read',
+    tags: ['Announcements'],
+    gradient: 'linear-gradient(135deg, #1e3345 0%, #101e2b 100%)',
+    icon: 'campaign',
+  },
+  {
+    id: 'post-8',
+    title: 'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus',
+    date: '9 Oct 2026',
+    readTime: '4 min read',
+    tags: ['Architecture'],
+    gradient: 'linear-gradient(135deg, #233b2a 0%, #132418 100%)',
+    icon: 'account_tree',
+  },
+  {
+    id: 'post-9',
+    title: 'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe',
+    date: '2 Oct 2026',
+    readTime: '7 min read',
+    tags: ['Engineering'],
+    gradient: 'linear-gradient(135deg, #3d2a35 0%, #24171f 100%)',
+    icon: 'terminal',
+  },
+  {
+    id: 'post-10',
+    title: 'Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores',
+    date: '24 Sep 2026',
+    readTime: '5 min read',
+    tags: ['Research'],
+    gradient: 'linear-gradient(135deg, #272c42 0%, #151827 100%)',
+    icon: 'biotech',
+  },
+  {
+    id: 'post-11',
+    title: 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae',
+    date: '15 Sep 2026',
+    readTime: '6 min read',
+    tags: ['Community'],
+    gradient: 'linear-gradient(135deg, #383421 0%, #242112 100%)',
+    icon: 'groups',
+  },
+  {
+    id: 'post-12',
+    title: 'Et harum quidem rerum facilis est et expedita distinctio nam libero tempore cum soluta',
+    date: '5 Sep 2026',
+    readTime: '8 min read',
+    tags: ['Product', 'Announcements'],
+    gradient: 'linear-gradient(135deg, #2c3821 0%, #1a2412 100%)',
+    icon: 'rocket_launch',
   },
 ];
+
+const BLOG_CATEGORY_TABS = ['All', 'Product', 'Engineering', 'Architecture', 'Announcements', 'Community', 'Research'];
+
+const LATEST_BLOGS = ALL_BLOG_POSTS.slice(0, 6).map((p) => ({
+  title: p.title,
+  date: p.date,
+  category: p.tags[0],
+}));
 
 const BLOG_COUNT = LATEST_BLOGS.length;
 const INFINITE_BLOGS = [
@@ -369,7 +479,75 @@ const INFINITE_BLOGS = [
   ...LATEST_BLOGS,
 ];
 
-export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [internalView, setInternalView] = useState<'landing' | 'blog'>(
+    initialView || (location.pathname.startsWith('/blog') ? 'blog' : 'landing')
+  );
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/blog')) {
+      setInternalView('blog');
+    } else if (location.pathname === '/' || location.pathname === '/id') {
+      setInternalView('landing');
+    }
+  }, [location.pathname]);
+
+  const isBlogView = location.pathname.startsWith('/blog') || internalView === 'blog';
+  const [activeBlogTab, setActiveBlogTab] = useState('All');
+  const blogTabsListRef = useRef<HTMLUListElement>(null);
+  const [blogTabIndicatorStyle, setBlogTabIndicatorStyle] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    if (!isBlogView || !blogTabsListRef.current) return;
+    const activeItem = blogTabsListRef.current.querySelector('li.active') as HTMLElement | null;
+    if (activeItem) {
+      setBlogTabIndicatorStyle({
+        left: activeItem.offsetLeft,
+        width: activeItem.offsetWidth,
+      });
+    }
+  }, [isBlogView, activeBlogTab]);
+
+  const filteredBlogPosts = activeBlogTab === 'All'
+    ? ALL_BLOG_POSTS
+    : ALL_BLOG_POSTS.filter((p) => p.tags.includes(activeBlogTab));
+
+  const lenisRef = useRef<Lenis | null>(null);
+
+  const openBlogView = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
+    setOpenDropdown(null);
+    setMobileMenuOpen(false);
+    setInternalView('blog');
+    if (!location.pathname.startsWith('/blog')) {
+      navigate('/blog');
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    lenisRef.current?.scrollTo(0, { immediate: true });
+  };
+
+  const openLandingView = (e?: React.SyntheticEvent) => {
+    if (e) e.preventDefault();
+    setOpenDropdown(null);
+    setMobileMenuOpen(false);
+    setInternalView('landing');
+    if (location.pathname !== '/' && location.pathname !== '/id') {
+      navigate('/');
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    lenisRef.current?.scrollTo(0, { immediate: true });
+  };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    lenisRef.current?.scrollTo(0, { immediate: true });
+    const timer = window.setTimeout(() => {
+      lenisRef.current?.resize();
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [isBlogView]);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const openDropdownRef = useRef<string | null>(null);
   openDropdownRef.current = openDropdown;
@@ -589,6 +767,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
       wheelMultiplier: 0.95,
       touchMultiplier: 1.5,
     });
+    lenisRef.current = lenis;
 
     let anchorY = window.scrollY;
     let isHidden = false;
@@ -738,6 +917,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     updateScrubs(window.scrollY);
 
     return () => {
+      lenisRef.current = null;
       window.clearTimeout(scrollIdleTimer);
       window.removeEventListener('resize', measureOffsets);
       lenis.destroy();
@@ -821,7 +1001,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="main-content">
             {/* Pure ArchiBot Brand Logo */}
             <div className="logo-container">
-              <Link to="/" className="logo-link" aria-label="ArchiBot">
+              <Link to="/" className="logo-link" aria-label="ArchiBot" onClick={openLandingView}>
                 <ArchiBrandMark size={26} />
                 <span
                   style={{
@@ -1118,10 +1298,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                     <p className="caption subnav-label">Resources</p>
                     <nav className="subnav">
                       {[
-                        { label: 'Web Dashboard Studio', href: dashboardHref, external: true },
-                        { label: 'Interactive Showcase', href: '#showcase-section', external: false },
-                        { label: 'Latest Blogs', href: '/blog', external: false },
-                        { label: 'Server Snapshots & Backups', href: '#feature-explorer', external: false },
+                        { label: 'Web Dashboard Studio', href: dashboardHref, external: true, onClick: undefined },
+                        {
+                          label: 'Interactive Showcase',
+                          href: '#showcase-section',
+                          external: false,
+                          onClick: (e: React.MouseEvent) => {
+                            openLandingView(e);
+                            window.setTimeout(() => {
+                              document.getElementById('showcase-section')?.scrollIntoView({ behavior: 'smooth' });
+                            }, 50);
+                          },
+                        },
+                        {
+                          label: 'Latest Blogs',
+                          href: '/blog',
+                          external: false,
+                          onClick: (e: React.MouseEvent) => {
+                            openBlogView(e);
+                          },
+                        },
+                        {
+                          label: 'Server Snapshots & Backups',
+                          href: '#feature-explorer',
+                          external: false,
+                          onClick: (e: React.MouseEvent) => {
+                            openLandingView(e);
+                            window.setTimeout(() => {
+                              document.getElementById('feature-explorer')?.scrollIntoView({ behavior: 'smooth' });
+                            }, 50);
+                          },
+                        },
                       ].map((item, idx) => (
                         <a
                           key={item.label}
@@ -1131,7 +1338,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                             animationDelay: `${0.14 + idx * 0.08}s`,
                             justifyContent: 'space-between',
                           }}
-                          onClick={() => setOpenDropdown(null)}
+                          onClick={(e) => {
+                            setOpenDropdown(null);
+                            if (item.onClick) {
+                              item.onClick(e);
+                            }
+                          }}
                         >
                           <span>{item.label}</span>
                           {item.external && <ArrowUpRightSvg />}
@@ -1158,9 +1370,189 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           MAIN SMOOTH CONTENT
           ==================================================================== */}
       <main>
-        {/* ==================================================================
-            SECTION 1: HERO (.welcome-wrapper)
-            ================================================================== */}
+        {isBlogView ? (
+          <div className="blog" data-blog-page>
+            <div className="grid-container">
+              {/* 1:1 Featured Blog Article */}
+              <div className="main-left-container">
+                <div className="main-element">
+                  <div className="left-content">
+                    <p className="caption featured-label">{isID ? 'Artikel Unggulan' : 'Featured Article'}</p>
+                    <a
+                      href="#"
+                      className="featured-title-link"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <h1 className="heading-3 featured-title">
+                        {FEATURED_BLOG_POST.title}
+                      </h1>
+                    </a>
+                    <div className="tags-section" style={{ marginTop: '20px' }}>
+                      <div className="tags-caption">
+                        <span>{FEATURED_BLOG_POST.date}</span>
+                        <span className="dot">•</span>
+                        <span>{FEATURED_BLOG_POST.readTime}</span>
+                        <span className="dot">•</span>
+                        {FEATURED_BLOG_POST.tags.map((t) => (
+                          <span key={t} className="tag-chip">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: '24px' }}>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <span>Read blog</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="right-content">
+                    <a
+                      href="#"
+                      className="featured-article-image"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <div className="featured-img-inner" style={{ background: FEATURED_BLOG_POST.gradient }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: '56px', color: 'rgba(255,255,255,0.85)' }}
+                          >
+                            {FEATURED_BLOG_POST.icon}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '13px',
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                              color: 'rgba(255,255,255,0.6)',
+                              fontWeight: 500,
+                            }}
+                          >
+                            ArchiBot Insights
+                          </span>
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Latest Blogs Section with Category Tabs + RSS */}
+              <div className="latest-blogs">
+                <div className="toolbar-header">
+                  <div className="tabs">
+                    <ul ref={blogTabsListRef}>
+                      {BLOG_CATEGORY_TABS.map((tab) => (
+                        <li key={tab} className={activeBlogTab === tab ? 'active' : ''}>
+                          <button
+                            type="button"
+                            onClick={() => setActiveBlogTab(tab)}
+                          >
+                            {tab}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <div
+                      className="tab-indicator-line"
+                      style={{
+                        left: `${blogTabIndicatorStyle.left}px`,
+                        width: `${blogTabIndicatorStyle.width}px`,
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    className="rss-feed-button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(window.location.origin + '/rss.xml').catch(() => {});
+                      alert('RSS feed link copied to clipboard: ' + window.location.origin + '/rss.xml');
+                    }}
+                    title="RSS Feed"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                      rss_feed
+                    </span>
+                    <span>RSS Feed</span>
+                  </button>
+                </div>
+
+                <div className="blog-cards">
+                  {filteredBlogPosts.map((post) => (
+                    <article key={post.id} className="featured-card">
+                      <div className="texts">
+                        <a
+                          href="#"
+                          className="card-title-link"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <h3>{post.title}</h3>
+                        </a>
+                        <div className="tags-section">
+                          <div className="tags-caption">
+                            <span>{post.date}</span>
+                            <span className="dot">•</span>
+                            <span>{post.readTime}</span>
+                            <span className="dot">•</span>
+                            {post.tags.map((t) => (
+                              <span key={t} className="tag-chip">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                          <a
+                            href="#"
+                            className="call-to-action--nav arrow-link caption"
+                            style={{ marginTop: '12px' }}
+                            onClick={(e) => e.preventDefault()}
+                          >
+                            <span>Read blog</span>
+                          </a>
+                        </div>
+                      </div>
+
+                      <a
+                        href="#"
+                        className="card-img-link"
+                        onClick={(e) => e.preventDefault()}
+                        aria-label={post.title}
+                      >
+                        <div
+                          className="img"
+                          style={{
+                            background: post.gradient,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+                          }}
+                        >
+                          <span
+                            className="material-symbols-outlined"
+                            style={{ fontSize: '36px', color: 'rgba(255,255,255,0.8)' }}
+                          >
+                            {post.icon}
+                          </span>
+                        </div>
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* ==================================================================
+                SECTION 1: HERO (.welcome-wrapper)
+                ================================================================== */}
         <section className="welcome-wrapper" id="hero">
           <div className="hero-video-wrapper" ref={heroParticlesRef}>
             <AntigravityParticles theme="light" variant="ring" density={230} />
@@ -2456,9 +2848,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="grid-container">
             <div className="landing-latest-blogs-header">
               <h2 className="heading-4 !text-4xl">{isID ? 'Blog Terbaru' : 'Latest Blogs'}</h2>
-              <Link to="/blog" className="button button-secondary">
+              <button type="button" onClick={openBlogView} className="button button-secondary">
                 <span>{isID ? 'Lihat blog' : 'View blog'}</span>
-              </Link>
+              </button>
             </div>
 
             <div
@@ -2487,13 +2879,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 {INFINITE_BLOGS.map((blog, idx) => (
                   <a
                     key={idx}
-                    href={dashboardHref}
+                    href="/blog"
                     className="list-item"
                     draggable={false}
                     onClick={(e) => {
                       if (blogHasMovedRef.current) {
                         e.preventDefault();
+                        return;
                       }
+                      openBlogView(e);
                     }}
                   >
                     <div className="list-image-wrapper">
@@ -2592,6 +2986,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             </div>
           </div>
         </section>
+          </>
+        )}
       </main>
 
       {/* ====================================================================
@@ -2626,7 +3022,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   <a href="#feature-explorer" className="call-to-action call-to-action--nav">Docs</a>
                   <a href="#latest-blogs" className="call-to-action call-to-action--nav">Changelog</a>
                   <a href="#latest-blogs" className="call-to-action call-to-action--nav">Releases</a>
-                  <Link to="/blog" className="call-to-action call-to-action--nav">Blog</Link>
+                  <a href="/blog" className="call-to-action call-to-action--nav" onClick={openBlogView}>Blog</a>
                   <a href="#latest-blogs" className="call-to-action call-to-action--nav">Newsletter</a>
                   <a href={dashboardHref} className="call-to-action call-to-action--nav">Pricing</a>
                   <a href="#use-cases-section" className="call-to-action call-to-action--nav">Use Cases</a>
@@ -2674,16 +3070,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
           <div className="grid-container">
             <div className="grid-row" style={{ alignItems: 'center' }}>
               <div className="grid-col col-xs-4 col-sm-3 col-md-5">
-                <Link to="/" className="footer-google-logo" aria-label="ArchiBot">
+                <Link to="/" className="footer-google-logo" aria-label="ArchiBot" onClick={openLandingView}>
                   <ArchiBrandMark size={20} />
                   <span>ArchiBot</span>
                 </Link>
               </div>
               <div className="footer-google-nav grid-col col-xs-4 col-sm-5 col-md-7">
-                <a href="#hero" className="caption">
+                <a href="#hero" className="caption" onClick={openLandingView}>
                   <span>About ArchiBot</span>
                 </a>
-                <a href="#feature-explorer" className="caption">
+                <a href="#feature-explorer" className="caption" onClick={openLandingView}>
                   <span>Modules</span>
                 </a>
                 <a href={dashboardHref} className="caption">
