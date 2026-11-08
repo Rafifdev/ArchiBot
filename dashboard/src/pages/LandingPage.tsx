@@ -659,8 +659,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
   // Theme Mode State (auto / light / dark, default auto from browser)
   const [themeMode, setThemeMode] = useState<'auto' | 'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('archibot_theme_mode') as 'auto' | 'light' | 'dark' | null;
-      if (saved === 'auto' || saved === 'light' || saved === 'dark') return saved;
+      const explicitChoice = localStorage.getItem('archibot_theme_mode_user_choice') as
+        | 'auto'
+        | 'light'
+        | 'dark'
+        | null;
+      if (explicitChoice === 'auto' || explicitChoice === 'light' || explicitChoice === 'dark') {
+        return explicitChoice;
+      }
     }
     return 'auto';
   });
@@ -1308,6 +1314,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         className={`lang-dropdown-option ${isSelected ? 'selected' : ''}`}
                         onClick={() => {
                           setThemeMode(opt.value);
+                          localStorage.setItem('archibot_theme_mode_user_choice', opt.value);
+                          localStorage.setItem('archibot_theme_mode', opt.value);
                           setThemeDropdownOpen(false);
                         }}
                       >
