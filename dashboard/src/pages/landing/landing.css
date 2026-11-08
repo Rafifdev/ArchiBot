@@ -687,8 +687,19 @@ html.lenis, html.lenis body {
   gap: 10px;
   height: 100%;
   display: inline-flex;
-  color: #202124 !important;
+  color: #121317 !important;
   text-decoration: none;
+}
+
+html[data-theme='dark'] .agy-landing .logo-link,
+html.dark .agy-landing .logo-link,
+.agy-landing[data-theme='dark'] .logo-link,
+.agy-landing.dark .logo-link,
+html[data-theme='dark'] .agy-landing .logo-link span,
+html.dark .agy-landing .logo-link span,
+.agy-landing[data-theme='dark'] .logo-link span,
+.agy-landing.dark .logo-link span {
+  color: #F2F3F5 !important;
 }
 
 .agy-landing .header-actions {
@@ -1671,6 +1682,18 @@ html.lenis, html.lenis body {
   display: block;
   overflow: visible;
   margin: 0 auto;
+}
+
+.agy-landing .footer-antigravity text {
+  fill: #121317;
+  transition: fill 0.3s ease;
+}
+
+html[data-theme='dark'] .agy-landing .footer-antigravity text,
+html.dark .agy-landing .footer-antigravity text,
+.agy-landing[data-theme='dark'] .footer-antigravity text,
+.agy-landing.dark .footer-antigravity text {
+  fill: #F2F3F5 !important;
 }
 
 .agy-landing .footer-google-links {

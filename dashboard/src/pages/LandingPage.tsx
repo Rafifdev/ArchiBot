@@ -1186,9 +1186,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     fontSize: '20.5px',
                     fontWeight: 500,
                     letterSpacing: '-0.02em',
-                    color: 'var(--theme-surface-on-surface, #121317)',
+                    color: resolvedTheme === 'dark' ? '#F2F3F5' : '#121317',
                     display: 'inline-flex',
                     alignItems: 'center',
+                    transition: 'color 0.2s ease',
                   }}
                 >
                   ArchiBot
@@ -3527,7 +3528,7 @@ await engine.start();`}</code>
                 <text
                   x="0"
                   y="198"
-                  fill="#121317"
+                  fill={resolvedTheme === 'dark' ? '#F2F3F5' : '#121317'}
                   style={{
                     fontFamily: "'Google Sans Flex', 'Google Sans', sans-serif",
                     fontSize: '252px',
@@ -3535,6 +3536,8 @@ await engine.start();`}</code>
                     letterSpacing: '-0.015em',
                     fontVariationSettings: '"wdth" 100, "wght" 650, "opsz" 144',
                     userSelect: 'none',
+                    fill: resolvedTheme === 'dark' ? '#F2F3F5' : '#121317',
+                    transition: 'fill 0.3s ease',
                   }}
                 >
                   ArchiBot
