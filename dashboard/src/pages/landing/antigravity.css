@@ -2024,6 +2024,9 @@ html.lenis, html.lenis body {
   padding-top: 130px;
   padding-bottom: 96px;
   min-height: 80vh;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 12), 1fr);
+  column-gap: var(--grid-gutter, 32px);
 }
 
 .agy-landing .breadcrumb-wrapper {
@@ -2173,72 +2176,106 @@ html.lenis, html.lenis body {
 }
 
 .agy-landing .post .share-trigger-btn {
-  color: var(--palette-grey-900, #2f3034);
-  background-color: var(--theme-surface-container, #f1f3f4);
+  height: 38px;
+  color: var(--theme-surface-on-surface-variant, #444746);
   cursor: pointer;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 20px;
-  display: inline-flex;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid #0000001f;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: 7px;
+  padding-inline: 14px 12px;
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1;
-  transition: all 0.2s;
+  transition: background-color 0.55s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1), color 0.55s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  display: inline-flex;
 }
 
-.agy-landing .post .share-trigger-btn:hover {
-  background-color: var(--palette-grey-200, #cdd4dc);
-  color: var(--palette-blue-600, #3279f9);
+.agy-landing .post .share-trigger-btn:hover,
+.agy-landing .post .share-trigger-btn.open {
+  background-color: var(--theme-nav-button-hover, #0000000d);
+  color: #121317;
+  border-color: #0000003d;
 }
 
 .agy-landing .post .share-trigger-btn .share-icon {
-  font-size: 16px;
-}
-
-.agy-landing .post .share-trigger-btn .arrow-icon {
-  font-size: 16px;
-  transition: transform 0.2s;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .agy-landing .post .share-dropdown-menu {
-  z-index: 100;
-  background-color: #fff;
-  border: 1px solid #dadce0;
-  border-radius: 12px;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 190px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(33, 34, 38, 0.12);
+  box-shadow: 0 18px 42px -10px rgba(18, 19, 23, 0.18), 0 4px 12px rgba(18, 19, 23, 0.06);
+  padding: 6px;
+  z-index: 1100;
+  transform-origin: top right;
+  transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1), transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
-  min-width: 190px;
-  padding: 6px 0;
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.agy-landing .post .share-dropdown-menu.open {
+  opacity: 1;
+  transform: scaleY(1) translateY(0);
+  pointer-events: auto;
+}
+
+.agy-landing .post .share-dropdown-menu.closed {
+  opacity: 0;
+  transform: scaleY(0.95) translateY(-4px);
+  pointer-events: none;
 }
 
 .agy-landing .post .share-menu-item {
-  color: #202124;
-  cursor: pointer;
-  text-align: left;
-  background: transparent;
-  border: none;
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 8px 16px;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #45474d;
   font-family: inherit;
-  font-size: 0.8125rem;
+  font-size: 13.5px;
   font-weight: 400;
-  transition: background-color 0.15s, color 0.15s;
+  text-align: left;
+  cursor: pointer;
   text-decoration: none !important;
+  transition: background-color 0.32s cubic-bezier(0.22, 1, 0.36, 1), color 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .agy-landing .post .share-menu-item:hover {
-  color: #1a73e8;
-  background-color: #f1f3f4;
+  background: #f0f1f5;
+  color: #121317;
+}
+
+.agy-landing .post .share-menu-item .item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.agy-landing .post .share-menu-item .item-label {
+  color: inherit;
+  font-size: 13.5px;
+  font-weight: 400;
 }
 
 .agy-landing .post .hero-image-wrapper {

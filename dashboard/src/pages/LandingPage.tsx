@@ -645,6 +645,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
   const langDropdownOpenRef = useRef(false);
   langDropdownOpenRef.current = langDropdownOpen;
   const langDropdownRef = useRef<HTMLDivElement>(null);
+  const shareDropdownRef = useRef<HTMLDivElement>(null);
 
   // Hero & Showcase Scroll-Scrub Refs
   const heroParticlesRef = useRef<HTMLDivElement>(null);
@@ -821,6 +822,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [langDropdownOpen]);
+
+  // Close article share dropdown on outside click or Escape
+  useEffect(() => {
+    if (!shareMenuOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (shareDropdownRef.current && !shareDropdownRef.current.contains(e.target as Node)) {
+        setShareMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShareMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [shareMenuOpen]);
 
   // Responsive column count for Latest Blogs slider
   useEffect(() => {
@@ -1490,10 +1510,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 </div>
 
                 <div className="meta-right">
-                  <div className="share-dropdown-wrapper">
+                  <div className="share-dropdown-wrapper" ref={shareDropdownRef}>
                     <button
                       type="button"
-                      className="share-trigger-btn"
+                      className={`share-trigger-btn ${shareMenuOpen ? 'open' : ''}`}
                       onClick={() => setShareMenuOpen((prev) => !prev)}
                       aria-expanded={shareMenuOpen}
                       title="Share options"
@@ -1502,44 +1522,55 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         <path d="M676.68-100q-42.79,0-72.97-30.24t-30.17-72.99q0-7.67 5.38-33.62L281.46-412.23q-14.66,16.62-34.82,26.04t-43.79,9.42q-42.6,0-72.72-30.01T100-480.09t30.12-73.22t72.6-29.92q22.87,0 42.76,8.91q19.9,8.91 34.36,25.32L578.92-722.77q-2.38-8-3.88-16.5t-1.5-17.55q0-42.7 30.26-72.94T676.86-860t72.97,30.26T780-756.68t-30.24,72.97t-73.11,30.17q-22.36,0-41.58-9t-33.69-24L300.46-515.23q3,8 4.5,17.12t1.5,17.81t-1.19,16.38t-3.58,15.69L602.38-274.08q14.6-15 33.53-23.69t40.95-8.69q43.15,0 73.14,30.26T780-203.14t-30.26,72.97T676.68-100Zm0.19-45.38q24.63,0 41.19-16.66q16.56-16.66 16.56-41.29t-16.66-41.19t-41.29-16.56t-41.19,16.66t-16.56,41.29t16.66,41.19t41.29,16.56ZM202.95-422.15q24.79,0 41.46-16.76t16.67-41.19t-16.77-41.09t-41.56-16.65q-24.46,0-40.91,16.76q-16.45,16.76-16.45,41.19t16.55,41.09t41.01,16.65ZM717.96-715.58q16.65-16.66 16.65-41.29t-16.66-41.19q-16.66-16.56-41.29-16.56t-41.19,16.66t-16.56,41.29t16.76,41.19t41.19,16.56t41.09-16.66ZM676.77-203.23ZM203.23-480Z" />
                       </svg>
                       <span className="share-trigger-label">Share</span>
-                      <svg className="arrow-icon" viewBox="0 -960 960 960" width="16px" height="16px" fill="currentColor">
-                        <path d="M480-357.85L253.85-584l32.61-32.61L480-423.08L673.54-616.61L706.15-584L480-357.85Z" />
-                      </svg>
+                      <ChevronDownSvg
+                        style={{
+                          width: '15px',
+                          height: '15px',
+                          transition: 'transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                          transform: shareMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        }}
+                      />
                     </button>
 
-                    {shareMenuOpen && (
-                      <div className="share-dropdown-menu">
-                        <button
-                          type="button"
-                          className="share-menu-item"
-                          onClick={() => {
-                            navigator.clipboard?.writeText(window.location.href).catch(() => {});
-                            setCopiedLink(true);
-                            setTimeout(() => setCopiedLink(false), 1500);
-                          }}
-                        >
-                          <span className="item-icon">
-                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                              {copiedLink ? 'check' : 'link'}
-                            </span>
+                    <div
+                      role="menu"
+                      data-lenis-prevent
+                      className={`share-dropdown-menu ${shareMenuOpen ? 'open' : 'closed'}`}
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="share-menu-item"
+                        onClick={() => {
+                          navigator.clipboard?.writeText(window.location.href).catch(() => {});
+                          setCopiedLink(true);
+                          setTimeout(() => setCopiedLink(false), 1500);
+                        }}
+                      >
+                        <span className="item-icon">
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                            {copiedLink ? 'check' : 'link'}
                           </span>
-                          <span className="item-label">{copiedLink ? 'Copied!' : 'Copy link'}</span>
-                        </button>
-                        <a
-                          href={`https://x.com/intent/tweet?text=${encodeURIComponent(currentArticle.title)}&url=${encodeURIComponent(window.location.href)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="share-menu-item"
-                        >
-                          <span className="item-icon">
-                            <svg viewBox="0 0 57 56" height="16" width="16" fill="currentColor">
-                              <path d="M40.8274 10.5H47.2677L33.1976 26.1977L49.75 47.5588H36.7896L26.6386 34.6034L15.0236 47.5588H8.57933L23.6288 30.7683L7.75 10.5H21.0393L30.215 22.3417L40.8274 10.5ZM38.5672 43.7959H42.1357L19.1003 14.0652H15.2708L38.5672 43.7959Z" />
-                            </svg>
-                          </span>
-                          <span className="item-label">Share on X</span>
-                        </a>
-                      </div>
-                    )}
+                        </span>
+                        <span className="item-label">{copiedLink ? 'Copied!' : 'Copy link'}</span>
+                      </button>
+                      <a
+                        href={`https://x.com/intent/tweet?text=${encodeURIComponent(currentArticle.title)}&url=${encodeURIComponent(window.location.href)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        role="menuitem"
+                        className="share-menu-item"
+                      >
+                        <span className="item-icon">
+                          <svg viewBox="0 0 57 56" height="15" width="15" fill="currentColor">
+                            <path d="M40.8274 10.5H47.2677L33.1976 26.1977L49.75 47.5588H36.7896L26.6386 34.6034L15.0236 47.5588H8.57933L23.6288 30.7683L7.75 10.5H21.0393L30.215 22.3417L40.8274 10.5ZM38.5672 43.7959H42.1357L19.1003 14.0652H15.2708L38.5672 43.7959Z" />
+                          </svg>
+                        </span>
+                        <span className="item-label">Share on X</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
