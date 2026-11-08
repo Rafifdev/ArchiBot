@@ -1417,26 +1417,36 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                       className="featured-article-image"
                       onClick={(e) => e.preventDefault()}
                     >
-                      <div className="featured-img-inner" style={{ background: FEATURED_BLOG_POST.gradient }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                          <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: '56px', color: 'rgba(255,255,255,0.85)' }}
-                          >
-                            {FEATURED_BLOG_POST.icon}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: '13px',
-                              letterSpacing: '0.08em',
-                              textTransform: 'uppercase',
-                              color: 'rgba(255,255,255,0.6)',
-                              fontWeight: 500,
-                            }}
-                          >
-                            ArchiBot Insights
-                          </span>
-                        </div>
+                      <div
+                        className="featured-img-inner"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          background: 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '12px',
+                          color: '#8a92a6',
+                        }}
+                      >
+                        <span
+                          className="material-symbols-outlined"
+                          style={{ fontSize: '56px', fontWeight: 300 }}
+                        >
+                          image
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '14px',
+                            color: '#6b7280',
+                            fontWeight: 500,
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          Placeholder Image
+                        </span>
                       </div>
                     </a>
                   </div>
@@ -1524,22 +1534,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         onClick={(e) => e.preventDefault()}
                         aria-label={post.title}
                       >
-                        <div
-                          className="img"
-                          style={{
-                            background: post.gradient,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-                          }}
-                        >
-                          <span
-                            className="material-symbols-outlined"
-                            style={{ fontSize: '36px', color: 'rgba(255,255,255,0.8)' }}
+                        <div className="img">
+                          <div
+                            className="img-inner"
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              color: '#8a92a6',
+                            }}
                           >
-                            {post.icon}
-                          </span>
+                            <span
+                              className="material-symbols-outlined"
+                              style={{ fontSize: '36px', fontWeight: 300 }}
+                            >
+                              image
+                            </span>
+                            <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 400 }}>
+                              Placeholder Image
+                            </span>
+                          </div>
                         </div>
                       </a>
                     </article>
