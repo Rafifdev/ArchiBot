@@ -2176,37 +2176,42 @@ html.lenis, html.lenis body {
 }
 
 .agy-landing .post .share-trigger-btn {
-  height: 38px;
-  color: var(--theme-surface-on-surface-variant, #444746);
+  color: var(--palette-grey-900, #2f3034);
+  background-color: var(--theme-surface-container, #f1f3f4);
   cursor: pointer;
-  user-select: none;
-  background-color: transparent;
-  border: 1px solid #0000001f;
-  border-radius: 9999px;
-  flex-shrink: 0;
-  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding-inline: 14px 12px;
+  gap: 6px;
+  padding: 6px 14px;
   font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1;
-  transition: background-color 0.55s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1), color 0.55s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-  display: inline-flex;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .agy-landing .post .share-trigger-btn:hover,
-.agy-landing .post .share-trigger-btn.open {
-  background-color: var(--theme-nav-button-hover, #0000000d);
-  color: #121317;
-  border-color: #0000003d;
+.agy-landing .post .share-trigger-btn.open,
+.agy-landing .post .share-trigger-btn[aria-expanded="true"] {
+  background-color: var(--palette-grey-200, #cdd4dc);
+  color: var(--palette-blue-600, #3279f9);
+  border-color: rgba(50, 121, 249, 0.3);
 }
 
 .agy-landing .post .share-trigger-btn .share-icon {
   width: 16px;
   height: 16px;
+  color: var(--palette-grey-800, #45474d);
   flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.agy-landing .post .share-trigger-btn:hover .share-icon,
+.agy-landing .post .share-trigger-btn.open .share-icon {
+  color: inherit;
 }
 
 .agy-landing .post .share-dropdown-menu {
