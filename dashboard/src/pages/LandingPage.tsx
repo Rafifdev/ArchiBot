@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
-import './landing/antigravity.css';
+import './landing/landing.css';
 import { DiscordMark } from '../components/ui';
 import { UserProfile } from '../types/api';
 import { AntigravityParticles } from './landing/AntigravityParticles';
@@ -1316,10 +1316,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         <span style={{ flex: 1, textAlign: 'left' }}>{opt.label}</span>
                         {isSelected && (
                           <span
-                            className="material-symbols-outlined"
+                            className="material-symbols-outlined check-icon"
                             style={{
                               fontSize: '18px',
-                              color: 'inherit',
+                              color: 'var(--theme-primary-primary, #5865F2)',
                               flexShrink: 0,
                               marginLeft: 'auto',
                             }}
@@ -1511,10 +1511,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                           onClick={() => setOpenDropdown(null)}
                         >
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '14px' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', color: '#121317' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', color: 'inherit' }}>
                               {item.icon}
                             </span>
-                            <span style={{ fontSize: '15.5px', fontWeight: 400, color: '#121317' }}>{item.title}</span>
+                            <span style={{ fontSize: '15.5px', fontWeight: 400, color: 'inherit' }}>{item.title}</span>
                           </span>
                           {item.external && (
                             <span style={{ color: '#5f6368', display: 'flex', alignItems: 'center' }}>
@@ -1769,11 +1769,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
               </p>
 
+              <blockquote>
+                <p>
+                  "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
+                  totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae."
+                </p>
+              </blockquote>
+
               <h3>Excepteur sint occaecat cupidatat</h3>
               <p>
                 Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni
                 dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
               </p>
+
+              <div className="article-code-box">
+                <pre>
+                  <code>{`// Example ArchiBot configuration snippet
+import { createArchiBotEngine } from '@archibot/core';
+
+const engine = createArchiBotEngine({
+  guildId: process.env.DISCORD_GUILD_ID,
+  features: ['architect', 'voice', 'giveaways', 'backup'],
+  analytics: { enabled: true, tracking: 'high-accuracy' }
+});
+
+await engine.start();`}</code>
+                </pre>
+              </div>
 
               <p>
                 At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti
@@ -1911,6 +1933,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                       }}
                     />
                   </div>
+
+                  {/* RSS Feed Button (1:1 with Antigravity Blog Toolbar) */}
+                  <button
+                    type="button"
+                    className="rss-feed-button"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(window.location.origin + '/rss.xml').catch(() => {});
+                      alert(isID ? 'Tautan RSS feed berhasil disalin!' : 'RSS feed link copied to clipboard!');
+                    }}
+                    title="RSS Feed"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                      rss_feed
+                    </span>
+                    <span>RSS Feed</span>
+                  </button>
                 </div>
 
                 <div className="blog-cards">
@@ -3247,7 +3285,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     <h4 className="heading-7" style={{ marginBottom: '6px' }}>
                       {USE_CASES[activeUseCase].title}
                     </h4>
-                    <p className="body" style={{ color: '#45474d', maxWidth: '640px', marginBottom: '12px' }}>
+                    <p className="body" style={{ color: 'var(--theme-surface-on-surface-variant, #949BA4)', maxWidth: '640px', marginBottom: '12px' }}>
                       {USE_CASES[activeUseCase].summary}
                     </p>
                     <a href={dashboardHref} className="call-to-action arrow-link">
