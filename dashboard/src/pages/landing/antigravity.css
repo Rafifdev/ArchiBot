@@ -1735,14 +1735,14 @@ html.lenis, html.lenis body {
   display: block;
 }
 
-.agy-landing .blog .main-left-container .featured-title-link:hover .featured-title {
-  color: var(--palette-blue-600, #3186ff);
+.agy-landing .blog .main-left-container .featured-title-link:hover .featured-title,
+.agy-landing .blog .main-left-container .featured-title:hover {
+  color: var(--theme-surface-on-surface, #121317);
 }
 
 .agy-landing .blog .main-left-container .featured-title {
   color: var(--theme-surface-on-surface, #121317);
   margin-block-end: 0;
-  transition: color 0.2s cubic-bezier(0.2, 0, 0, 1);
   font-weight: 500;
   line-height: 1.25;
 }
@@ -1922,15 +1922,15 @@ html.lenis, html.lenis body {
   display: block;
 }
 
-.agy-landing .featured-card .texts .card-title-link:hover h3 {
-  color: var(--palette-blue-600, #3186ff);
+.agy-landing .featured-card .texts .card-title-link:hover h3,
+.agy-landing .featured-card:hover .texts h3 {
+  color: var(--theme-surface-on-surface, #121317);
 }
 
 .agy-landing .featured-card .texts h3 {
   color: var(--theme-surface-on-surface, #121317);
   margin: 0;
   padding-bottom: 14px;
-  transition: color 0.2s;
   font-size: 18px;
   line-height: 1.35;
   font-weight: 500;
