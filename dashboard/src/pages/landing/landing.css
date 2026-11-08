@@ -864,7 +864,7 @@ html.dark .agy-landing .logo-link span,
 }
 
 .agy-landing .dropdown {
-  border-radius: 0 0 var(--shape-corner-lg) var(--shape-corner-lg);
+  border-radius: 0;
   z-index: 99;
   background: #ffffff;
   position: absolute;
@@ -872,8 +872,8 @@ html.dark .agy-landing .logo-link span,
   left: 0;
   right: 0;
   padding: var(--space-2xl) 0 var(--space-xl);
-  border-top: 1px solid var(--theme-surface-surface-container-higher);
-  box-shadow: 0 24px 48px -12px rgba(18, 19, 23, 0.1);
+  border: none !important;
+  box-shadow: none !important;
   animation: agy-dropdown-shell-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -919,8 +919,10 @@ html.dark .agy-landing .logo-link span,
 }
 
 .agy-landing .subnav-column {
-  border-inline-start: 1px solid var(--theme-outline-variant);
-  border-inline-end: 1px solid var(--theme-outline-variant);
+  border-inline-start: 1px solid var(--theme-outline-variant, rgba(0, 0, 0, 0.08)) !important;
+  border-inline-end: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
   padding-inline: var(--space-xl);
 }
 
@@ -2669,9 +2671,19 @@ html[data-theme='dark'] .agy-landing .dropdown-panel,
 html.dark .agy-landing .dropdown-panel,
 .agy-landing[data-theme='dark'] .dropdown-panel,
 .agy-landing.dark .dropdown-panel {
-  background: #181B23;
-  border: 1px solid #232733;
-  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='dark'] .agy-landing .subnav-column,
+html.dark .agy-landing .subnav-column,
+.agy-landing[data-theme='dark'] .subnav-column,
+.agy-landing.dark .subnav-column {
+  border-inline-start: 1px solid #232733 !important;
+  border-inline-end: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
 }
 
 html[data-theme='dark'] .agy-landing .mega-menu-item,
@@ -3049,9 +3061,8 @@ html.dark .agy-landing .dropdown,
 .agy-landing[data-theme='dark'] .dropdown,
 .agy-landing.dark .dropdown {
   background: #181B23;
-  border-top: 1px solid #232733;
-  border-bottom: 1px solid #232733;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.75);
+  border: none !important;
+  box-shadow: none !important;
 }
 
 html[data-theme='dark'] .agy-landing .dropdown-overlay,
