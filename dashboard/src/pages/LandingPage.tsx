@@ -360,6 +360,15 @@ const LATEST_BLOGS = [
   },
 ];
 
+const BLOG_COUNT = LATEST_BLOGS.length;
+const INFINITE_BLOGS = [
+  ...LATEST_BLOGS,
+  ...LATEST_BLOGS,
+  ...LATEST_BLOGS,
+  ...LATEST_BLOGS,
+  ...LATEST_BLOGS,
+];
+
 export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const openDropdownRef = useRef<string | null>(null);
@@ -413,14 +422,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   // Use-Case Carousel state in Section 5 + slide transition key
   const [activeUseCase, setActiveUseCase] = useState(0);
 
-  // Latest Blogs Horizontal Slider state & Drag-to-Slide
-  const [blogSlideIndex, setBlogSlideIndex] = useState(0);
+  // Latest Blogs Infinite Seamless Slider state & Drag-to-Slide
+  const [blogSlideIndex, setBlogSlideIndex] = useState(BLOG_COUNT * 2);
   const [visibleBlogCols, setVisibleBlogCols] = useState(4);
   const [blogDragOffset, setBlogDragOffset] = useState(0);
   const [isBlogDragging, setIsBlogDragging] = useState(false);
+  const [enableBlogTransition, setEnableBlogTransition] = useState(true);
   const isBlogDraggingRef = useRef(false);
   const blogDragStartXRef = useRef(0);
   const blogHasMovedRef = useRef(false);
+
+  useEffect(() => {
+    if (!enableBlogTransition) {
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setEnableBlogTransition(true);
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [enableBlogTransition]);
+
+  const handleBlogTransitionEnd = (e: React.TransitionEvent) => {
+    if (e.target !== e.currentTarget || e.propertyName !== 'transform') return;
+    if (blogSlideIndex >= BLOG_COUNT * 3) {
+      setEnableBlogTransition(false);
+      setBlogSlideIndex((prev) => prev - BLOG_COUNT * 2);
+    } else if (blogSlideIndex < BLOG_COUNT) {
+      setEnableBlogTransition(false);
+      setBlogSlideIndex((prev) => prev + BLOG_COUNT * 2);
+    }
+  };
 
   const dashboardHref = user ? '/servers' : '/auth/discord';
   const isID = selectedLang === 'id';
@@ -456,11 +488,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     } catch (_) {}
 
     const delta = e.clientX - blogDragStartXRef.current;
-    const threshold = 50;
+    const threshold = 40;
+    setEnableBlogTransition(true);
     if (delta < -threshold) {
-      setBlogSlideIndex((prev) => Math.min(maxBlogSlide, prev + 1));
+      setBlogSlideIndex((prev) => prev + 1);
     } else if (delta > threshold) {
-      setBlogSlideIndex((prev) => Math.max(0, prev - 1));
+      setBlogSlideIndex((prev) => prev - 1);
     }
     setBlogDragOffset(0);
   };
@@ -522,8 +555,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
     window.addEventListener('resize', updateCols, { passive: true });
     return () => window.removeEventListener('resize', updateCols);
   }, []);
-
-  const maxBlogSlide = Math.max(0, LATEST_BLOGS.length - visibleBlogCols);
 
   // 1:1 Antigravity.google Smooth Scroll (Lenis) + Reactive Header + Zero-Reflow Scrubbing
   useEffect(() => {
@@ -2420,13 +2451,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
             >
               <div
                 className="blogs-slider-track"
+                onTransitionEnd={handleBlogTransitionEnd}
                 style={{
                   transform: `translate3d(calc(-${blogSlideIndex} * ((100% + var(--grid-gutter)) / ${visibleBlogCols}) + ${blogDragOffset}px), 0, 0)`,
-                  transition: isBlogDragging ? 'none' : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                  transition: isBlogDragging || !enableBlogTransition ? 'none' : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
                   willChange: 'transform',
                 }}
               >
-                {LATEST_BLOGS.map((blog, idx) => (
+                {INFINITE_BLOGS.map((blog, idx) => (
                   <a
                     key={idx}
                     href={dashboardHref}
@@ -2483,8 +2515,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   type="button"
                   className="slider-control-button"
                   aria-label="Previous blogs"
-                  disabled={blogSlideIndex <= 0}
-                  onClick={() => setBlogSlideIndex((prev) => Math.max(0, prev - 1))}
+                  onClick={() => {
+                    setEnableBlogTransition(true);
+                    setBlogSlideIndex((prev) => prev - 1);
+                  }}
                 >
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
@@ -2492,8 +2526,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   type="button"
                   className="slider-control-button"
                   aria-label="Next blogs"
-                  disabled={blogSlideIndex >= maxBlogSlide}
-                  onClick={() => setBlogSlideIndex((prev) => Math.min(maxBlogSlide, prev + 1))}
+                  onClick={() => {
+                    setEnableBlogTransition(true);
+                    setBlogSlideIndex((prev) => prev + 1);
+                  }}
                 >
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </button>
