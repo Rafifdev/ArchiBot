@@ -1753,8 +1753,14 @@ await engine.start();`}</code>
                 </div>
 
                 <div className="blog-cards">
-                  {filteredBlogPosts.map((post) => (
-                    <article key={post.id} className="featured-card">
+                  {filteredBlogPosts.map((post, idx) => (
+                    <article
+                      key={`${activeBlogTab}-${post.id}`}
+                      className="featured-card blog-card-animated"
+                      style={{
+                        animation: `blogCardFadeIn 0.5s cubic-bezier(0.25, 1, 0.5, 1) ${idx * 0.05}s both`,
+                      }}
+                    >
                       <div className="texts">
                         <a
                           href={`/blog/${post.slug}`}

@@ -1870,9 +1870,32 @@ html.lenis, html.lenis body {
   bottom: 0;
   height: 2px;
   background-color: #3186ff;
-  transition: left 0.3s cubic-bezier(0.2, 0, 0, 1), width 0.3s cubic-bezier(0.2, 0, 0, 1);
+  transition: left 0.35s cubic-bezier(0.45, 0, 0.55, 1), width 0.35s cubic-bezier(0.45, 0, 0.55, 1);
   z-index: 2;
   pointer-events: none;
+}
+
+@keyframes blogCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.agy-landing .featured-card.blog-card-animated {
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agy-landing .featured-card.blog-card-animated {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 .agy-landing .blog .latest-blogs .blog-cards {
