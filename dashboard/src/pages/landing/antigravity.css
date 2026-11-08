@@ -753,6 +753,8 @@ html.lenis, html.lenis body {
   width: 248px;
   max-height: 320px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   border-radius: 14px;
   background: #ffffff;
   border: 1px solid rgba(33, 34, 38, 0.12);
@@ -1377,6 +1379,13 @@ html.lenis, html.lenis body {
   width: 100%;
   overflow: hidden;
   margin-block-end: var(--space-2xl);
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.agy-landing .blogs-slider-viewport:active {
+  cursor: grabbing;
 }
 
 .agy-landing .blogs-slider-track {
@@ -1393,6 +1402,8 @@ html.lenis, html.lenis body {
   display: flex;
   flex-direction: column;
   color: inherit;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 @media (width <= 1200px) {

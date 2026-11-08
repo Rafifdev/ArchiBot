@@ -413,13 +413,57 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
   // Use-Case Carousel state in Section 5 + slide transition key
   const [activeUseCase, setActiveUseCase] = useState(0);
 
-  // Latest Blogs Horizontal Slider state
+  // Latest Blogs Horizontal Slider state & Drag-to-Slide
   const [blogSlideIndex, setBlogSlideIndex] = useState(0);
   const [visibleBlogCols, setVisibleBlogCols] = useState(4);
+  const [blogDragOffset, setBlogDragOffset] = useState(0);
+  const [isBlogDragging, setIsBlogDragging] = useState(false);
+  const isBlogDraggingRef = useRef(false);
+  const blogDragStartXRef = useRef(0);
+  const blogHasMovedRef = useRef(false);
 
   const dashboardHref = user ? '/servers' : '/auth/discord';
   const isID = selectedLang === 'id';
   const activeLanguageObj = LANGUAGE_OPTIONS.find((l) => l.value === selectedLang) || LANGUAGE_OPTIONS[0];
+
+  const handleBlogPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    isBlogDraggingRef.current = true;
+    setIsBlogDragging(true);
+    blogDragStartXRef.current = e.clientX;
+    blogHasMovedRef.current = false;
+    setBlogDragOffset(0);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch (_) {}
+  };
+
+  const handleBlogPointerMove = (e: React.PointerEvent) => {
+    if (!isBlogDraggingRef.current) return;
+    const delta = e.clientX - blogDragStartXRef.current;
+    if (Math.abs(delta) > 5) {
+      blogHasMovedRef.current = true;
+    }
+    setBlogDragOffset(delta);
+  };
+
+  const handleBlogPointerUp = (e: React.PointerEvent) => {
+    if (!isBlogDraggingRef.current) return;
+    isBlogDraggingRef.current = false;
+    setIsBlogDragging(false);
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch (_) {}
+
+    const delta = e.clientX - blogDragStartXRef.current;
+    const threshold = 50;
+    if (delta < -threshold) {
+      setBlogSlideIndex((prev) => Math.min(maxBlogSlide, prev + 1));
+    } else if (delta > threshold) {
+      setBlogSlideIndex((prev) => Math.max(0, prev - 1));
+    }
+    setBlogDragOffset(0);
+  };
 
   // Auto-advance motionStep (paused during active scroll to prevent mid-scroll re-render jank)
   useEffect(() => {
@@ -800,15 +844,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   className="call-to-action--nav button button-primary button-compact download-button"
                 >
                   <DiscordMark className="w-4 h-4" />
-                  <span>
-                    {user
-                      ? isID
-                        ? 'Buka Dashboard'
-                        : 'Open Dashboard'
-                      : isID
-                      ? 'Masuk'
-                      : 'Sign in'}
-                  </span>
+                  <span>Dashboard</span>
                 </a>
               </div>
             </div>
@@ -847,7 +883,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
 
               <div
                 role="listbox"
+                data-lenis-prevent
                 className={`lang-dropdown-menu ${langDropdownOpen ? 'open' : 'closed'}`}
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
               >
                 {LANGUAGE_OPTIONS.map((option) => {
                   const isSelected = option.value === selectedLang;
@@ -1097,15 +1136,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                   <div className="welcome-cta">
                     <a href={dashboardHref} className="call-to-action button button-primary">
                       <DiscordMark className="w-5 h-5" />
-                      <span>
-                        {user
-                          ? isID
-                            ? 'Buka Dashboard'
-                            : 'Open Dashboard'
-                          : isID
-                          ? 'Masuk dengan Discord'
-                          : 'Sign in with Discord'}
-                      </span>
+                      <span>Manage Server For Free</span>
                     </a>
                   </div>
                 </div>
@@ -2375,15 +2406,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               </a>
             </div>
 
-            <div className="blogs-slider-viewport">
+            <div
+              className="blogs-slider-viewport"
+              onPointerDown={handleBlogPointerDown}
+              onPointerMove={handleBlogPointerMove}
+              onPointerUp={handleBlogPointerUp}
+              onPointerCancel={handleBlogPointerUp}
+              style={{
+                cursor: isBlogDragging ? 'grabbing' : 'grab',
+                userSelect: 'none',
+                touchAction: 'pan-y',
+              }}
+            >
               <div
                 className="blogs-slider-track"
                 style={{
-                  transform: `translate3d(calc(-${blogSlideIndex} * ((100% + var(--grid-gutter)) / ${visibleBlogCols})), 0, 0)`,
+                  transform: `translate3d(calc(-${blogSlideIndex} * ((100% + var(--grid-gutter)) / ${visibleBlogCols}) + ${blogDragOffset}px), 0, 0)`,
+                  transition: isBlogDragging ? 'none' : 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                  willChange: 'transform',
                 }}
               >
                 {LATEST_BLOGS.map((blog, idx) => (
-                  <a key={idx} href={dashboardHref} className="list-item">
+                  <a
+                    key={idx}
+                    href={dashboardHref}
+                    className="list-item"
+                    draggable={false}
+                    onClick={(e) => {
+                      if (blogHasMovedRef.current) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
                     <div className="list-image-wrapper">
                       {/* Clean Architectural Placeholder Image */}
                       <div
@@ -2469,15 +2523,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                 <div className="download-section-cta">
                   <a href={dashboardHref} className="call-to-action button button-primary-inverse">
                     <DiscordMark className="w-5 h-5" />
-                    <span>
-                      {user
-                        ? isID
-                          ? 'Buka Dashboard'
-                          : 'Open Dashboard'
-                        : isID
-                        ? 'Masuk dengan Discord'
-                        : 'Sign in with Discord'}
-                    </span>
+                    <span>Manage Server For Free</span>
                   </a>
                 </div>
               </div>
@@ -2536,7 +2582,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
               <div id="antigravity-footer-wrapper" ref={footerWordmarkRef}>
                 <svg
                   className="footer-antigravity"
-                  viewBox="0 0 1080 230"
+                  viewBox="0 0 1140 230"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   role="img"
@@ -2551,7 +2597,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
                       fontFamily: "'Google Sans Flex', 'Google Sans', sans-serif",
                       fontSize: '250px',
                       fontWeight: 500,
-                      letterSpacing: '-0.02em',
+                      letterSpacing: '0.005em',
                       fontVariationSettings: '"wdth" 100, "wght" 500, "opsz" 144',
                       userSelect: 'none',
                     }}
