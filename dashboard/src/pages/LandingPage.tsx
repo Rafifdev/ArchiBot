@@ -2400,9 +2400,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user }) => {
         <section className="landing-latest-blogs" id="latest-blogs">
           <div className="grid-container">
             <div className="landing-latest-blogs-header">
-              <h2 className="heading-5">Latest Blogs</h2>
+              <h2 className="heading-3">{isID ? 'Blog Terbaru' : 'Latest Blogs'}</h2>
               <a href={dashboardHref} className="button button-secondary">
-                <span>View blog</span>
+                <span>{isID ? 'Lihat blog' : 'View blog'}</span>
               </a>
             </div>
 
