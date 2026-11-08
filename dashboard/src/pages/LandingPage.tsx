@@ -46,12 +46,12 @@ const ArrowUpRightSvg: React.FC = () => (
 );
 
 /* ==========================================================================
-   Theme Mode Options (Auto / Light / Dark)
+   Theme Mode Options (Dark / Light / Auto)
    ========================================================================== */
-const THEME_OPTIONS: { value: 'auto' | 'light' | 'dark'; label: string; icon: string }[] = [
-  { value: 'auto', label: 'Auto', icon: 'brightness_auto' },
-  { value: 'light', label: 'Light', icon: 'light_mode' },
+const THEME_OPTIONS: { value: 'dark' | 'light' | 'auto'; label: string; icon: string }[] = [
   { value: 'dark', label: 'Dark', icon: 'dark_mode' },
+  { value: 'light', label: 'Light', icon: 'light_mode' },
+  { value: 'auto', label: 'Auto', icon: 'laptop' },
 ];
 
 /* ==========================================================================
@@ -1275,13 +1275,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   title="Theme Mode"
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'inherit' }}>
-                    {themeMode === 'auto'
-                      ? 'brightness_auto'
-                      : themeMode === 'dark'
-                      ? 'dark_mode'
-                      : 'light_mode'}
+                    {themeMode === 'dark' ? 'dark_mode' : themeMode === 'light' ? 'light_mode' : 'laptop'}
                   </span>
-                  <span>{themeMode === 'auto' ? 'Auto' : themeMode === 'dark' ? 'Dark' : 'Light'}</span>
+                  <span>{themeMode === 'dark' ? 'Dark' : themeMode === 'light' ? 'Light' : 'Auto'}</span>
                   <ChevronDownSvg
                     style={{
                       width: '15px',
@@ -1314,17 +1310,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                           setThemeDropdownOpen(false);
                         }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px', flexShrink: 0 }}>
                           {opt.icon}
                         </span>
-                        <span style={{ flex: 1 }}>{opt.label}</span>
+                        <span style={{ flex: 1, textAlign: 'left' }}>{opt.label}</span>
                         {isSelected && (
                           <span
                             className="material-symbols-outlined"
                             style={{
-                              fontSize: '17px',
-                              color: 'var(--theme-primary-primary, #5865F2)',
+                              fontSize: '18px',
+                              color: 'inherit',
                               flexShrink: 0,
+                              marginLeft: 'auto',
                             }}
                           >
                             check
