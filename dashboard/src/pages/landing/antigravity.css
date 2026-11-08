@@ -1718,7 +1718,7 @@ html.lenis, html.lenis body {
   grid-column: 1 / -1;
   grid-template-columns: 1.1fr 1fr;
   display: grid;
-  align-items: center;
+  align-items: start;
 }
 
 .agy-landing .blog .main-left-container .featured-label {
@@ -1754,7 +1754,7 @@ html.lenis, html.lenis body {
   max-width: 100%;
   display: block;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
   border: none;
   position: relative;
   background: linear-gradient(135deg, #16171d 0%, #1f2330 100%);
