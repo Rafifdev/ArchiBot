@@ -3455,7 +3455,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
           <div className="grid-container">
             <div className="grid-row footer-inner">
               <div className="grid-col col-xs-4 col-sm-8 col-md-4">
-                <p className="footer-title heading-5">
+                <p
+                  className="footer-title heading-5"
+                  style={{ color: resolvedTheme === 'dark' ? '#ffffff' : undefined }}
+                >
                   Experience liftoff
                 </p>
               </div>

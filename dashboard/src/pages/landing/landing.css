@@ -1632,6 +1632,13 @@ html.dark .agy-landing .logo-link span,
   letter-spacing: -0.02em;
 }
 
+html[data-theme='dark'] .agy-landing .footer-title,
+html.dark .agy-landing .footer-title,
+.agy-landing[data-theme='dark'] .footer-title,
+.agy-landing.dark .footer-title {
+  color: #ffffff !important;
+}
+
 .agy-landing .footer-nav-section {
   display: flex;
   flex-direction: column;
