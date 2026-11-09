@@ -32,7 +32,7 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
     return { topNavItems: [], sectionGroups: [] };
   }
 
-  // Only features that genuinely exist in ArchiBot (bot.js + Express routes)
+  // Root navigation items
   const topNavItems: NavEntry[] = [
     { to: `/guilds/${guildId}`, label: 'Home', icon: 'home', end: true },
     { to: `/guilds/${guildId}/analytics`, label: 'Analytics', icon: 'analytics' },
@@ -40,33 +40,29 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
 
   const sectionGroups: NavGroup[] = [
     {
+      title: 'CHANNELS & TEMPLATES',
+      items: [
+        { to: `/guilds/${guildId}/channels`, label: 'Channels & Categories', icon: 'deployed_code' },
+        { to: `/guilds/${guildId}/architect`, label: 'Server Templates', icon: 'auto_awesome' },
+        { to: `/guilds/${guildId}/architect?tab=lego`, label: 'Modular Builder', icon: 'view_quilt' },
+        { to: `/guilds/${guildId}/backups`, label: 'Saved Templates', icon: 'inventory_2' },
+      ],
+    },
+    {
       title: 'SERVER MANAGEMENT',
       items: [
-        { to: `/guilds/${guildId}/architect`, label: 'Lego & Templates', icon: 'architecture' },
-        { to: `/guilds/${guildId}/channels`, label: 'Channels & Categories', icon: 'deployed_code' },
         { to: `/guilds/${guildId}/roles`, label: 'Roles & Permissions', icon: 'badge' },
         { to: `/guilds/${guildId}/members`, label: 'Members & Moderation', icon: 'group' },
-        { to: `/guilds/${guildId}/audit`, label: 'Discord Audit Logs', icon: 'history' },
+        { to: `/guilds/${guildId}/audit`, label: 'Audit Logs', icon: 'history' },
       ],
     },
     {
-      title: 'WELCOMER & LEAVE',
+      title: 'COMMUNITY & ENGAGEMENT',
       items: [
-        { to: `/guilds/${guildId}/welcome`, label: 'Welcome Message', icon: 'waving_hand' },
-        { to: `/guilds/${guildId}/goodbye`, label: 'Goodbye Message', icon: 'logout' },
-      ],
-    },
-    {
-      title: 'GIVEAWAYS',
-      items: [
-        { to: `/guilds/${guildId}/giveaways`, label: 'Giveaway Management', icon: 'celebration' },
-      ],
-    },
-    {
-      title: 'BACKUPS & MILESTONES',
-      items: [
+        { to: `/guilds/${guildId}/welcome`, label: 'Welcome Messages', icon: 'waving_hand' },
+        { to: `/guilds/${guildId}/goodbye`, label: 'Goodbye Messages', icon: 'logout' },
         { to: `/guilds/${guildId}/milestones`, label: 'Member Milestones', icon: 'emoji_events' },
-        { to: `/guilds/${guildId}/backups`, label: 'Layout Backups', icon: 'inventory_2' },
+        { to: `/guilds/${guildId}/giveaways`, label: 'Giveaways', icon: 'celebration' },
       ],
     },
   ];
@@ -301,10 +297,17 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
   const { topNavItems, sectionGroups } = getBotNavigation(guildId);
 
   const checkActive = (item: NavEntry) => {
+    const [itemPath, itemQuery] = item.to.split('?');
     if (item.end) {
-      return location.pathname === item.to;
+      return location.pathname === itemPath && (!itemQuery || location.search === `?${itemQuery}`);
     }
-    return location.pathname.startsWith(item.to);
+    if (itemQuery) {
+      return location.pathname === itemPath && location.search === `?${itemQuery}`;
+    }
+    if (itemPath.endsWith('/architect')) {
+      return location.pathname === itemPath && (!location.search || location.search === '?tab=templates');
+    }
+    return location.pathname.startsWith(itemPath);
   };
 
   return (

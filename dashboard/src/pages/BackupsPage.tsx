@@ -173,9 +173,9 @@ export const BackupsPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        category="BACKUPS & MILESTONES"
-        title="Server Layout Backups"
-        description="Snapshot your channels, categories, and roles. Fully synchronized with /backup on Discord."
+        category="CHANNELS & TEMPLATES"
+        title="Saved Templates & Layout Backups"
+        description="Save your server's channels, categories, and roles as reusable templates, or import and restore custom JSON layouts."
         actions={
           <>
             <MdButton variant="tonal" icon="file_upload" onClick={() => setImportOpen(true)}>

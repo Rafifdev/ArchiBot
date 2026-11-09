@@ -18,7 +18,7 @@ import { useServerSwitch } from '../components/layout';
 
 export const ArchitectPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tabIndex, setTabIndex] = useState(0);
   const [templates, setTemplates] = useState<any[]>([]);
   const [legoModules, setLegoModules] = useState<any[]>([]);
@@ -51,7 +51,17 @@ export const ArchitectPage: React.FC = () => {
     const tab = searchParams.get('tab');
     if (tab === 'deployer') setTabIndex(2);
     else if (tab === 'lego') setTabIndex(1);
+    else if (tab === 'danger') setTabIndex(3);
+    else setTabIndex(0);
   }, [searchParams]);
+
+  const handleTabChange = (idx: number) => {
+    setTabIndex(idx);
+    if (idx === 1) setSearchParams({ tab: 'lego' });
+    else if (idx === 2) setSearchParams({ tab: 'deployer' });
+    else if (idx === 3) setSearchParams({ tab: 'danger' });
+    else setSearchParams({});
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -199,17 +209,17 @@ export const ArchitectPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        category="SERVER MANAGEMENT"
-        title="Server Architect & Lego Builder"
-        description="Build complete, structured Discord server environments in seconds with 1-click presets or Lego modular blocks."
+        category="CHANNELS & TEMPLATES"
+        title="Server Templates & Modular Builder"
+        description="Generate complete Discord server structures in seconds using 1-click preset templates or the custom Modular Builder."
       />
 
       <MdTabs
         activeIndex={tabIndex}
-        onChange={setTabIndex}
+        onChange={handleTabChange}
         tabs={[
-          { id: 'templates', label: '1-Click Templates', icon: 'auto_awesome' },
-          { id: 'lego', label: 'Lego Modular Builder', icon: 'view_quilt' },
+          { id: 'templates', label: 'Server Templates', icon: 'auto_awesome' },
+          { id: 'lego', label: 'Modular Builder', icon: 'view_quilt' },
           { id: 'deployer', label: 'Interactive Panels', icon: 'smart_button' },
           { id: 'danger', label: 'Danger Zone', icon: 'warning' },
         ]}

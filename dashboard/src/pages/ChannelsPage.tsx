@@ -839,7 +839,7 @@ export const ChannelsPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        category="SERVER MANAGEMENT"
+        category="CHANNELS & TEMPLATES"
         title="Channels & Categories"
         description="Organize categories, lock or unlock channels, and configure channel properties."
         actions={
