@@ -2804,49 +2804,6 @@ html.dark .agy-landing .list-image-wrapper > div,
 .agy-landing.dark .list-image-wrapper > div {
   background: #2E3447 !important;
   border: none !important;
-  color: #CBD5E1 !important;
-}
-
-html[data-theme='dark'] .agy-landing .blog-placeholder-thumb span,
-html.dark .agy-landing .blog-placeholder-thumb span,
-.agy-landing[data-theme='dark'] .blog-placeholder-thumb span,
-.agy-landing.dark .blog-placeholder-thumb span,
-html[data-theme='dark'] .agy-landing .post-main-media.placeholder-hero span,
-html.dark .agy-landing .post-main-media.placeholder-hero span,
-.agy-landing[data-theme='dark'] .post-main-media.placeholder-hero span,
-.agy-landing.dark .post-main-media.placeholder-hero span,
-html[data-theme='dark'] .agy-landing .featured-img-inner span,
-html.dark .agy-landing .featured-img-inner span,
-.agy-landing[data-theme='dark'] .featured-img-inner span,
-.agy-landing.dark .featured-img-inner span,
-html[data-theme='dark'] .agy-landing .featured-card .img span,
-html.dark .agy-landing .featured-card .img span,
-.agy-landing[data-theme='dark'] .featured-card .img span,
-.agy-landing.dark .featured-card .img span,
-html[data-theme='dark'] .agy-landing .list-image-wrapper span,
-html.dark .agy-landing .list-image-wrapper span,
-.agy-landing[data-theme='dark'] .list-image-wrapper span,
-.agy-landing.dark .list-image-wrapper span {
-  color: #CBD5E1 !important;
-}
-
-html[data-theme='dark'] .agy-landing .post-main-media.placeholder-hero .material-symbols-outlined,
-html.dark .agy-landing .post-main-media.placeholder-hero .material-symbols-outlined,
-.agy-landing[data-theme='dark'] .post-main-media.placeholder-hero .material-symbols-outlined,
-.agy-landing.dark .post-main-media.placeholder-hero .material-symbols-outlined,
-html[data-theme='dark'] .agy-landing .featured-img-inner .material-symbols-outlined,
-html.dark .agy-landing .featured-img-inner .material-symbols-outlined,
-.agy-landing[data-theme='dark'] .featured-img-inner .material-symbols-outlined,
-.agy-landing.dark .featured-img-inner .material-symbols-outlined,
-html[data-theme='dark'] .agy-landing .featured-card .img .material-symbols-outlined,
-html.dark .agy-landing .featured-card .img .material-symbols-outlined,
-.agy-landing[data-theme='dark'] .featured-card .img .material-symbols-outlined,
-.agy-landing.dark .featured-card .img .material-symbols-outlined,
-html[data-theme='dark'] .agy-landing .list-image-wrapper .material-symbols-outlined,
-html.dark .agy-landing .list-image-wrapper .material-symbols-outlined,
-.agy-landing[data-theme='dark'] .list-image-wrapper .material-symbols-outlined,
-.agy-landing.dark .list-image-wrapper .material-symbols-outlined {
-  color: #8892B0 !important;
 }
 
 /* Article Detail Page in Dark Mode */

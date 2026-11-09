@@ -1750,15 +1750,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '14px',
-                  color: '#949BA4',
+                  color: '#8a92a6',
                   borderRadius: 'var(--shape-corner-xl, 24px)',
                   width: '100%',
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '64px', fontWeight: 300, color: '#8892B0' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '64px', fontWeight: 300 }}>
                   image
                 </span>
-                <span style={{ fontSize: '15px', color: '#CBD5E1', fontWeight: 500 }}>
+                <span style={{ fontSize: '15px', color: '#6b7280', fontWeight: 500 }}>
                   Placeholder Image
                 </span>
               </div>
@@ -1896,19 +1896,19 @@ await engine.start();`}</code>
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '12px',
-                          color: '#949BA4',
+                          color: '#8a92a6',
                         }}
                       >
                         <span
                           className="material-symbols-outlined"
-                          style={{ fontSize: '56px', fontWeight: 300, color: '#8892B0' }}
+                          style={{ fontSize: '56px', fontWeight: 300 }}
                         >
                           image
                         </span>
                         <span
                           style={{
                             fontSize: '14px',
-                            color: '#CBD5E1',
+                            color: '#6b7280',
                             fontWeight: 500,
                             letterSpacing: '0.02em',
                           }}
@@ -2018,16 +2018,16 @@ await engine.start();`}</code>
                               alignItems: 'center',
                               justifyContent: 'center',
                               gap: '6px',
-                              color: '#949BA4',
+                              color: '#8a92a6',
                             }}
                           >
                             <span
                               className="material-symbols-outlined"
-                              style={{ fontSize: '36px', fontWeight: 300, color: '#8892B0' }}
+                              style={{ fontSize: '36px', fontWeight: 300 }}
                             >
                               image
                             </span>
-                            <span style={{ fontSize: '11px', color: '#CBD5E1', fontWeight: 400 }}>
+                            <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 400 }}>
                               Placeholder Image
                             </span>
                           </div>
@@ -3394,15 +3394,15 @@ await engine.start();`}</code>
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          color: '#949BA4',
+                          color: '#8a92a6',
                           gap: '10px',
                           position: 'relative',
                         }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '42px', fontWeight: 300, color: '#8892B0' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '42px', fontWeight: 300 }}>
                           image
                         </span>
-                        <span className="small" style={{ color: '#CBD5E1' }}>
+                        <span className="small" style={{ color: '#6b7280' }}>
                           Placeholder Image
                         </span>
                       </div>
