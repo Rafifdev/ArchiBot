@@ -1455,58 +1455,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
 
                   {/* Products Simple Clean List (1:1 with Reference Screenshot) */}
                   <div className="col-md-4 subnav-column">
-                    <p className="caption subnav-label">Products</p>
+                    <p className="caption subnav-label">{isID ? 'Modul Server' : 'Products'}</p>
                     <nav className="subnav">
                       {[
                         {
-                          icon: (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                              <path d="M4 19C4 11 8 5 12 5C16 5 20 11 20 19M7.5 15C9.5 13.2 14.5 13.2 16.5 15" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          ),
-                          title: 'ArchiBot App',
-                          href: dashboardHref,
-                          external: false,
-                        },
-                        {
-                          icon: (
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px', fontWeight: 300 }}>
-                              extension
-                            </span>
-                          ),
-                          title: 'ArchiBot Extensions',
-                          href: dashboardHref,
-                          external: true,
-                        },
-                        {
-                          icon: (
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px', fontWeight: 300 }}>
-                              terminal
-                            </span>
-                          ),
-                          title: 'ArchiBot CLI',
+                          icon: 'architecture',
+                          title: isID ? 'AI Server Architect' : 'Server Architect',
                           href: '#feature-explorer',
-                          external: false,
+                          tab: 'architect',
                         },
                         {
-                          icon: (
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px', fontWeight: 300 }}>
-                              code
-                            </span>
-                          ),
-                          title: 'ArchiBot IDE',
+                          icon: 'celebration',
+                          title: isID ? 'Giveaway Interaktif' : 'Interactive Giveaways',
                           href: '#feature-explorer',
-                          external: false,
+                          tab: 'giveaways',
                         },
                         {
-                          icon: (
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px', fontWeight: 300 }}>
-                              deployed_code
-                            </span>
-                          ),
-                          title: 'ArchiBot SDK',
+                          icon: 'graphic_eq',
+                          title: isID ? 'Hub Voice Dinamis' : 'Dynamic Voice Hubs',
                           href: '#feature-explorer',
-                          external: false,
+                          tab: 'voice',
+                        },
+                        {
+                          icon: 'waving_hand',
+                          title: isID ? 'Studio Sambutan & Pamit' : 'Welcome & Leave Studio',
+                          href: '#feature-explorer',
+                          tab: null,
+                        },
+                        {
+                          icon: 'inventory_2',
+                          title: isID ? 'Pencadangan Server' : 'Server Backups & Recovery',
+                          href: '#feature-explorer',
+                          tab: 'security',
                         },
                       ].map((item, idx) => (
                         <a
@@ -1517,21 +1497,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                             animationDelay: `${0.14 + idx * 0.075}s`,
                             justifyContent: 'space-between',
                           }}
-                          onClick={() => setOpenDropdown(null)}
+                          onClick={(e) => {
+                            setOpenDropdown(null);
+                            openLandingView(e);
+                            if (item.tab) {
+                              setShowcaseTab(item.tab as typeof showcaseTab);
+                              setShowcaseAutoPlay(false);
+                            }
+                            window.setTimeout(() => {
+                              const target = item.tab
+                                ? document.getElementById('showcase-section') || document.getElementById('feature-explorer')
+                                : document.getElementById('feature-explorer');
+                              target?.scrollIntoView({ behavior: 'smooth' });
+                            }, 50);
+                          }}
                         >
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '14px' }}>
                             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', color: 'inherit' }}>
-                              {item.icon}
+                              <span className="material-symbols-outlined" style={{ fontSize: '20px', fontWeight: 300 }}>
+                                {item.icon}
+                              </span>
                             </span>
                             <span style={{ fontSize: '15.5px', fontWeight: 400, color: 'inherit' }}>{item.title}</span>
                           </span>
-                          {item.external && (
-                            <span style={{ color: '#5f6368', display: 'flex', alignItems: 'center' }}>
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </span>
-                          )}
                         </a>
                       ))}
                     </nav>
@@ -3474,14 +3462,65 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
 
               <div className="grid-col col-xs-4 col-sm-4 col-md-3 col-md-offset-2">
                 <div className="footer-nav-section">
-                  <p className="caption">Product</p>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">Product</a>
-                  <a href={dashboardHref} className="call-to-action call-to-action--nav">Download</a>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot App</a>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot Extensions</a>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot CLI</a>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot IDE</a>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">ArchiBot SDK</a>
+                  <p className="caption">{isID ? 'Produk' : 'Product'}</p>
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action call-to-action--nav"
+                    onClick={(e) => {
+                      openLandingView(e);
+                      setShowcaseTab('architect');
+                      setShowcaseAutoPlay(false);
+                      document.getElementById('feature-explorer')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {isID ? 'AI Server Architect' : 'Server Architect'}
+                  </a>
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action call-to-action--nav"
+                    onClick={(e) => {
+                      openLandingView(e);
+                      setShowcaseTab('giveaways');
+                      setShowcaseAutoPlay(false);
+                      (document.getElementById('showcase-section') || document.getElementById('feature-explorer'))?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {isID ? 'Giveaway Interaktif' : 'Interactive Giveaways'}
+                  </a>
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action call-to-action--nav"
+                    onClick={(e) => {
+                      openLandingView(e);
+                      setShowcaseTab('voice');
+                      setShowcaseAutoPlay(false);
+                      (document.getElementById('showcase-section') || document.getElementById('feature-explorer'))?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {isID ? 'Hub Voice Dinamis' : 'Dynamic Voice Hubs'}
+                  </a>
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action call-to-action--nav"
+                    onClick={(e) => {
+                      openLandingView(e);
+                      document.getElementById('feature-explorer')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {isID ? 'Studio Sambutan' : 'Welcome Studio'}
+                  </a>
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action call-to-action--nav"
+                    onClick={(e) => {
+                      openLandingView(e);
+                      setShowcaseTab('security');
+                      setShowcaseAutoPlay(false);
+                      (document.getElementById('showcase-section') || document.getElementById('feature-explorer'))?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {isID ? 'Pencadangan Server' : 'Server Backups'}
+                  </a>
                 </div>
               </div>
 
