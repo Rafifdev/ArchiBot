@@ -3,17 +3,69 @@ import { Link, useLocation, useNavigate, Outlet, useParams } from 'react-router-
 import { Badge, DiscordMark, MdDivider, MdIconButton, MdTextField, MdDialog } from '../ui';
 import { GuildSummary, UserProfile } from '../../types/api';
 
+export type ThemeMode = 'system' | 'light' | 'dark';
+
 export interface ServerSwitchContextValue {
   isSwitchingServer: boolean;
   registerServerFetch: (promise: Promise<any>) => void;
+  themeMode: ThemeMode;
+  resolvedTheme: 'dark' | 'light';
+  setThemeMode: (mode: ThemeMode) => void;
+  accentColor: string;
+  setAccentColor: (color: string) => void;
 }
 
 export const ServerSwitchContext = createContext<ServerSwitchContextValue>({
   isSwitchingServer: false,
   registerServerFetch: () => {},
+  themeMode: 'dark',
+  resolvedTheme: 'dark',
+  setThemeMode: () => {},
+  accentColor: '#5865F2',
+  setAccentColor: () => {},
 });
 
 export const useServerSwitch = () => useContext(ServerSwitchContext);
+
+function applyAccentColorToDocument(hexColor: string, theme: 'dark' | 'light') {
+  const clean = /^#?([0-9a-fA-F]{6})$/.exec(hexColor.trim());
+  const hex = clean ? `#${clean[1].toUpperCase()}` : '#5865F2';
+  const num = Number.parseInt(hex.slice(1), 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+
+  const hoverR = Math.max(0, Math.round(r * 0.84));
+  const hoverG = Math.max(0, Math.round(g * 0.84));
+  const hoverB = Math.max(0, Math.round(b * 0.84));
+  const hoverHex = `rgb(${hoverR}, ${hoverG}, ${hoverB})`;
+
+  const softBg =
+    theme === 'light'
+      ? `rgb(${Math.round(255 * 0.86 + r * 0.14)}, ${Math.round(255 * 0.86 + g * 0.14)}, ${Math.round(255 * 0.86 + b * 0.14)})`
+      : `rgb(${Math.round(20 * 0.78 + r * 0.22)}, ${Math.round(22 * 0.78 + g * 0.22)}, ${Math.round(29 * 0.78 + b * 0.22)})`;
+
+  const activeBg =
+    theme === 'light'
+      ? `rgb(${Math.round(255 * 0.82 + r * 0.18)}, ${Math.round(255 * 0.82 + g * 0.18)}, ${Math.round(255 * 0.82 + b * 0.18)})`
+      : `rgb(${Math.round(20 * 0.74 + r * 0.26)}, ${Math.round(22 * 0.74 + g * 0.26)}, ${Math.round(29 * 0.74 + b * 0.26)})`;
+
+  const root = document.documentElement;
+  root.style.setProperty('--color-discord-blurple', hex);
+  root.style.setProperty('--color-discord-blurple-hover', hoverHex);
+  root.style.setProperty('--color-discord-blurple-soft', softBg);
+  root.style.setProperty('--color-discord-active', activeBg);
+  root.style.setProperty('--md-sys-color-primary', hex);
+  root.style.setProperty('--md-sys-color-secondary', hex);
+  root.style.setProperty('--md-switch-selected-track-color', hex);
+  root.style.setProperty('--md-switch-selected-hover-track-color', hoverHex);
+  root.style.setProperty('--md-switch-selected-focus-track-color', hex);
+  root.style.setProperty('--md-slider-active-track-color', hex);
+  root.style.setProperty('--md-slider-handle-color', hex);
+  root.style.setProperty('--md-slider-hover-handle-color', hex);
+  root.style.setProperty('--md-slider-focus-handle-color', hex);
+  root.style.setProperty('--md-slider-pressed-handle-color', hex);
+}
 
 export interface NavEntry {
   to: string;
@@ -415,7 +467,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
 
       {/* Navigation Scrollable Body */}
       <div className="flex-1 overflow-y-auto pt-3 pb-8 px-2 space-y-4">
-        {/* Top items (Home, Lego, Settings) */}
+        {/* Top items (Home, Analytics) */}
         <div className="space-y-0.5">
           {topNavItems.map((item) => {
             const active = checkActive(item);
@@ -426,13 +478,13 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                 className={`relative overflow-hidden flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-normal no-underline transition-colors ${
                   active
                     ? 'bg-discord-surface text-discord-white'
-                    : 'text-discord-muted hover:text-discord-white hover:bg-discord-surface/50'
+                    : 'text-discord-text/90 hover:text-discord-white hover:bg-discord-surface/60'
                 }`}
               >
                 <md-ripple />
                 <md-icon
                   class={`text-base shrink-0 ${
-                    active ? 'text-discord-blurple' : 'text-discord-muted'
+                    active ? 'text-discord-blurple' : 'text-discord-text/80'
                   }`}
                 >
                   {item.icon}
@@ -446,7 +498,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         {/* Section Groups */}
         {sectionGroups.map((group) => (
           <div key={group.title} className="space-y-0.5">
-            <div className="px-3 pb-1 text-[11px] font-normal tracking-wider uppercase text-discord-muted/80">
+            <div className="px-3 pb-1 text-[11px] font-normal tracking-wider uppercase text-discord-text/65">
               {group.title}
             </div>
             {group.items.map((item) => {
@@ -458,13 +510,13 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                   className={`relative overflow-hidden flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-normal no-underline transition-colors ${
                     active
                       ? 'bg-discord-surface text-discord-white'
-                      : 'text-discord-muted hover:text-discord-white hover:bg-discord-surface/50'
+                      : 'text-discord-text/90 hover:text-discord-white hover:bg-discord-surface/60'
                   }`}
                 >
                   <md-ripple />
                   <md-icon
                     class={`text-base shrink-0 ${
-                      active ? 'text-discord-blurple' : 'text-discord-muted'
+                      active ? 'text-discord-blurple' : 'text-discord-text/80'
                     }`}
                   >
                     {item.icon}
@@ -488,7 +540,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
             className={`relative overflow-hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-normal no-underline transition-colors w-full ${
               location.pathname.startsWith(`/guilds/${guildId}/settings`)
                 ? 'bg-discord-surface text-discord-white'
-                : 'text-discord-muted hover:text-discord-white hover:bg-discord-surface/50'
+                : 'text-discord-text/90 hover:text-discord-white hover:bg-discord-surface/60'
             }`}
           >
             <md-ripple />
@@ -496,7 +548,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
               class={`text-base shrink-0 ${
                 location.pathname.startsWith(`/guilds/${guildId}/settings`)
                   ? 'text-discord-blurple'
-                  : 'text-discord-muted'
+                  : 'text-discord-text/80'
               }`}
             >
               settings
@@ -506,10 +558,10 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
         ) : (
           <Link
             to="/servers"
-            className="relative overflow-hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-discord-muted hover:text-discord-white hover:bg-discord-surface/50 no-underline transition-colors w-full"
+            className="relative overflow-hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-discord-text/90 hover:text-discord-white hover:bg-discord-surface/60 no-underline transition-colors w-full"
           >
             <md-ripple />
-            <md-icon class="text-base text-discord-muted">dns</md-icon>
+            <md-icon class="text-base text-discord-text/80">dns</md-icon>
             <span>Select Server</span>
           </Link>
         )}
@@ -765,9 +817,25 @@ export interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => {
   const { guildId } = useParams<{ guildId?: string }>();
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('archibot_theme') as 'dark' | 'light') || 'dark';
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    const savedMode = localStorage.getItem('archibot_theme_mode') as ThemeMode | null;
+    if (savedMode === 'system' || savedMode === 'light' || savedMode === 'dark') return savedMode;
+    const legacy = localStorage.getItem('archibot_theme') as 'dark' | 'light' | null;
+    return legacy === 'light' ? 'light' : 'dark';
   });
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return true;
+  });
+  const [accentColor, setAccentColor] = useState<string>(() => {
+    return localStorage.getItem('archibot_accent_color') || '#5865F2';
+  });
+
+  const resolvedTheme: 'dark' | 'light' =
+    themeMode === 'system' ? (systemPrefersDark ? 'dark' : 'light') : themeMode;
+
   const [guildInfo, setGuildInfo] = useState<GuildSummary | null>(null);
   const [allGuilds, setAllGuilds] = useState<GuildSummary[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -797,14 +865,24 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (theme === 'dark') {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    if (resolvedTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('archibot_theme', theme);
-  }, [theme]);
+    localStorage.setItem('archibot_theme_mode', themeMode);
+    localStorage.setItem('archibot_theme', resolvedTheme);
+    applyAccentColorToDocument(accentColor, resolvedTheme);
+  }, [themeMode, resolvedTheme, accentColor]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -882,17 +960,30 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
   }, [guildId, registerServerFetch]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeMode((prev) => {
+      const current = prev === 'system' ? (systemPrefersDark ? 'dark' : 'light') : prev;
+      return current === 'dark' ? 'light' : 'dark';
+    });
   };
 
   return (
-    <ServerSwitchContext.Provider value={{ isSwitchingServer, registerServerFetch }}>
+    <ServerSwitchContext.Provider
+      value={{
+        isSwitchingServer,
+        registerServerFetch,
+        themeMode,
+        resolvedTheme,
+        setThemeMode,
+        accentColor,
+        setAccentColor,
+      }}
+    >
       <div className="h-screen w-screen overflow-hidden flex flex-col bg-discord-canvas text-discord-text font-sans relative">
         {/* Top App Bar (Fixed at Top) */}
         <TopAppBar
           user={user}
           guildId={guildId}
-          theme={theme}
+          theme={resolvedTheme}
           onToggleTheme={toggleTheme}
           onOpenSearch={() => setSearchOpen(true)}
           onLogout={onLogout}

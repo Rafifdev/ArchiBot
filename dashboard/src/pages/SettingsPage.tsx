@@ -5,6 +5,7 @@ import {
   EmptyState,
   MdChip,
   MdDivider,
+  MdIcon,
   MdSelect,
   MdSwitch,
   MdTextField,
@@ -15,8 +16,20 @@ import {
   toast,
   UnsavedChangesBar,
 } from '../components/ui';
-import { useServerSwitch } from '../components/layout';
+import { useServerSwitch, ThemeMode } from '../components/layout';
 import { ChannelItem, MemberItem, RoleItem } from '../types/api';
+
+const ACCENT_PRESETS = [
+  { label: 'Slate', value: '#4E5466' },
+  { label: 'Violet', value: '#6D28D9' },
+  { label: 'Purple', value: '#8B5CF6' },
+  { label: 'Blurple', value: '#5865F2' },
+  { label: 'Royal Blue', value: '#2563EB' },
+  { label: 'Sky Blue', value: '#0EA5E9' },
+  { label: 'Teal', value: '#0891B2' },
+  { label: 'Emerald', value: '#10B981' },
+  { label: 'Rose', value: '#EC4899' },
+];
 
 interface SavedSettingsSnapshot {
   botNickname: string;
@@ -40,7 +53,18 @@ export const SettingsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { registerServerFetch } = useServerSwitch();
+  const {
+    registerServerFetch,
+    themeMode,
+    setThemeMode,
+    accentColor,
+    setAccentColor,
+  } = useServerSwitch();
+  const [customAccentInput, setCustomAccentInput] = useState(accentColor);
+
+  useEffect(() => {
+    setCustomAccentInput(accentColor);
+  }, [accentColor]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -412,8 +436,289 @@ export const SettingsPage: React.FC = () => {
     <div className="flex flex-col gap-6 w-full pb-16">
       <PageHeader
         title="Settings"
-        description="Modify ArchiBot's general settings, customization, logging, and access control to your desire."
+        description="Modify ArchiBot's appearance, general settings, customization, logging, and access control to your desire."
       />
+
+      {/* 0. Appearance (Accent Color & Interface Theme) */}
+      <SurfaceCard
+        title="Appearance"
+        subtitle="Change how ArchiBot looks and feels in your browser."
+        className="flex flex-col gap-5"
+      >
+        {/* Accent Color */}
+        <div className="flex flex-col gap-3">
+          <div>
+            <div className="text-xs font-normal text-discord-white">Accent color</div>
+            <div className="text-xs font-normal text-discord-muted mt-0.5">
+              Update your dashboard to your brand color.
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {ACCENT_PRESETS.map((preset) => {
+                const isSelected = accentColor.toUpperCase() === preset.value.toUpperCase();
+                return (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => setAccentColor(preset.value)}
+                    className={`relative w-8 h-8 rounded-full transition-transform cursor-pointer flex items-center justify-center ${
+                      isSelected ? 'scale-105' : 'hover:scale-105'
+                    }`}
+                    style={{
+                      backgroundColor: preset.value,
+                      boxShadow: isSelected
+                        ? `0 0 0 2px var(--color-discord-card), 0 0 0 4px ${preset.value}`
+                        : 'none',
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-2.5 sm:ml-2">
+              <span className="text-xs font-normal text-discord-muted">Custom</span>
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-discord-surface border border-discord-border focus-within:border-discord-blurple transition-colors">
+                <input
+                  type="color"
+                  value={/^#[0-9A-Fa-f]{6}$/.test(accentColor) ? accentColor : '#5865F2'}
+                  onChange={(e) => setAccentColor(e.target.value.toUpperCase())}
+                  className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0"
+                  title="Pick custom accent color"
+                />
+                <input
+                  type="text"
+                  value={customAccentInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCustomAccentInput(val);
+                    const normalized = val.startsWith('#') ? val : `#${val}`;
+                    if (/^#[0-9A-Fa-f]{6}$/.test(normalized)) {
+                      setAccentColor(normalized.toUpperCase());
+                    }
+                  }}
+                  placeholder="#5865F2"
+                  maxLength={7}
+                  className="w-20 bg-transparent text-xs font-normal text-discord-white focus:outline-none font-mono uppercase"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <MdDivider />
+
+        {/* Interface Theme */}
+        <div className="flex flex-col gap-3.5">
+          <div>
+            <div className="text-xs font-normal text-discord-white">Interface theme</div>
+            <div className="text-xs font-normal text-discord-muted mt-0.5">
+              Select or customize your UI theme.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {(
+              [
+                { id: 'system' as ThemeMode, label: 'System preference' },
+                { id: 'light' as ThemeMode, label: 'Light' },
+                { id: 'dark' as ThemeMode, label: 'Dark' },
+              ] as const
+            ).map((option) => {
+              const selected = themeMode === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setThemeMode(option.id)}
+                  className="group flex flex-col gap-2.5 text-left cursor-pointer bg-transparent border-0 p-0 focus:outline-none"
+                >
+                  {/* Visual Dashboard Preview Frame */}
+                  <div
+                    className={`w-full h-36 rounded-xl p-2 transition-all overflow-hidden border-2 ${
+                      selected
+                        ? 'border-discord-blurple shadow-sm'
+                        : 'border-discord-border hover:border-discord-border-hover'
+                    }`}
+                    style={{
+                      backgroundColor:
+                        option.id === 'light'
+                          ? '#F2F3F5'
+                          : option.id === 'dark'
+                          ? '#0E1015'
+                          : '#181B23',
+                    }}
+                  >
+                    {option.id === 'system' ? (
+                      /* Split Light / Dark Preview */
+                      <div className="w-full h-full rounded-lg overflow-hidden grid grid-cols-2 border border-discord-border/40">
+                        {/* Left Half: Light */}
+                        <div className="bg-[#FFFFFF] p-2.5 flex flex-col gap-2 border-r border-[#DBDEE1]">
+                          <div className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ED4245]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#FEE75C]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#57F287]" />
+                          </div>
+                          <div className="flex gap-2 flex-1 min-h-0">
+                            <div className="w-8 flex flex-col gap-1.5 pt-0.5">
+                              <div className="flex items-center gap-1">
+                                <span
+                                  className="w-2 h-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: accentColor }}
+                                />
+                                <span
+                                  className="h-1.5 flex-1 rounded-full"
+                                  style={{ backgroundColor: accentColor }}
+                                />
+                              </div>
+                              <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
+                              <div className="h-1.5 w-4/5 rounded-full bg-[#E3E5E8]" />
+                              <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
+                            </div>
+                            <div className="flex-1 bg-[#F8F9FA] rounded-md p-2 flex flex-col gap-1.5 border border-[#EBEDEF]">
+                              <div className="text-[9px] font-normal text-[#111214] truncate">
+                                Your dashboard
+                              </div>
+                              <div className="flex-1 rounded bg-[#FFFFFF] border border-[#EBEDEF]" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Half: Dark */}
+                        <div className="bg-[#14161D] p-2.5 flex flex-col gap-2">
+                          <div className="flex items-center justify-end gap-1">
+                            <span className="h-2 w-5 rounded bg-[#232733]" />
+                            <span
+                              className="h-2 w-5 rounded"
+                              style={{ backgroundColor: accentColor }}
+                            />
+                          </div>
+                          <div className="flex-1 bg-[#181B23] rounded-md p-2 flex flex-col gap-1.5 border border-[#232733]">
+                            <div className="text-[9px] font-normal text-[#F2F3F5] truncate">
+                              Preview
+                            </div>
+                            <div className="flex-1 rounded bg-[#20242F] border border-[#232733]" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : option.id === 'light' ? (
+                      /* Full Light Preview */
+                      <div className="w-full h-full rounded-lg bg-[#FFFFFF] border border-[#DBDEE1] p-2.5 flex flex-col gap-2">
+                        <div className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ED4245]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FEE75C]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#57F287]" />
+                        </div>
+                        <div className="flex gap-2.5 flex-1 min-h-0">
+                          <div className="w-10 flex flex-col gap-1.5 pt-0.5">
+                            <div className="flex items-center gap-1">
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: accentColor }}
+                              />
+                              <span
+                                className="h-1.5 flex-1 rounded-full"
+                                style={{ backgroundColor: accentColor }}
+                              />
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
+                            <div className="h-1.5 w-4/5 rounded-full bg-[#E3E5E8]" />
+                            <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
+                          </div>
+                          <div className="flex-1 bg-[#F8F9FA] rounded-md p-2 flex flex-col gap-1.5 border border-[#EBEDEF]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] font-normal text-[#111214]">
+                                Your dashboard
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="h-2 w-4 rounded bg-[#E3E5E8]" />
+                                <span
+                                  className="h-2 w-4 rounded"
+                                  style={{ backgroundColor: accentColor }}
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5 flex-1">
+                              <div className="rounded bg-[#FFFFFF] border border-[#EBEDEF]" />
+                              <div className="rounded bg-[#FFFFFF] border border-[#EBEDEF]" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Full Dark Preview */
+                      <div className="w-full h-full rounded-lg bg-[#14161D] border border-[#232733] p-2.5 flex flex-col gap-2">
+                        <div className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ED4245]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#FEE75C]" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#57F287]" />
+                        </div>
+                        <div className="flex gap-2.5 flex-1 min-h-0">
+                          <div className="w-10 flex flex-col gap-1.5 pt-0.5">
+                            <div className="flex items-center gap-1">
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: accentColor }}
+                              />
+                              <span
+                                className="h-1.5 flex-1 rounded-full"
+                                style={{ backgroundColor: accentColor }}
+                              />
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-[#232733]" />
+                            <div className="h-1.5 w-4/5 rounded-full bg-[#232733]" />
+                            <div className="h-1.5 w-full rounded-full bg-[#232733]" />
+                          </div>
+                          <div className="flex-1 bg-[#181B23] rounded-md p-2 flex flex-col gap-1.5 border border-[#232733]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] font-normal text-[#F2F3F5]">
+                                Your dashboard
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <span className="h-2 w-4 rounded bg-[#232733]" />
+                                <span
+                                  className="h-2 w-4 rounded"
+                                  style={{ backgroundColor: accentColor }}
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5 flex-1">
+                              <div className="rounded bg-[#20242F] border border-[#232733]" />
+                              <div className="rounded bg-[#20242F] border border-[#232733]" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Radio Check + Label */}
+                  <div className="flex items-center gap-2 px-0.5">
+                    <span
+                      className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
+                        selected
+                          ? 'bg-discord-blurple text-discord-white'
+                          : 'border border-discord-border-hover bg-discord-surface/40'
+                      }`}
+                    >
+                      {selected && <MdIcon name="check" className="!text-[12px]" />}
+                    </span>
+                    <span
+                      className={`text-xs font-normal ${
+                        selected ? 'text-discord-white' : 'text-discord-text/90'
+                      }`}
+                    >
+                      {option.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </SurfaceCard>
 
       {/* 1. Admin Role */}
       <SurfaceCard
