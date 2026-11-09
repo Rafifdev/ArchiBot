@@ -55,25 +55,31 @@ export const OverviewPage: React.FC = () => {
       onClick: () => window.open('https://discord.gg', '_blank'),
     },
     {
-      title: 'Layout Snapshots',
-      subtitle: 'Save & restore server layouts',
-      icon: 'inventory_2',
-      iconBg: 'bg-discord-surface text-discord-yellow',
+      title: 'Analytics',
+      subtitle: 'Server growth & activity trends',
+      icon: 'analytics',
+      iconBg: 'bg-discord-surface text-discord-green',
       external: false,
-      onClick: () => navigate(`/guilds/${guildId}/backups`),
+      onClick: () => navigate(`/guilds/${guildId}/analytics`),
     },
     {
-      title: 'Member Milestones',
-      subtitle: 'Celebrate member goals',
-      icon: 'emoji_events',
+      title: 'Channels & Categories',
+      subtitle: 'Manage server channels & layout',
+      icon: 'deployed_code',
       iconBg: 'bg-discord-surface text-discord-blurple',
       external: false,
-      onClick: () => navigate(`/guilds/${guildId}/settings?tab=milestone`),
+      onClick: () => navigate(`/guilds/${guildId}/channels`),
     },
   ];
 
-  // Only modules that genuinely exist in ArchiBot (bot.js + Express routes)
+  // Exactly matching the sidebar navigation structure and international standard naming
   const modules = [
+    {
+      title: 'Analytics',
+      description: 'Server growth metrics, activity trends, and channel usage',
+      icon: 'analytics',
+      to: `/guilds/${guildId}/analytics`,
+    },
     {
       title: 'Channels & Categories',
       description: 'Create, lock, sync, and manage text, stage, and voice channels',
@@ -85,6 +91,12 @@ export const OverviewPage: React.FC = () => {
       description: 'Generate complete server structures from 1-click templates or the Modular Builder',
       icon: 'architecture',
       to: `/guilds/${guildId}/architect`,
+    },
+    {
+      title: 'Saved Templates',
+      description: 'Snapshot server structure, export JSON, or restore saved layouts',
+      icon: 'inventory_2',
+      to: `/guilds/${guildId}/backups`,
     },
     {
       title: 'Roles & Permissions',
@@ -99,10 +111,10 @@ export const OverviewPage: React.FC = () => {
       to: `/guilds/${guildId}/members`,
     },
     {
-      title: 'Member Milestones',
-      description: 'Generate custom milestone celebration banners and grant reward roles',
-      icon: 'emoji_events',
-      to: `/guilds/${guildId}/milestones`,
+      title: 'Audit Logs',
+      description: 'Inspect recent server actions, moderation records, and administrative events',
+      icon: 'history',
+      to: `/guilds/${guildId}/audit`,
     },
     {
       title: 'Welcome Messages',
@@ -117,22 +129,16 @@ export const OverviewPage: React.FC = () => {
       to: `/guilds/${guildId}/goodbye`,
     },
     {
+      title: 'Member Milestones',
+      description: 'Generate custom milestone celebration banners and grant reward roles',
+      icon: 'emoji_events',
+      to: `/guilds/${guildId}/milestones`,
+    },
+    {
       title: 'Giveaways',
       description: 'Host interactive server giveaways with role requirements and automatic winner draws',
-      icon: 'redeem',
+      icon: 'celebration',
       to: `/guilds/${guildId}/giveaways`,
-    },
-    {
-      title: 'Layout Backups',
-      description: 'Snapshot server structure, export JSON, or restore saved layouts',
-      icon: 'inventory_2',
-      to: `/guilds/${guildId}/backups`,
-    },
-    {
-      title: 'Audit Logs & Bot Profile',
-      description: 'Inspect recent server actions and customize ArchiBot server nickname',
-      icon: 'history',
-      to: `/guilds/${guildId}/settings?tab=audit`,
     },
   ];
 
