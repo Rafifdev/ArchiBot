@@ -104,7 +104,6 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
       items: [
         { to: `/guilds/${guildId}/roles`, label: 'Roles & Permissions', icon: 'badge' },
         { to: `/guilds/${guildId}/members`, label: 'Members & Moderation', icon: 'group' },
-        { to: `/guilds/${guildId}/integrations`, label: 'Bot Integrations', icon: 'smart_toy' },
         { to: `/guilds/${guildId}/audit`, label: 'Audit Logs', icon: 'history' },
       ],
     },

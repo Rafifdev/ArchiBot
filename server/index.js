@@ -19,7 +19,6 @@ import embedsRoutes from './routes/embeds.js';
 import backupsRoutes from './routes/backups.js';
 import settingsRoutes from './routes/settings.js';
 import giveawaysRoutes from './routes/giveaways.js';
-import integrationsRoutes from './routes/integrations.js';
 
 const app = express();
 
@@ -49,7 +48,6 @@ app.use('/api/guilds', embedsRoutes);
 app.use('/api/guilds', backupsRoutes);
 app.use('/api/guilds', settingsRoutes);
 app.use('/api/guilds', giveawaysRoutes);
-app.use('/api/guilds', integrationsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
