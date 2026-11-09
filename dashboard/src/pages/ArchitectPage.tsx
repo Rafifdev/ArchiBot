@@ -199,7 +199,7 @@ export const ArchitectPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        category="ARCHITECT"
+        category="SERVER MANAGEMENT"
         title="Server Architect & Lego Builder"
         description="Build complete, structured Discord server environments in seconds with 1-click presets or Lego modular blocks."
       />

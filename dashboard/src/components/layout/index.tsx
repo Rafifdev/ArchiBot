@@ -36,13 +36,13 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
   const topNavItems: NavEntry[] = [
     { to: `/guilds/${guildId}`, label: 'Home', icon: 'home', end: true },
     { to: `/guilds/${guildId}/analytics`, label: 'Analytics', icon: 'analytics' },
-    { to: `/guilds/${guildId}/architect`, label: 'Lego & Templates', icon: 'architecture' },
   ];
 
   const sectionGroups: NavGroup[] = [
     {
       title: 'SERVER MANAGEMENT',
       items: [
+        { to: `/guilds/${guildId}/architect`, label: 'Lego & Templates', icon: 'architecture' },
         { to: `/guilds/${guildId}/channels`, label: 'Channels & Categories', icon: 'deployed_code' },
         { to: `/guilds/${guildId}/roles`, label: 'Roles & Permissions', icon: 'badge' },
         { to: `/guilds/${guildId}/members`, label: 'Members & Moderation', icon: 'group' },
@@ -54,14 +54,6 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
       items: [
         { to: `/guilds/${guildId}/welcome`, label: 'Welcome Message', icon: 'waving_hand' },
         { to: `/guilds/${guildId}/goodbye`, label: 'Goodbye Message', icon: 'logout' },
-      ],
-    },
-    {
-      title: 'VOICE & PANELS',
-      items: [
-        { to: `/guilds/${guildId}/voice`, label: 'Dynamic Voice Hubs', icon: 'spatial_audio_off' },
-        { to: `/guilds/${guildId}/architect?tab=deployer`, label: 'Interactive Panels', icon: 'view_quilt' },
-        { to: `/guilds/${guildId}/embeds`, label: 'Embed Publisher', icon: 'assignment' },
       ],
     },
     {
