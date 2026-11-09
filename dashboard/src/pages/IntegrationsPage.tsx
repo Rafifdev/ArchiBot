@@ -11,11 +11,9 @@ import {
   MdIcon,
   MdIconButton,
   MdSelect,
-  MdTabs,
   MdTextField,
   MembersSkeleton,
   PageHeader,
-  SectionHeader,
   StatusBadge,
   SurfaceCard,
   SwitchRow,
@@ -68,45 +66,6 @@ interface ChannelOption {
   type: 'text' | 'voice';
   parentName: string | null;
 }
-
-interface BotPresetItem {
-  id: string;
-  title: string;
-  category: string;
-  icon: string;
-  description: string;
-  channelsPreview: string[];
-}
-
-const DEFAULT_PRESETS: BotPresetItem[] = [
-  {
-    id: 'bot_sandbox',
-    title: 'Dedicated Bot Command Sandbox',
-    category: 'utility',
-    icon: 'terminal',
-    description:
-      'Creates a dedicated #bot-commands text channel so bot interactions and slash commands stay organized away from general chat.',
-    channelsPreview: ['🤖・bot-commands'],
-  },
-  {
-    id: 'voice_bot_lounge',
-    title: 'Audio & Voice Bot Lounge',
-    category: 'music',
-    icon: 'graphic_eq',
-    description:
-      'Creates an "AUDIO & VOICE BOTS" category with a #audio-controls text channel and a dedicated 🔊 Bot Audio Lounge voice room.',
-    channelsPreview: ['🎛️・audio-controls', '🔊 Bot Audio Lounge'],
-  },
-  {
-    id: 'interactive_bot_zone',
-    title: 'Interactive & Activity Bot Zone',
-    category: 'gaming',
-    icon: 'extension',
-    description:
-      'Creates a "BOT ACTIVITIES" category with isolated channels for interactive bots, leveling checks, and community activities.',
-    channelsPreview: ['🤖・bot-activities', '📊・rank-and-stats'],
-  },
-];
 
 const CATEGORY_META: Record<
   string,
@@ -223,27 +182,10 @@ export const IntegrationsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const { registerServerFetch } = useServerSwitch();
 
-  const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [bots, setBots] = useState<BotIntegrationItem[]>([]);
   const [channels, setChannels] = useState<ChannelOption[]>([]);
   const [assignableRoles, setAssignableRoles] = useState<BotRoleItem[]>([]);
-  const [presets, setPresets] = useState<BotPresetItem[]>(DEFAULT_PRESETS);
-
-  // Search & Filters
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-
-  // Universal OAuth2 Bot Invite Generator State
-  const [inviteClientId, setInviteClientId] = useState('');
-  const [invitePermLevel, setInvitePermLevel] = useState('standard');
-
-  // Custom Bot Room Builder State
-  const [customCategoryName, setCustomCategoryName] = useState('');
-  const [customTextChannel, setCustomTextChannel] = useState('');
-  const [customVoiceChannel, setCustomVoiceChannel] = useState('');
-  const [customRoomBotIds, setCustomRoomBotIds] = useState<string[]>([]);
-  const [creatingCustomRoom, setCreatingCustomRoom] = useState(false);
 
   // Manage Bot Modal
   const [editingBot, setEditingBot] = useState<BotIntegrationItem | null>(null);
@@ -263,17 +205,7 @@ export const IntegrationsPage: React.FC = () => {
   const [channelSearch, setChannelSearch] = useState('');
   const [savingSandbox, setSavingSandbox] = useState(false);
 
-  // Publish Bot Directory Modal
-  const [publishModalOpen, setPublishModalOpen] = useState(false);
-  const [guideChannelId, setGuideChannelId] = useState('');
-  const [guideTitle, setGuideTitle] = useState('');
-  const [guideDescription, setGuideDescription] = useState(
-    'Use the designated channels and command prefixes below when interacting with bots in our server.'
-  );
-  const [publishingGuide, setPublishingGuide] = useState(false);
-
-  // Preset & Remove Bot State
-  const [applyingPresetId, setApplyingPresetId] = useState<string | null>(null);
+  // Remove Bot State
   const [kickBotTarget, setKickBotTarget] = useState<BotIntegrationItem | null>(null);
 
   const fetchIntegrations = () => {
@@ -295,13 +227,9 @@ export const IntegrationsPage: React.FC = () => {
         }
         if (Array.isArray(data.channels)) {
           setChannels(data.channels);
-          const firstText = data.channels.find((c: ChannelOption) => c.type === 'text');
-          if (firstText && !guideChannelId) setGuideChannelId(firstText.id);
         }
         if (Array.isArray(data.assignableRoles)) setAssignableRoles(data.assignableRoles);
-        if (Array.isArray(data.presets)) setPresets(data.presets);
       } catch {
-        // Fallback: Build Bot Integrations state from existing /members, /channels, and /roles endpoints
         try {
           const [membersRes, channelsRes, rolesRes] = await Promise.all([
             safeJsonFetch(`/api/guilds/${guildId}/members?limit=200`).catch(() => ({ members: [] })),
@@ -337,8 +265,6 @@ export const IntegrationsPage: React.FC = () => {
             }));
 
           setChannels(mappedChannels);
-          const firstText = mappedChannels.find((c) => c.type === 'text');
-          if (firstText && !guideChannelId) setGuideChannelId(firstText.id);
 
           const mappedRoles: BotRoleItem[] = rawRoles
             .filter((r: any) => !r.managed && r.name !== '@everyone')
@@ -406,21 +332,6 @@ export const IntegrationsPage: React.FC = () => {
   useEffect(() => {
     fetchIntegrations();
   }, [guildId]);
-
-  const filteredBots = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return bots.filter((b) => {
-      if (categoryFilter !== 'all' && b.category !== categoryFilter) return false;
-      if (!q) return true;
-      return (
-        b.displayName.toLowerCase().includes(q) ||
-        b.username.toLowerCase().includes(q) ||
-        b.id.includes(q) ||
-        b.prefix.toLowerCase().includes(q) ||
-        b.notes.toLowerCase().includes(q)
-      );
-    });
-  }, [bots, search, categoryFilter]);
 
   const stats = useMemo(() => {
     const thirdPartyCount = bots.filter((b) => !b.isSelf).length;
@@ -613,271 +524,15 @@ export const IntegrationsPage: React.FC = () => {
     }
   };
 
-  const handlePublishGuide = async () => {
-    if (!guildId || !guideChannelId) {
-      toast.warning('Please select a text channel to publish the Bot Guide.');
-      return;
-    }
-    setPublishingGuide(true);
-    try {
-      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/publish-guide`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          channelId: guideChannelId,
-          title: guideTitle,
-          description: guideDescription,
-        }),
-      });
-      toast.success(`Posted the Server Bot Directory embed to #${data.channelName}.`);
-      setPublishModalOpen(false);
-    } catch {
-      try {
-        const categoryLabels: Record<string, string> = {
-          core: '⚙️ Core & System Bots',
-          moderation: '🛡️ Moderation & Security Bots',
-          utility: '🔧 Utility & Automation Bots',
-          ai: '✨ AI & Webhook Integrations',
-          music: '🎵 Audio & Voice Bots',
-          gaming: '🎮 Games & Entertainment Bots',
-          economy: '🪙 Economy & Leveling Bots',
-          custom: '🧩 Custom & Other Bots',
-        };
-
-        const fields = Object.entries(categoryLabels)
-          .map(([catKey, label]) => {
-            const list = bots.filter((b) => (b.category || 'utility') === catKey);
-            if (!list.length) return null;
-            const value = list
-              .map((b) => {
-                const chHint = b.allowedChannelIds.length
-                  ? ` • 📍 ${b.allowedChannelIds
-                      .slice(0, 3)
-                      .map((id) => `<#${id}>`)
-                      .join(', ')}`
-                  : '';
-                const cmdHint =
-                  Array.isArray(b.commands) && b.commands.length > 0
-                    ? ` (${b.commands.slice(0, 4).map((c) => `\`${c}\``).join(', ')})`
-                    : '';
-                return `• **${b.displayName}** (\`${b.prefix || '/'}\`) — ${b.notes}${cmdHint}${chHint}`;
-              })
-              .join('\n')
-              .slice(0, 1024);
-            return { name: label, value, inline: false };
-          })
-          .filter(Boolean);
-
-        await safeJsonFetch(`/api/guilds/${guildId}/embeds/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            channelId: guideChannelId,
-            embed: {
-              title: guideTitle.trim() || '🤖 Server Bot Directory & Command Guide',
-              description: guideDescription.trim(),
-              color: '#5865F2',
-              timestamp: true,
-              fields,
-            },
-          }),
-        });
-
-        const chName = channels.find((c) => c.id === guideChannelId)?.name || 'channel';
-        toast.success(`Posted the Server Bot Directory embed to #${chName}.`);
-        setPublishModalOpen(false);
-      } catch (err: any) {
-        toast.error(err.message || 'Could not post Bot Directory embed.');
-      }
-    } finally {
-      setPublishingGuide(false);
-    }
-  };
-
-  const handleOpenBotAuthorize = (botIdOrInput: string, permPreset = 'standard') => {
-    const raw = botIdOrInput.trim();
-    if (!raw) {
-      toast.warning('Please enter a Discord Bot Client ID or Invite URL.');
-      return;
-    }
-
-    // If full URL was pasted, open directly
-    if (/^https?:\/\//i.test(raw)) {
-      window.open(raw, '_blank', 'noopener,noreferrer');
-      return;
-    }
+  const handleOpenBotAuthorize = (botId: string) => {
+    const raw = botId.trim();
+    if (!raw) return;
 
     const clientIdMatch = /\d{15,22}/.exec(raw);
-    if (!clientIdMatch) {
-      toast.warning('Please enter a valid numeric Discord Application / Client ID (17-20 digits).');
-      return;
-    }
-
-    const permMap: Record<string, string> = {
-      minimal: '2147485696', // View Channels, Send Messages, Embed Links, Use Slash Commands
-      voice: '36702208', // View Channels, Connect, Speak, Use Voice Activity
-      standard: '1099511627775', // Standard Moderation & Utility
-      admin: '8', // Administrator
-    };
-    const permissions = permMap[permPreset] || '2147485696';
+    const id = clientIdMatch ? clientIdMatch[0] : raw;
     const guildParam = guildId ? `&guild_id=${guildId}&disable_guild_select=false` : '';
-    const url = `https://discord.com/oauth2/authorize?client_id=${clientIdMatch[0]}&permissions=${permissions}&scope=bot%20applications.commands${guildParam}`;
+    const url = `https://discord.com/oauth2/authorize?client_id=${id}&permissions=1099511627775&scope=bot%20applications.commands${guildParam}`;
     window.open(url, '_blank', 'noopener,noreferrer');
-  };
-
-  const handleCreateCustomBotRoom = async () => {
-    if (!guildId) return;
-    if (!customTextChannel.trim() && !customVoiceChannel.trim()) {
-      toast.warning('Please provide at least a Text Channel or Voice Channel name.');
-      return;
-    }
-
-    setCreatingCustomRoom(true);
-    try {
-      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/presets/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          presetId: 'custom',
-          customCategoryName,
-          customTextChannel,
-          customVoiceChannel,
-          allowedBotIds: customRoomBotIds,
-        }),
-      });
-      toast.success(`Created ${data.createdChannels.join(', ')} successfully.`);
-      setCustomCategoryName('');
-      setCustomTextChannel('');
-      setCustomVoiceChannel('');
-      setCustomRoomBotIds([]);
-      fetchIntegrations();
-    } catch {
-      try {
-        const createdNames: string[] = [];
-        let parentId: string | undefined;
-        if (customCategoryName.trim()) {
-          const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: customCategoryName.trim(), type: 'category' }),
-          });
-          parentId = catRes.channel?.id;
-        }
-        if (customTextChannel.trim()) {
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: customTextChannel.trim(),
-              type: 'text',
-              parentId,
-              topic: 'Dedicated channel for bot commands and integrations.',
-            }),
-          });
-          createdNames.push(customTextChannel.trim());
-        }
-        if (customVoiceChannel.trim()) {
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: customVoiceChannel.trim(),
-              type: 'voice',
-              parentId,
-            }),
-          });
-          createdNames.push(customVoiceChannel.trim());
-        }
-        toast.success(`Created ${createdNames.join(', ')} successfully.`);
-        setCustomCategoryName('');
-        setCustomTextChannel('');
-        setCustomVoiceChannel('');
-        setCustomRoomBotIds([]);
-        fetchIntegrations();
-      } catch (err: any) {
-        toast.error(err.message || 'Could not create custom bot channels.');
-      }
-    } finally {
-      setCreatingCustomRoom(false);
-    }
-  };
-
-  const handleApplyPreset = async (preset: BotPresetItem) => {
-    if (!guildId) return;
-    setApplyingPresetId(preset.id);
-    try {
-      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/presets/apply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ presetId: preset.id }),
-      });
-      toast.success(`Created ${data.createdChannels.join(', ')} for ${preset.title}.`);
-      fetchIntegrations();
-    } catch {
-      try {
-        const createdNames: string[] = [];
-        if (preset.id === 'voice_bot_lounge') {
-          const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🔊 AUDIO & VOICE BOTS', type: 'category' }),
-          });
-          const parentId = catRes.channel?.id;
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: '🎛️・audio-controls',
-              type: 'text',
-              parentId,
-              topic: 'Use audio and voice bot commands here.',
-            }),
-          });
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🔊 Bot Audio Lounge', type: 'voice', parentId }),
-          });
-          createdNames.push('🎛️・audio-controls', '🔊 Bot Audio Lounge');
-        } else if (preset.id === 'interactive_bot_zone') {
-          const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🤖 BOT ACTIVITIES', type: 'category' }),
-          });
-          const parentId = catRes.channel?.id;
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🤖・bot-activities', type: 'text', parentId }),
-          });
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '📊・rank-and-stats', type: 'text', parentId }),
-          });
-          createdNames.push('🤖・bot-activities', '📊・rank-and-stats');
-        } else {
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: '🤖・bot-commands',
-              type: 'text',
-              topic: 'Dedicated sandbox for third-party bot commands and slash utilities.',
-            }),
-          });
-          createdNames.push('🤖・bot-commands');
-        }
-
-        toast.success(`Created ${createdNames.join(', ')} for ${preset.title}.`);
-        fetchIntegrations();
-      } catch (err: any) {
-        toast.error(err.message || 'Could not create preset channels.');
-      }
-    } finally {
-      setApplyingPresetId(null);
-    }
   };
 
   const handleConfirmKickBot = async () => {
@@ -905,17 +560,6 @@ export const IntegrationsPage: React.FC = () => {
     }
   };
 
-  const textChannelOptions = useMemo(
-    () =>
-      channels
-        .filter((c) => c.type === 'text')
-        .map((c) => ({
-          value: c.id,
-          label: `#${c.name}${c.parentName ? ` (${c.parentName})` : ''}`,
-        })),
-    [channels]
-  );
-
   const filteredModalChannels = useMemo(() => {
     const q = channelSearch.trim().toLowerCase();
     if (!q) return channels;
@@ -934,24 +578,6 @@ export const IntegrationsPage: React.FC = () => {
         category="SERVER MANAGEMENT"
         title="Bot Integrations"
         description="Universal control center for all bots in your server — manage roles, nicknames, command prefixes, channel access permissions, and security privileges from one place."
-        actions={
-          <div className="flex flex-wrap items-center gap-2.5">
-            <MdButton
-              variant="tonal"
-              icon="menu_book"
-              onClick={() => setPublishModalOpen(true)}
-            >
-              Publish Bot Directory
-            </MdButton>
-            <MdButton
-              variant="filled"
-              icon="person_add"
-              onClick={() => setTabIndex(3)}
-            >
-              Add Bot / Create Sandbox
-            </MdButton>
-          </div>
-        }
       />
 
       {/* Top Universal Summary Metrics */}
@@ -1040,558 +666,144 @@ export const IntegrationsPage: React.FC = () => {
         </SurfaceCard>
       </div>
 
-      {/* Main Navigation Tabs */}
-      <MdTabs
-        tabs={[
-          { id: 'installed', label: `Installed Bots (${bots.length})`, icon: 'smart_toy' },
-          { id: 'sandboxes', label: 'Channel Access', icon: 'lock_person' },
-          { id: 'commands', label: 'Command Registry', icon: 'terminal' },
-          { id: 'builder', label: 'Add Bot & Rooms', icon: 'add_circle' },
-        ]}
-        activeIndex={tabIndex}
-        onChange={setTabIndex}
-      />
-
-      {/* TAB 0: INSTALLED BOTS (UNIVERSAL ROSTER) */}
-      {tabIndex === 0 && (
-        <div className="space-y-4">
-          <SurfaceCard>
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-2">
-                {[
-                  { id: 'all', label: 'All Bots', icon: 'apps' },
-                  { id: 'moderation', label: 'Moderation', icon: 'shield' },
-                  { id: 'utility', label: 'Utility', icon: 'build' },
-                  { id: 'ai', label: 'AI & Webhooks', icon: 'auto_awesome' },
-                  { id: 'music', label: 'Audio & Voice', icon: 'graphic_eq' },
-                  { id: 'gaming', label: 'Games', icon: 'sports_esports' },
-                  { id: 'economy', label: 'Economy & XP', icon: 'monitoring' },
-                  { id: 'custom', label: 'Custom', icon: 'smart_toy' },
-                ].map((cat) => (
-                  <MdChip
-                    key={cat.id}
-                    label={cat.label}
-                    icon={cat.icon}
-                    selected={categoryFilter === cat.id}
-                    onClick={() => setCategoryFilter(cat.id)}
-                  />
-                ))}
-              </div>
-              <div className="w-full lg:w-72">
-                <MdTextField
-                  label="Search bot name, ID, or prefix..."
-                  value={search}
-                  onChange={setSearch}
-                  debounceMs={250}
-                  icon="search"
-                />
-              </div>
-            </div>
-          </SurfaceCard>
-
-          {filteredBots.length === 0 ? (
-            <EmptyState
-              icon="smart_toy"
-              title="No matching bots found"
-              description="Try clearing your search filter or authorize a new bot in the Add Bot & Rooms tab."
-              action={
-                <MdButton variant="tonal" icon="person_add" onClick={() => setTabIndex(3)}>
-                  Add Bot to Server
-                </MdButton>
-              }
-            />
-          ) : (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              {filteredBots.map((bot) => {
-                const catMeta = CATEGORY_META[bot.category] || CATEGORY_META.utility;
-                return (
-                  <SurfaceCard key={bot.id}>
-                    <div className="flex flex-col justify-between h-full gap-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3.5 min-w-0">
-                          <div className="relative shrink-0">
-                            <img
-                              src={bot.avatar}
-                              alt={bot.displayName}
-                              className="w-12 h-12 rounded-xl object-cover border border-discord-border"
-                            />
-                            <span
-                              className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-discord-card ${
-                                bot.status === 'offline' ? 'bg-discord-muted' : 'bg-discord-green'
-                              }`}
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm font-normal text-discord-white truncate">
-                                {bot.displayName}
-                              </span>
-                              <StatusBadge label={catMeta.label} tone={catMeta.tone} />
-                              {bot.isSelf && <StatusBadge label="Primary Engine" tone="blurple" />}
-                            </div>
-                            <div className="text-xs text-discord-muted mt-0.5 flex flex-wrap items-center gap-2">
-                              <span>@{bot.username}</span>
-                              <span>•</span>
-                              <span>ID: {bot.id}</span>
-                              <span>•</span>
-                              <span>
-                                Prefix:{' '}
-                                <code className="px-1.5 py-0.5 rounded bg-discord-surface text-discord-white border border-discord-border">
-                                  {bot.prefix || '/'}
-                                </code>
-                              </span>
-                            </div>
-                            <p className="text-xs text-discord-muted mt-2 line-clamp-2">
-                              {bot.notes}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Security Risk Badge */}
-                        <div className="shrink-0">
-                          {bot.riskLevel === 'high' ? (
-                            <StatusBadge
-                              label={bot.isAdmin ? 'Admin Access' : 'High Privilege'}
-                              tone="yellow"
-                            />
-                          ) : bot.riskLevel === 'medium' ? (
-                            <StatusBadge label="Moderate Perms" tone="neutral" />
-                          ) : (
-                            <StatusBadge label="Scoped Safe" tone="green" />
-                          )}
-                        </div>
-                      </div>
-
-                      <MdDivider />
-
-                      {/* Roles & Channel Sandbox Summary */}
-                      <div className="space-y-2.5">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[11px] text-discord-muted mr-1">Roles:</span>
-                          {bot.roles.length === 0 ? (
-                            <span className="text-xs text-discord-muted">No roles assigned</span>
-                          ) : (
-                            bot.roles.slice(0, 5).map((r) => <Badge key={r.id}>{r.name}</Badge>)
-                          )}
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                          <div className="flex flex-wrap items-center gap-2 text-discord-muted">
-                            <MdIcon name="lock_person" className="text-sm text-discord-blurple" />
-                            {bot.allowedChannelIds.length > 0 || bot.blockedChannelIds.length > 0 ? (
-                              <span>
-                                Allowed in{' '}
-                                <span className="text-discord-white">
-                                  {bot.allowedChannelIds.length}
-                                </span>{' '}
-                                ch • Restricted in{' '}
-                                <span className="text-discord-white">
-                                  {bot.blockedChannelIds.length}
-                                </span>{' '}
-                                ch
-                              </span>
-                            ) : (
-                              <span>Default access (follows role permissions)</span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <MdButton
-                              size="sm"
-                              variant="tonal"
-                              icon="lock_person"
-                              onClick={() => openSandboxModal(bot)}
-                            >
-                              Channels
-                            </MdButton>
-                            <MdButton
-                              size="sm"
-                              variant="outlined"
-                              icon="edit"
-                              onClick={() => openManageModal(bot)}
-                            >
-                              Configure
-                            </MdButton>
-                            <MdIconButton
-                              icon="open_in_new"
-                              title="Re-authorize / OAuth2 Link"
-                              onClick={() => handleOpenBotAuthorize(bot.id, 'standard')}
-                            />
-                            {!bot.isSelf && (
-                              <MdIconButton
-                                icon="person_remove"
-                                title="Remove bot from server"
-                                onClick={() => setKickBotTarget(bot)}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </SurfaceCard>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 1: UNIVERSAL CHANNEL ACCESS & SANDBOXES */}
-      {tabIndex === 1 && (
-        <div className="space-y-4">
-          <SurfaceCard
-            title="Universal Channel Access & Sandbox Control"
-            subtitle="Control exactly which text and voice channels each bot is allowed to read, message, or connect to — preventing unwanted bot responses in general chat."
-            headerAction={
-              <MdButton
-                size="sm"
-                variant="tonal"
-                icon="add_circle"
-                onClick={() => setTabIndex(3)}
-              >
-                Create Bot Channel
-              </MdButton>
-            }
-          >
-            <div className="space-y-3">
-              {bots.map((bot) => {
-                const catMeta = CATEGORY_META[bot.category] || CATEGORY_META.utility;
-                const allowedNames = bot.allowedChannelIds
-                  .map((id) => channels.find((c) => c.id === id)?.name)
-                  .filter(Boolean);
-                const blockedCount = bot.blockedChannelIds.length;
-
-                return (
-                  <div
-                    key={bot.id}
-                    className="p-4 rounded-xl bg-discord-surface border border-discord-border flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <img
-                        src={bot.avatar}
-                        alt={bot.displayName}
-                        className="w-10 h-10 rounded-xl object-cover border border-discord-border shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-normal text-discord-white">
-                            {bot.displayName}
-                          </span>
-                          <StatusBadge label={catMeta.label} tone={catMeta.tone} />
-                          {bot.isSandboxed ? (
-                            <StatusBadge label="Custom Channel Scope" tone="green" />
-                          ) : (
-                            <StatusBadge label="Default Role Scope" tone="neutral" />
-                          )}
-                        </div>
-                        <div className="text-xs text-discord-muted mt-1 flex flex-wrap items-center gap-1.5">
-                          {allowedNames.length > 0 ? (
-                            <>
-                              <span>Explicitly allowed in:</span>
-                              {allowedNames.slice(0, 4).map((name) => (
-                                <span
-                                  key={name}
-                                  className="px-2 py-0.5 rounded-md bg-discord-card border border-discord-border text-discord-white"
-                                >
-                                  #{name}
-                                </span>
-                              ))}
-                              {allowedNames.length > 4 && (
-                                <span>+{allowedNames.length - 4} more</span>
-                              )}
-                            </>
-                          ) : (
-                            <span>No explicit channel whitelist configured yet.</span>
-                          )}
-                          {blockedCount > 0 && (
-                            <span className="text-discord-muted">
-                              • Restricted in {blockedCount} channel{blockedCount > 1 ? 's' : ''}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <MdButton
-                        size="sm"
-                        variant="filled"
-                        icon="lock_person"
-                        onClick={() => openSandboxModal(bot)}
-                      >
-                        Manage Channel Access
-                      </MdButton>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </SurfaceCard>
-        </div>
-      )}
-
-      {/* TAB 2: UNIVERSAL COMMAND & PREFIX REGISTRY */}
-      {tabIndex === 2 && (
-        <div className="space-y-4">
-          <SurfaceCard
-            title="Universal Bot Command & Prefix Registry"
-            subtitle="Document prefixes, key slash commands, and usage notes for every bot in your server, then publish an automated Server Bot Directory embed to Discord."
-            headerAction={
-              <MdButton
-                variant="filled"
-                icon="send"
-                onClick={() => setPublishModalOpen(true)}
-              >
-                Publish Directory to Discord
-              </MdButton>
-            }
-          >
-            <div className="space-y-3">
-              {bots.map((bot) => {
-                const catMeta = CATEGORY_META[bot.category] || CATEGORY_META.utility;
-                return (
-                  <div
-                    key={bot.id}
-                    className="p-4 rounded-xl bg-discord-surface border border-discord-border flex flex-col md:flex-row md:items-center justify-between gap-4"
-                  >
+      {/* Universal Installed Bots Roster */}
+      {bots.length === 0 ? (
+        <EmptyState
+          icon="smart_toy"
+          title="No bots detected in this server"
+          description="When you authorize bots into your Discord server, they will automatically appear here for configuration."
+        />
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {bots.map((bot) => {
+            const catMeta = CATEGORY_META[bot.category] || CATEGORY_META.utility;
+            return (
+              <SurfaceCard key={bot.id}>
+                <div className="flex flex-col justify-between h-full gap-4">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3.5 min-w-0">
-                      <img
-                        src={bot.avatar}
-                        alt={bot.displayName}
-                        className="w-10 h-10 rounded-xl object-cover border border-discord-border shrink-0"
-                      />
+                      <div className="relative shrink-0">
+                        <img
+                          src={bot.avatar}
+                          alt={bot.displayName}
+                          className="w-12 h-12 rounded-xl object-cover border border-discord-border"
+                        />
+                        <span
+                          className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-discord-card ${
+                            bot.status === 'offline' ? 'bg-discord-muted' : 'bg-discord-green'
+                          }`}
+                        />
+                      </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-normal text-discord-white">
+                          <span className="text-sm font-normal text-discord-white truncate">
                             {bot.displayName}
                           </span>
                           <StatusBadge label={catMeta.label} tone={catMeta.tone} />
-                          <code className="px-2 py-0.5 rounded bg-discord-card border border-discord-border text-xs text-discord-blurple">
-                            Prefix: {bot.prefix || '/'}
-                          </code>
+                          {bot.isSelf && <StatusBadge label="Primary Engine" tone="blurple" />}
                         </div>
-                        <p className="text-xs text-discord-muted mt-1">{bot.notes}</p>
-
-                        {Array.isArray(bot.commands) && bot.commands.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                            <span className="text-[11px] text-discord-muted">Commands:</span>
-                            {bot.commands.map((cmd) => (
-                              <code
-                                key={cmd}
-                                className="px-1.5 py-0.5 rounded text-[11px] bg-discord-card border border-discord-border text-discord-white"
-                              >
-                                {cmd}
-                              </code>
-                            ))}
-                          </div>
-                        )}
-
-                        {bot.dangerousPermissions.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                            <span className="text-[11px] text-discord-muted">
-                              Elevated Permissions:
-                            </span>
-                            {bot.dangerousPermissions.slice(0, 6).map((perm) => (
-                              <span
-                                key={perm}
-                                className="px-1.5 py-0.5 rounded text-[11px] bg-discord-card border border-discord-border text-discord-muted"
-                              >
-                                {perm}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        <div className="text-xs text-discord-muted mt-0.5 flex flex-wrap items-center gap-2">
+                          <span>@{bot.username}</span>
+                          <span>•</span>
+                          <span>ID: {bot.id}</span>
+                          <span>•</span>
+                          <span>
+                            Prefix:{' '}
+                            <code className="px-1.5 py-0.5 rounded bg-discord-surface text-discord-white border border-discord-border">
+                              {bot.prefix || '/'}
+                            </code>
+                          </span>
+                        </div>
+                        <p className="text-xs text-discord-muted mt-2 line-clamp-2">
+                          {bot.notes}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <MdButton
-                        size="sm"
-                        variant="outlined"
-                        icon="edit"
-                        onClick={() => openManageModal(bot)}
-                      >
-                        Edit Prefix & Commands
-                      </MdButton>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </SurfaceCard>
-        </div>
-      )}
-
-      {/* TAB 3: UNIVERSAL ADD BOT (BY CLIENT ID / URL) & CUSTOM SANDBOX ROOM BUILDER */}
-      {tabIndex === 3 && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            {/* 1. Universal OAuth2 Bot Invite Generator */}
-            <SurfaceCard
-              title="Authorize Any Discord Bot (OAuth2 Generator)"
-              subtitle="Invite any public or custom Discord bot directly into this server using its Application / Client ID or OAuth2 invite link."
-            >
-              <div className="space-y-4">
-                <MdTextField
-                  label="Bot Application / Client ID or Invite URL"
-                  value={inviteClientId}
-                  onChange={setInviteClientId}
-                  placeholder="e.g. 123456789012345678 or https://discord.com/oauth2/authorize..."
-                  icon="smart_toy"
-                />
-
-                <MdSelect
-                  label="Initial Permission Scope"
-                  value={invitePermLevel}
-                  onChange={setInvitePermLevel}
-                  options={[
-                    {
-                      value: 'minimal',
-                      label: 'Minimal Safe Scope (View, Send Messages, Embeds & Slash Commands)',
-                    },
-                    {
-                      value: 'voice',
-                      label: 'Audio & Voice Scope (View, Connect, Speak & Voice Activity)',
-                    },
-                    {
-                      value: 'standard',
-                      label: 'Standard Utility & Moderation Scope',
-                    },
-                    {
-                      value: 'admin',
-                      label: 'Full Administrator (Only for trusted bots)',
-                    },
-                  ]}
-                />
-
-                <div className="flex items-center justify-end pt-1">
-                  <MdButton
-                    variant="filled"
-                    icon="open_in_new"
-                    onClick={() => handleOpenBotAuthorize(inviteClientId, invitePermLevel)}
-                  >
-                    Authorize Bot to Server
-                  </MdButton>
-                </div>
-              </div>
-            </SurfaceCard>
-
-            {/* 2. Universal Custom Bot Room & Category Builder */}
-            <SurfaceCard
-              title="Custom Bot Room & Sandbox Builder"
-              subtitle="Create custom text or voice channels for any bot workflow and immediately grant channel access to selected bots."
-            >
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <MdTextField
-                    label="Category Name (Optional)"
-                    value={customCategoryName}
-                    onChange={setCustomCategoryName}
-                    placeholder="e.g. 🤖 BOT ZONE"
-                  />
-                  <MdTextField
-                    label="Text Channel Name"
-                    value={customTextChannel}
-                    onChange={setCustomTextChannel}
-                    placeholder="e.g. 🤖・bot-commands"
-                  />
-                  <MdTextField
-                    label="Voice Channel (Optional)"
-                    value={customVoiceChannel}
-                    onChange={setCustomVoiceChannel}
-                    placeholder="e.g. 🔊 Bot Lounge"
-                  />
-                </div>
-
-                <div>
-                  <div className="text-xs text-discord-muted mb-2">
-                    Grant Channel Access to Installed Bots (Optional):
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2.5 rounded-xl bg-discord-surface border border-discord-border">
-                    {bots.map((b) => {
-                      const selected = customRoomBotIds.includes(b.id);
-                      return (
-                        <MdChip
-                          key={b.id}
-                          label={b.displayName}
-                          selected={selected}
-                          onClick={() =>
-                            setCustomRoomBotIds((prev) =>
-                              prev.includes(b.id)
-                                ? prev.filter((id) => id !== b.id)
-                                : [...prev, b.id]
-                            )
-                          }
+                    {/* Security Risk Badge */}
+                    <div className="shrink-0">
+                      {bot.riskLevel === 'high' ? (
+                        <StatusBadge
+                          label={bot.isAdmin ? 'Admin Access' : 'High Privilege'}
+                          tone="yellow"
                         />
-                      );
-                    })}
+                      ) : bot.riskLevel === 'medium' ? (
+                        <StatusBadge label="Moderate Perms" tone="neutral" />
+                      ) : (
+                        <StatusBadge label="Scoped Safe" tone="green" />
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-end pt-1">
-                  <MdButton
-                    variant="filled"
-                    icon="add_circle"
-                    loading={creatingCustomRoom}
-                    onClick={handleCreateCustomBotRoom}
-                  >
-                    Create Bot Channels
-                  </MdButton>
-                </div>
-              </div>
-            </SurfaceCard>
-          </div>
+                  <MdDivider />
 
-          {/* 3. Generic 1-Click Bot Sandbox Templates */}
-          <div>
-            <SectionHeader title="Quick Sandbox Environment Templates" />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {presets.map((preset) => (
-                <SurfaceCard key={preset.id}>
-                  <div className="flex flex-col justify-between h-full gap-4">
-                    <div>
-                      <div className="flex items-center justify-between gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-discord-surface border border-discord-border flex items-center justify-center text-discord-blurple">
-                          <MdIcon name={preset.icon} className="text-xl" />
-                        </div>
-                        <StatusBadge label="1-Click Template" tone="blurple" />
-                      </div>
-                      <h3 className="text-base font-normal text-discord-white">{preset.title}</h3>
-                      <p className="text-xs text-discord-muted mt-1 leading-relaxed">
-                        {preset.description}
-                      </p>
-
-                      <div className="mt-3 pt-3 border-t border-discord-border">
-                        <div className="text-[11px] uppercase tracking-wider text-discord-muted mb-2">
-                          Channels Created Automatically
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {preset.channelsPreview.map((chName) => (
-                            <span
-                              key={chName}
-                              className="px-2 py-1 rounded-lg bg-discord-surface border border-discord-border text-xs text-discord-white"
-                            >
-                              {chName}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                  {/* Roles & Channel Sandbox Summary */}
+                  <div className="space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] text-discord-muted mr-1">Roles:</span>
+                      {bot.roles.length === 0 ? (
+                        <span className="text-xs text-discord-muted">No roles assigned</span>
+                      ) : (
+                        bot.roles.slice(0, 5).map((r) => <Badge key={r.id}>{r.name}</Badge>)
+                      )}
                     </div>
 
-                    <MdButton
-                      variant="tonal"
-                      icon="add_business"
-                      loading={applyingPresetId === preset.id}
-                      onClick={() => handleApplyPreset(preset)}
-                      className="w-full justify-center"
-                    >
-                      Deploy {preset.title}
-                    </MdButton>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 text-discord-muted">
+                        <MdIcon name="lock_person" className="text-sm text-discord-blurple" />
+                        {bot.allowedChannelIds.length > 0 || bot.blockedChannelIds.length > 0 ? (
+                          <span>
+                            Allowed in{' '}
+                            <span className="text-discord-white">
+                              {bot.allowedChannelIds.length}
+                            </span>{' '}
+                            ch • Restricted in{' '}
+                            <span className="text-discord-white">
+                              {bot.blockedChannelIds.length}
+                            </span>{' '}
+                            ch
+                          </span>
+                        ) : (
+                          <span>Default access (follows role permissions)</span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <MdButton
+                          size="sm"
+                          variant="tonal"
+                          icon="lock_person"
+                          onClick={() => openSandboxModal(bot)}
+                        >
+                          Channels
+                        </MdButton>
+                        <MdButton
+                          size="sm"
+                          variant="outlined"
+                          icon="edit"
+                          onClick={() => openManageModal(bot)}
+                        >
+                          Configure
+                        </MdButton>
+                        <MdIconButton
+                          icon="open_in_new"
+                          title="Re-authorize / OAuth2 Link"
+                          onClick={() => handleOpenBotAuthorize(bot.id)}
+                        />
+                        {!bot.isSelf && (
+                          <MdIconButton
+                            icon="person_remove"
+                            title="Remove bot from server"
+                            onClick={() => setKickBotTarget(bot)}
+                          />
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </SurfaceCard>
-              ))}
-            </div>
-          </div>
+                </div>
+              </SurfaceCard>
+            );
+          })}
         </div>
       )}
 
@@ -1697,7 +909,7 @@ export const IntegrationsPage: React.FC = () => {
         )}
       </MdDialog>
 
-      {/* MODAL 2: CHANNEL SANDBOX & PERMISSION ISOLATION */}
+      {/* MODAL 2: CHANNEL ACCESS & PERMISSION ISOLATION */}
       <MdDialog
         open={Boolean(sandboxBot)}
         onClose={() => setSandboxBot(null)}
@@ -1794,57 +1006,7 @@ export const IntegrationsPage: React.FC = () => {
         )}
       </MdDialog>
 
-      {/* MODAL 3: PUBLISH BOT DIRECTORY EMBED */}
-      <MdDialog
-        open={publishModalOpen}
-        onClose={() => setPublishModalOpen(false)}
-        headline="Publish Server Bot Directory to Discord"
-        actions={
-          <div className="flex items-center justify-end gap-2">
-            <MdButton variant="text" onClick={() => setPublishModalOpen(false)}>
-              Cancel
-            </MdButton>
-            <MdButton
-              variant="filled"
-              icon="send"
-              loading={publishingGuide}
-              onClick={handlePublishGuide}
-            >
-              Publish Embed
-            </MdButton>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          <p className="text-xs text-discord-muted leading-relaxed">
-            ArchiBot will generate a formatted Discord embed listing all installed bots in your server grouped by category, including each bot&apos;s command prefix, registered commands, and designated channels.
-          </p>
-
-          <MdSelect
-            label="Target Text Channel"
-            value={guideChannelId}
-            onChange={setGuideChannelId}
-            options={textChannelOptions}
-          />
-
-          <MdTextField
-            label="Embed Title (Optional)"
-            value={guideTitle}
-            onChange={setGuideTitle}
-            placeholder="🤖 Server Bot Directory & Command Guide"
-          />
-
-          <MdTextField
-            type="textarea"
-            rows={3}
-            label="Introduction Text"
-            value={guideDescription}
-            onChange={setGuideDescription}
-          />
-        </div>
-      </MdDialog>
-
-      {/* MODAL 4: REMOVE BOT CONFIRMATION */}
+      {/* MODAL 3: REMOVE BOT CONFIRMATION */}
       <ConfirmDialog
         open={Boolean(kickBotTarget)}
         onClose={() => setKickBotTarget(null)}
