@@ -1203,9 +1203,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
               </Link>
             </div>
 
-            {/* Desktop Nav + CTA (Use Cases & Communities Removed, Rocket Removed) */}
+            {/* Desktop Nav + CTA (Modules -> Resource -> Capabilities) */}
             <div className="header-actions" style={{ display: mobileMenuOpen ? 'none' : undefined }}>
               <nav className="call-to-action--nav nav" aria-label="Main Navigation">
+                {/* 1. Modules */}
                 <div
                   className="nav-item"
                   onMouseEnter={() => setOpenDropdown('modules')}
@@ -1225,19 +1226,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   </button>
                 </div>
 
-                <div
-                  className="nav-item"
-                  onMouseEnter={() => setOpenDropdown(null)}
-                >
-                  <a
-                    href="#feature-explorer"
-                    className="call-to-action--nav button button-nav button-compact"
-                    onClick={() => setOpenDropdown(null)}
-                  >
-                    <span>{isID ? 'Fitur Unggulan' : 'Capabilities'}</span>
-                  </a>
-                </div>
-
+                {/* 2. Resource */}
                 <div
                   className="nav-item"
                   onMouseEnter={() => setOpenDropdown('resources')}
@@ -1250,11 +1239,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     aria-expanded={openDropdown === 'resources'}
                     onClick={() => setOpenDropdown(openDropdown === 'resources' ? null : 'resources')}
                   >
-                    <span>{isID ? 'Sumber Daya' : 'Resources'}</span>
+                    <span>{isID ? 'Sumber Daya' : 'Resource'}</span>
                     <span className="dropdown-icon">
                       <ChevronDownSvg />
                     </span>
                   </button>
+                </div>
+
+                {/* 3. Capabilities */}
+                <div
+                  className="nav-item"
+                  onMouseEnter={() => setOpenDropdown(null)}
+                >
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action--nav button button-nav button-compact"
+                    onClick={() => setOpenDropdown(null)}
+                  >
+                    <span>{isID ? 'Fitur Unggulan' : 'Capabilities'}</span>
+                  </a>
                 </div>
               </nav>
 
@@ -1542,23 +1545,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     </p>
                   </div>
                   <div className="col-md-4 subnav-column">
-                    <p className="caption subnav-label">Resources</p>
+                    <p className="caption subnav-label">{isID ? 'Sumber Daya' : 'Resource'}</p>
                     <nav className="subnav">
                       {[
-                        { label: 'Web Dashboard Studio', href: dashboardHref, external: true, onClick: undefined },
                         {
-                          label: 'Interactive Showcase',
-                          href: '#showcase-section',
-                          external: false,
-                          onClick: (e: React.MouseEvent) => {
-                            openLandingView(e);
-                            window.setTimeout(() => {
-                              document.getElementById('showcase-section')?.scrollIntoView({ behavior: 'smooth' });
-                            }, 50);
-                          },
-                        },
-                        {
-                          label: 'Latest Blogs',
+                          label: 'Blog',
                           href: '/blog',
                           external: false,
                           onClick: (e: React.MouseEvent) => {
@@ -1566,7 +1557,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                           },
                         },
                         {
-                          label: 'Server Snapshots & Backups',
+                          label: isID ? 'Dokumentasi' : 'Documentation',
                           href: '#feature-explorer',
                           external: false,
                           onClick: (e: React.MouseEvent) => {
@@ -1576,10 +1567,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                             }, 50);
                           },
                         },
+                        {
+                          label: isID ? 'Dukungan' : 'Support',
+                          href: 'https://discord.gg',
+                          external: true,
+                        },
                       ].map((item, idx) => (
                         <a
                           key={item.label}
                           href={item.href}
+                          target={item.external ? '_blank' : undefined}
+                          rel={item.external ? 'noopener noreferrer' : undefined}
                           className="body subnav-link"
                           style={{
                             animationDelay: `${0.14 + idx * 0.08}s`,
@@ -3529,15 +3527,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
 
               <div className="grid-col col-xs-4 col-sm-4 col-md-3">
                 <div className="footer-nav-section">
-                  <p className="caption">Resources</p>
-                  <a href="#feature-explorer" className="call-to-action call-to-action--nav">Docs</a>
-                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Changelog</a>
-                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Releases</a>
+                  <p className="caption">{isID ? 'Sumber Daya' : 'Resource'}</p>
                   <a href="/blog" className="call-to-action call-to-action--nav" onClick={openBlogView}>Blog</a>
-                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Newsletter</a>
-                  <a href={dashboardHref} className="call-to-action call-to-action--nav">Pricing</a>
-                  <a href="#use-cases-section" className="call-to-action call-to-action--nav">Use Cases</a>
-                  <a href="#latest-blogs" className="call-to-action call-to-action--nav">Press</a>
+                  <a
+                    href="#feature-explorer"
+                    className="call-to-action call-to-action--nav"
+                    onClick={(e) => {
+                      openLandingView(e);
+                      document.getElementById('feature-explorer')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    {isID ? 'Dokumentasi' : 'Documentation'}
+                  </a>
+                  <a
+                    href="https://discord.gg"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="call-to-action call-to-action--nav"
+                  >
+                    {isID ? 'Dukungan' : 'Support'}
+                  </a>
                 </div>
               </div>
             </div>
@@ -3590,18 +3599,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
               </div>
               <div className="footer-google-nav grid-col col-xs-4 col-sm-5 col-md-7">
                 <a href="#hero" className="caption" onClick={openLandingView}>
-                  <span>About ArchiBot</span>
+                  <span>About Archibot</span>
                 </a>
-                <a href="#feature-explorer" className="caption" onClick={openLandingView}>
-                  <span>Modules</span>
-                </a>
-                <a href={dashboardHref} className="caption">
-                  <span>Web Studio</span>
-                </a>
-                <a href="#latest-blogs" className="caption">
+                <a href="#privacy" className="caption">
                   <span>Privacy &amp; Security</span>
                 </a>
-                <a href="#latest-blogs" className="caption">
+                <a href="#terms" className="caption">
                   <span>Terms</span>
                 </a>
               </div>
