@@ -3,7 +3,6 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import {
   MdButton,
   MdTextField,
-  MdSelect,
   ArchitectSkeleton,
   MdIcon,
   MdTabs,
@@ -13,7 +12,6 @@ import {
   SwitchRow,
   toast,
 } from '../components/ui';
-import { ChannelItem, RoleItem } from '../types/api';
 import { useServerSwitch } from '../components/layout';
 
 export const ArchitectPage: React.FC = () => {
@@ -22,8 +20,6 @@ export const ArchitectPage: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [templates, setTemplates] = useState<any[]>([]);
   const [legoModules, setLegoModules] = useState<any[]>([]);
-  const [channels, setChannels] = useState<ChannelItem[]>([]);
-  const [roles, setRoles] = useState<RoleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { registerServerFetch } = useServerSwitch();
   const [executing, setExecuting] = useState(false);
@@ -36,49 +32,30 @@ export const ArchitectPage: React.FC = () => {
   const [customVoice, setCustomVoice] = useState('');
   const [customRoles, setCustomRoles] = useState('Admin, Moderator, Member, VIP');
 
-  const [deployType, setDeployType] = useState('verify');
-  const [deployChannelId, setDeployChannelId] = useState('');
-  const [deployRoleId, setDeployRoleId] = useState('');
-  const [deployTitle, setDeployTitle] = useState('');
-  const [deployMessage, setDeployMessage] = useState('');
-  const [deployRolesList, setDeployRolesList] = useState('Gamer, Anime, Developer, Artist');
-  const [deployStyle, setDeployStyle] = useState('buttons');
-
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [keepGeneral, setKeepGeneral] = useState(true);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'deployer') setTabIndex(2);
-    else if (tab === 'lego') setTabIndex(1);
-    else if (tab === 'danger') setTabIndex(3);
+    if (tab === 'lego') setTabIndex(1);
+    else if (tab === 'danger') setTabIndex(2);
     else setTabIndex(0);
   }, [searchParams]);
 
   const handleTabChange = (idx: number) => {
     setTabIndex(idx);
     if (idx === 1) setSearchParams({ tab: 'lego' });
-    else if (idx === 2) setSearchParams({ tab: 'deployer' });
-    else if (idx === 3) setSearchParams({ tab: 'danger' });
+    else if (idx === 2) setSearchParams({ tab: 'danger' });
     else setSearchParams({});
   };
 
   useEffect(() => {
     setLoading(true);
-    const p = Promise.all([
-      fetch(`/api/guilds/${guildId}/architect`, { credentials: 'include' }).then((r) => r.json()),
-      fetch(`/api/guilds/${guildId}/channels`, { credentials: 'include' }).then((r) => r.json()),
-      fetch(`/api/guilds/${guildId}/roles`, { credentials: 'include' }).then((r) => r.json()),
-    ])
-      .then(([archData, chanData, roleData]) => {
+    const p = fetch(`/api/guilds/${guildId}/architect`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((archData) => {
         if (archData.templates) setTemplates(archData.templates);
         if (archData.legoModules) setLegoModules(archData.legoModules);
-        if (chanData.channels) {
-          const textChans = chanData.channels.filter((c: any) => c.typeName === 'text');
-          setChannels(textChans);
-          if (textChans.length > 0) setDeployChannelId(textChans[0].id);
-        }
-        if (roleData.roles) setRoles(roleData.roles);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -144,37 +121,6 @@ export const ArchitectPage: React.FC = () => {
     }
   };
 
-  const handleDeployPanel = async () => {
-    if (!deployChannelId) {
-      toast.warning('Please select a target channel.');
-      return;
-    }
-    setExecuting(true);
-    try {
-      const res = await fetch(`/api/guilds/${guildId}/architect/deploy-panel`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          channelId: deployChannelId,
-          type: deployType,
-          roleId: deployRoleId,
-          title: deployTitle,
-          message: deployMessage,
-          rolesList: deployRolesList,
-          style: deployStyle,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) toast.success(data.message);
-      else toast.error(data.error || 'Failed to deploy panel');
-    } catch (err: any) {
-      toast.error(`Error: ${err.message}`);
-    } finally {
-      setExecuting(false);
-    }
-  };
-
   const handleClearServer = async () => {
     setExecuting(true);
     try {
@@ -196,21 +142,11 @@ export const ArchitectPage: React.FC = () => {
 
   if (loading && templates.length === 0 && legoModules.length === 0) return <ArchitectSkeleton />;
 
-  const channelOptions = channels.map((c) => ({ value: c.id, label: `#${c.name}` }));
-  const roleOptions = [
-    { value: '', label: 'Auto (Verified Role)' },
-    ...roles.map((r) => ({
-      value: r.id,
-      label: r.name,
-      color: r.color && r.color !== '#000000' ? r.color : '#80848e',
-    })),
-  ];
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         category="CHANNELS & TEMPLATES"
-        title="Server Templates & Modular Builder"
+        title="Template Builder"
         description="Generate complete Discord server structures in seconds using 1-click preset templates or the custom Modular Builder."
       />
 
@@ -220,7 +156,6 @@ export const ArchitectPage: React.FC = () => {
         tabs={[
           { id: 'templates', label: 'Server Templates', icon: 'auto_awesome' },
           { id: 'lego', label: 'Modular Builder', icon: 'view_quilt' },
-          { id: 'deployer', label: 'Interactive Panels', icon: 'smart_button' },
           { id: 'danger', label: 'Danger Zone', icon: 'warning' },
         ]}
       />
@@ -372,101 +307,6 @@ export const ArchitectPage: React.FC = () => {
       )}
 
       {tabIndex === 2 && (
-        <SurfaceCard className="flex flex-col gap-4 max-w-xl">
-          <div>
-            <h3 className="text-xs font-normal text-discord-white">Deploy Interactive Panels</h3>
-            <p className="text-xs text-discord-muted font-normal mt-1">
-              Post clickable button panels directly into any channel in your Discord server.
-            </p>
-          </div>
-
-          <MdSelect
-            label="Panel Type"
-            value={deployType}
-            onChange={setDeployType}
-            options={[
-              { value: 'verify', label: 'Image CAPTCHA Verification Panel' },
-              { value: 'roles', label: 'Self-Assignable Role Picker (Buttons / Dropdown)' },
-              { value: 'ticket', label: 'Private Support Ticket Panel' },
-              { value: 'voice', label: '15-Button Voice Room Controls Panel' },
-              { value: 'music', label: 'Music Bot Controls Panel' },
-            ]}
-          />
-
-          <MdSelect
-            label="Target Channel"
-            value={deployChannelId}
-            onChange={setDeployChannelId}
-            options={channelOptions}
-          />
-
-          {deployType === 'verify' && (
-            <>
-              <MdTextField
-                label="Panel Title"
-                value={deployTitle}
-                onChange={setDeployTitle}
-                placeholder="Account Verification"
-              />
-              <MdSelect
-                label="Role Granted Upon Success"
-                value={deployRoleId}
-                onChange={setDeployRoleId}
-                options={roleOptions}
-              />
-            </>
-          )}
-
-          {deployType === 'roles' && (
-            <>
-              <MdTextField
-                label="Panel Title"
-                value={deployTitle}
-                onChange={setDeployTitle}
-                placeholder="Pick Your Roles"
-              />
-              <MdTextField
-                label="Roles (comma-separated)"
-                value={deployRolesList}
-                onChange={setDeployRolesList}
-                placeholder="Gamer, Anime, Developer, Artist"
-              />
-              <MdSelect
-                label="Picker Interface Style"
-                value={deployStyle}
-                onChange={setDeployStyle}
-                options={[
-                  { value: 'buttons', label: 'Clickable Buttons' },
-                  { value: 'dropdown', label: 'Select Dropdown Menu' },
-                ]}
-              />
-            </>
-          )}
-
-          {deployType === 'ticket' && (
-            <>
-              <MdTextField
-                label="Heading Title"
-                value={deployTitle}
-                onChange={setDeployTitle}
-                placeholder="Need Help? Open a Ticket"
-              />
-              <MdTextField
-                label="Message Description"
-                value={deployMessage}
-                onChange={setDeployMessage}
-                placeholder="Click the button below to start a private conversation with our staff team."
-              />
-            </>
-          )}
-
-          <MdButton variant="filled" icon="send" onClick={handleDeployPanel} disabled={executing || !deployChannelId}>
-            {executing ? 'Deploying...' : 'Deploy Panel to Discord'}
-          </MdButton>
-        </SurfaceCard>
-      )}
-
-      {tabIndex === 3 && (
         <SurfaceCard className="border-discord-red/40 flex flex-col gap-4">
           <div className="flex items-center gap-2 text-discord-red">
             <MdIcon name="warning" className="text-xl" />

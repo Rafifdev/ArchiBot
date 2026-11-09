@@ -43,8 +43,7 @@ function getBotNavigation(guildId?: string): { topNavItems: NavEntry[]; sectionG
       title: 'CHANNELS & TEMPLATES',
       items: [
         { to: `/guilds/${guildId}/channels`, label: 'Channels & Categories', icon: 'deployed_code' },
-        { to: `/guilds/${guildId}/architect`, label: 'Server Templates', icon: 'auto_awesome' },
-        { to: `/guilds/${guildId}/architect?tab=lego`, label: 'Modular Builder', icon: 'view_quilt' },
+        { to: `/guilds/${guildId}/architect`, label: 'Template Builder', icon: 'architecture' },
         { to: `/guilds/${guildId}/backups`, label: 'Saved Templates', icon: 'inventory_2' },
       ],
     },
