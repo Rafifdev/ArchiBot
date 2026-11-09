@@ -1743,8 +1743,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 className="post-main-media placeholder-hero"
                 style={{
                   aspectRatio: '16 / 9',
-                  background: 'linear-gradient(135deg, #181B23 0%, #101218 100%)',
-                  border: '1px solid #232733',
+                  background: '#2E3447',
+                  border: 'none',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -1755,10 +1755,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   width: '100%',
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '64px', fontWeight: 300, color: '#6D7480' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '64px', fontWeight: 300, color: '#8892B0' }}>
                   image
                 </span>
-                <span style={{ fontSize: '15px', color: '#949BA4', fontWeight: 500 }}>
+                <span style={{ fontSize: '15px', color: '#CBD5E1', fontWeight: 500 }}>
                   Placeholder Image
                 </span>
               </div>
@@ -1888,8 +1888,8 @@ await engine.start();`}</code>
                         style={{
                           width: '100%',
                           height: '100%',
-                          background: 'linear-gradient(135deg, #181B23 0%, #101218 100%)',
-                          border: '1px solid #232733',
+                          background: '#2E3447',
+                          border: 'none',
                           borderRadius: '16px',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1901,14 +1901,14 @@ await engine.start();`}</code>
                       >
                         <span
                           className="material-symbols-outlined"
-                          style={{ fontSize: '56px', fontWeight: 300, color: '#6D7480' }}
+                          style={{ fontSize: '56px', fontWeight: 300, color: '#8892B0' }}
                         >
                           image
                         </span>
                         <span
                           style={{
                             fontSize: '14px',
-                            color: '#949BA4',
+                            color: '#CBD5E1',
                             fontWeight: 500,
                             letterSpacing: '0.02em',
                           }}
@@ -2023,11 +2023,11 @@ await engine.start();`}</code>
                           >
                             <span
                               className="material-symbols-outlined"
-                              style={{ fontSize: '36px', fontWeight: 300, color: '#6D7480' }}
+                              style={{ fontSize: '36px', fontWeight: 300, color: '#8892B0' }}
                             >
                               image
                             </span>
-                            <span style={{ fontSize: '11px', color: '#949BA4', fontWeight: 400 }}>
+                            <span style={{ fontSize: '11px', color: '#CBD5E1', fontWeight: 400 }}>
                               Placeholder Image
                             </span>
                           </div>
@@ -3382,13 +3382,13 @@ await engine.start();`}</code>
                     }}
                   >
                     <div className="list-image-wrapper">
-                      {/* Clean Architectural Placeholder Image (Dark) */}
+                      {/* Clean Architectural Placeholder Image (Solid Dark) */}
                       <div
                         style={{
                           width: '100%',
                           height: '100%',
-                          background: 'linear-gradient(135deg, #181B23 0%, #101218 100%)',
-                          border: '1px solid #232733',
+                          background: '#2E3447',
+                          border: 'none',
                           borderRadius: 'inherit',
                           display: 'flex',
                           flexDirection: 'column',
@@ -3399,10 +3399,10 @@ await engine.start();`}</code>
                           position: 'relative',
                         }}
                       >
-                        <span className="material-symbols-outlined" style={{ fontSize: '42px', fontWeight: 300, color: '#6D7480' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '42px', fontWeight: 300, color: '#8892B0' }}>
                           image
                         </span>
-                        <span className="small" style={{ color: '#949BA4' }}>
+                        <span className="small" style={{ color: '#CBD5E1' }}>
                           Placeholder Image
                         </span>
                       </div>

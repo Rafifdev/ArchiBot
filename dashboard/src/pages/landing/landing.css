@@ -2017,8 +2017,8 @@ html.dark .agy-landing .footer-antigravity text,
   width: 148px;
   height: 148px;
   overflow: hidden;
-  border: 1px solid #232733;
-  background: linear-gradient(135deg, #181B23 0%, #101218 100%);
+  border: none !important;
+  background: #2E3447 !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2802,9 +2802,9 @@ html[data-theme='dark'] .agy-landing .list-image-wrapper > div,
 html.dark .agy-landing .list-image-wrapper > div,
 .agy-landing[data-theme='dark'] .list-image-wrapper > div,
 .agy-landing.dark .list-image-wrapper > div {
-  background: linear-gradient(135deg, #181B23 0%, #101218 100%) !important;
-  border-color: #232733 !important;
-  color: #949BA4 !important;
+  background: #2E3447 !important;
+  border: none !important;
+  color: #CBD5E1 !important;
 }
 
 html[data-theme='dark'] .agy-landing .blog-placeholder-thumb span,
@@ -2827,7 +2827,26 @@ html[data-theme='dark'] .agy-landing .list-image-wrapper span,
 html.dark .agy-landing .list-image-wrapper span,
 .agy-landing[data-theme='dark'] .list-image-wrapper span,
 .agy-landing.dark .list-image-wrapper span {
-  color: #949BA4 !important;
+  color: #CBD5E1 !important;
+}
+
+html[data-theme='dark'] .agy-landing .post-main-media.placeholder-hero .material-symbols-outlined,
+html.dark .agy-landing .post-main-media.placeholder-hero .material-symbols-outlined,
+.agy-landing[data-theme='dark'] .post-main-media.placeholder-hero .material-symbols-outlined,
+.agy-landing.dark .post-main-media.placeholder-hero .material-symbols-outlined,
+html[data-theme='dark'] .agy-landing .featured-img-inner .material-symbols-outlined,
+html.dark .agy-landing .featured-img-inner .material-symbols-outlined,
+.agy-landing[data-theme='dark'] .featured-img-inner .material-symbols-outlined,
+.agy-landing.dark .featured-img-inner .material-symbols-outlined,
+html[data-theme='dark'] .agy-landing .featured-card .img .material-symbols-outlined,
+html.dark .agy-landing .featured-card .img .material-symbols-outlined,
+.agy-landing[data-theme='dark'] .featured-card .img .material-symbols-outlined,
+.agy-landing.dark .featured-card .img .material-symbols-outlined,
+html[data-theme='dark'] .agy-landing .list-image-wrapper .material-symbols-outlined,
+html.dark .agy-landing .list-image-wrapper .material-symbols-outlined,
+.agy-landing[data-theme='dark'] .list-image-wrapper .material-symbols-outlined,
+.agy-landing.dark .list-image-wrapper .material-symbols-outlined {
+  color: #8892B0 !important;
 }
 
 /* Article Detail Page in Dark Mode */
