@@ -1743,7 +1743,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 className="post-main-media placeholder-hero"
                 style={{
                   aspectRatio: '16 / 9',
-                  background: '#2E3447',
+                  background:
+                    resolvedTheme === 'dark'
+                      ? '#2E3447'
+                      : 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
                   border: 'none',
                   display: 'flex',
                   flexDirection: 'column',
@@ -1888,7 +1891,10 @@ await engine.start();`}</code>
                         style={{
                           width: '100%',
                           height: '100%',
-                          background: '#2E3447',
+                          background:
+                            resolvedTheme === 'dark'
+                              ? '#2E3447'
+                              : 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
                           border: 'none',
                           borderRadius: '16px',
                           display: 'flex',
@@ -3366,12 +3372,15 @@ await engine.start();`}</code>
                     }}
                   >
                     <div className="list-image-wrapper">
-                      {/* Clean Architectural Placeholder Image (Solid Dark) */}
+                      {/* Clean Architectural Placeholder Image (Solid Dark in Dark Mode, Light Gradient in Light Mode) */}
                       <div
                         style={{
                           width: '100%',
                           height: '100%',
-                          background: '#2E3447',
+                          background:
+                            resolvedTheme === 'dark'
+                              ? '#2E3447'
+                              : 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
                           border: 'none',
                           borderRadius: 'inherit',
                           display: 'flex',
