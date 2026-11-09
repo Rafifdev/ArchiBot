@@ -20,6 +20,7 @@ import { useServerSwitch, ThemeMode } from '../components/layout';
 import { ChannelItem, MemberItem, RoleItem } from '../types/api';
 
 const ACCENT_PRESETS = [
+  { label: 'Charcoal', value: '#232733' },
   { label: 'Slate', value: '#4E5466' },
   { label: 'Violet', value: '#6D28D9' },
   { label: 'Purple', value: '#8B5CF6' },
@@ -60,11 +61,6 @@ export const SettingsPage: React.FC = () => {
     accentColor,
     setAccentColor,
   } = useServerSwitch();
-  const [customAccentInput, setCustomAccentInput] = useState(accentColor);
-
-  useEffect(() => {
-    setCustomAccentInput(accentColor);
-  }, [accentColor]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -454,57 +450,27 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 pt-1">
-            <div className="flex flex-wrap items-center gap-2.5">
-              {ACCENT_PRESETS.map((preset) => {
-                const isSelected = accentColor.toUpperCase() === preset.value.toUpperCase();
-                return (
-                  <button
-                    key={preset.value}
-                    type="button"
-                    title={preset.label}
-                    onClick={() => setAccentColor(preset.value)}
-                    className={`relative w-8 h-8 rounded-full transition-transform cursor-pointer flex items-center justify-center ${
-                      isSelected ? 'scale-105' : 'hover:scale-105'
-                    }`}
-                    style={{
-                      backgroundColor: preset.value,
-                      boxShadow: isSelected
-                        ? `0 0 0 2px var(--color-discord-card), 0 0 0 4px ${preset.value}`
-                        : 'none',
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            <div className="flex items-center gap-2.5 sm:ml-2">
-              <span className="text-xs font-normal text-discord-muted">Custom</span>
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-discord-surface border border-discord-border focus-within:border-discord-blurple transition-colors">
-                <input
-                  type="color"
-                  value={/^#[0-9A-Fa-f]{6}$/.test(accentColor) ? accentColor : '#5865F2'}
-                  onChange={(e) => setAccentColor(e.target.value.toUpperCase())}
-                  className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0"
-                  title="Pick custom accent color"
-                />
-                <input
-                  type="text"
-                  value={customAccentInput}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setCustomAccentInput(val);
-                    const normalized = val.startsWith('#') ? val : `#${val}`;
-                    if (/^#[0-9A-Fa-f]{6}$/.test(normalized)) {
-                      setAccentColor(normalized.toUpperCase());
-                    }
+          <div className="flex flex-wrap items-center gap-2.5 pt-1">
+            {ACCENT_PRESETS.map((preset) => {
+              const isSelected = accentColor.toUpperCase() === preset.value.toUpperCase();
+              return (
+                <button
+                  key={preset.value}
+                  type="button"
+                  title={preset.label}
+                  onClick={() => setAccentColor(preset.value)}
+                  className={`relative w-8 h-8 rounded-full transition-transform cursor-pointer flex items-center justify-center ${
+                    isSelected ? 'scale-105' : 'hover:scale-105'
+                  }`}
+                  style={{
+                    backgroundColor: preset.value,
+                    boxShadow: isSelected
+                      ? `0 0 0 2px var(--color-discord-card), 0 0 0 4px ${preset.value}`
+                      : 'none',
                   }}
-                  placeholder="#5865F2"
-                  maxLength={7}
-                  className="w-20 bg-transparent text-xs font-normal text-discord-white focus:outline-none font-mono uppercase"
                 />
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
 
@@ -535,9 +501,9 @@ export const SettingsPage: React.FC = () => {
                   onClick={() => setThemeMode(option.id)}
                   className="group flex flex-col gap-2.5 text-left cursor-pointer bg-transparent border-0 p-0 focus:outline-none"
                 >
-                  {/* Visual Dashboard Preview Frame */}
+                  {/* Visual Dashboard Preview Frame (Taller) */}
                   <div
-                    className={`w-full h-36 rounded-xl p-2 transition-all overflow-hidden border-2 ${
+                    className={`w-full h-52 rounded-xl p-2.5 transition-all overflow-hidden border-2 ${
                       selected
                         ? 'border-discord-blurple shadow-sm'
                         : 'border-discord-border hover:border-discord-border-hover'
@@ -555,30 +521,31 @@ export const SettingsPage: React.FC = () => {
                       /* Split Light / Dark Preview */
                       <div className="w-full h-full rounded-lg overflow-hidden grid grid-cols-2 border border-discord-border/40">
                         {/* Left Half: Light */}
-                        <div className="bg-[#FFFFFF] p-2.5 flex flex-col gap-2 border-r border-[#DBDEE1]">
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#ED4245]" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#FEE75C]" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#57F287]" />
+                        <div className="bg-[#FFFFFF] p-3 flex flex-col gap-2.5 border-r border-[#DBDEE1]">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#ED4245]" />
+                            <span className="w-2 h-2 rounded-full bg-[#FEE75C]" />
+                            <span className="w-2 h-2 rounded-full bg-[#57F287]" />
                           </div>
-                          <div className="flex gap-2 flex-1 min-h-0">
-                            <div className="w-8 flex flex-col gap-1.5 pt-0.5">
-                              <div className="flex items-center gap-1">
+                          <div className="flex gap-2.5 flex-1 min-h-0">
+                            <div className="w-10 flex flex-col gap-2 pt-0.5">
+                              <div className="flex items-center gap-1.5">
                                 <span
-                                  className="w-2 h-2 rounded-full shrink-0"
+                                  className="w-2.5 h-2.5 rounded-full shrink-0"
                                   style={{ backgroundColor: accentColor }}
                                 />
                                 <span
-                                  className="h-1.5 flex-1 rounded-full"
+                                  className="h-2 flex-1 rounded-full"
                                   style={{ backgroundColor: accentColor }}
                                 />
                               </div>
-                              <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
-                              <div className="h-1.5 w-4/5 rounded-full bg-[#E3E5E8]" />
-                              <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
+                              <div className="h-2 w-full rounded-full bg-[#E3E5E8]" />
+                              <div className="h-2 w-4/5 rounded-full bg-[#E3E5E8]" />
+                              <div className="h-2 w-full rounded-full bg-[#E3E5E8]" />
+                              <div className="h-2 w-3/4 rounded-full bg-[#E3E5E8]" />
                             </div>
-                            <div className="flex-1 bg-[#F8F9FA] rounded-md p-2 flex flex-col gap-1.5 border border-[#EBEDEF]">
-                              <div className="text-[9px] font-normal text-[#111214] truncate">
+                            <div className="flex-1 bg-[#F8F9FA] rounded-md p-2.5 flex flex-col gap-2 border border-[#EBEDEF]">
+                              <div className="text-[10px] font-normal text-[#111214] truncate">
                                 Your dashboard
                               </div>
                               <div className="flex-1 rounded bg-[#FFFFFF] border border-[#EBEDEF]" />
@@ -587,16 +554,16 @@ export const SettingsPage: React.FC = () => {
                         </div>
 
                         {/* Right Half: Dark */}
-                        <div className="bg-[#14161D] p-2.5 flex flex-col gap-2">
-                          <div className="flex items-center justify-end gap-1">
-                            <span className="h-2 w-5 rounded bg-[#232733]" />
+                        <div className="bg-[#14161D] p-3 flex flex-col gap-2.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <span className="h-2.5 w-6 rounded bg-[#232733]" />
                             <span
-                              className="h-2 w-5 rounded"
+                              className="h-2.5 w-6 rounded"
                               style={{ backgroundColor: accentColor }}
                             />
                           </div>
-                          <div className="flex-1 bg-[#181B23] rounded-md p-2 flex flex-col gap-1.5 border border-[#232733]">
-                            <div className="text-[9px] font-normal text-[#F2F3F5] truncate">
+                          <div className="flex-1 bg-[#181B23] rounded-md p-2.5 flex flex-col gap-2 border border-[#232733]">
+                            <div className="text-[10px] font-normal text-[#F2F3F5] truncate">
                               Preview
                             </div>
                             <div className="flex-1 rounded bg-[#20242F] border border-[#232733]" />
@@ -605,42 +572,43 @@ export const SettingsPage: React.FC = () => {
                       </div>
                     ) : option.id === 'light' ? (
                       /* Full Light Preview */
-                      <div className="w-full h-full rounded-lg bg-[#FFFFFF] border border-[#DBDEE1] p-2.5 flex flex-col gap-2">
-                        <div className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#ED4245]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#FEE75C]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#57F287]" />
+                      <div className="w-full h-full rounded-lg bg-[#FFFFFF] border border-[#DBDEE1] p-3 flex flex-col gap-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-[#ED4245]" />
+                          <span className="w-2 h-2 rounded-full bg-[#FEE75C]" />
+                          <span className="w-2 h-2 rounded-full bg-[#57F287]" />
                         </div>
-                        <div className="flex gap-2.5 flex-1 min-h-0">
-                          <div className="w-10 flex flex-col gap-1.5 pt-0.5">
-                            <div className="flex items-center gap-1">
+                        <div className="flex gap-3 flex-1 min-h-0">
+                          <div className="w-12 flex flex-col gap-2 pt-0.5">
+                            <div className="flex items-center gap-1.5">
                               <span
-                                className="w-2 h-2 rounded-full shrink-0"
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
                                 style={{ backgroundColor: accentColor }}
                               />
                               <span
-                                className="h-1.5 flex-1 rounded-full"
+                                className="h-2 flex-1 rounded-full"
                                 style={{ backgroundColor: accentColor }}
                               />
                             </div>
-                            <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
-                            <div className="h-1.5 w-4/5 rounded-full bg-[#E3E5E8]" />
-                            <div className="h-1.5 w-full rounded-full bg-[#E3E5E8]" />
+                            <div className="h-2 w-full rounded-full bg-[#E3E5E8]" />
+                            <div className="h-2 w-4/5 rounded-full bg-[#E3E5E8]" />
+                            <div className="h-2 w-full rounded-full bg-[#E3E5E8]" />
+                            <div className="h-2 w-3/4 rounded-full bg-[#E3E5E8]" />
                           </div>
-                          <div className="flex-1 bg-[#F8F9FA] rounded-md p-2 flex flex-col gap-1.5 border border-[#EBEDEF]">
+                          <div className="flex-1 bg-[#F8F9FA] rounded-md p-2.5 flex flex-col gap-2 border border-[#EBEDEF]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[9px] font-normal text-[#111214]">
+                              <span className="text-[10px] font-normal text-[#111214]">
                                 Your dashboard
                               </span>
-                              <div className="flex items-center gap-1">
-                                <span className="h-2 w-4 rounded bg-[#E3E5E8]" />
+                              <div className="flex items-center gap-1.5">
+                                <span className="h-2.5 w-6 rounded bg-[#E3E5E8]" />
                                 <span
-                                  className="h-2 w-4 rounded"
+                                  className="h-2.5 w-6 rounded"
                                   style={{ backgroundColor: accentColor }}
                                 />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5 flex-1">
+                            <div className="grid grid-cols-2 gap-2 flex-1">
                               <div className="rounded bg-[#FFFFFF] border border-[#EBEDEF]" />
                               <div className="rounded bg-[#FFFFFF] border border-[#EBEDEF]" />
                             </div>
@@ -649,42 +617,43 @@ export const SettingsPage: React.FC = () => {
                       </div>
                     ) : (
                       /* Full Dark Preview */
-                      <div className="w-full h-full rounded-lg bg-[#14161D] border border-[#232733] p-2.5 flex flex-col gap-2">
-                        <div className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#ED4245]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#FEE75C]" />
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#57F287]" />
+                      <div className="w-full h-full rounded-lg bg-[#14161D] border border-[#232733] p-3 flex flex-col gap-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-[#ED4245]" />
+                          <span className="w-2 h-2 rounded-full bg-[#FEE75C]" />
+                          <span className="w-2 h-2 rounded-full bg-[#57F287]" />
                         </div>
-                        <div className="flex gap-2.5 flex-1 min-h-0">
-                          <div className="w-10 flex flex-col gap-1.5 pt-0.5">
-                            <div className="flex items-center gap-1">
+                        <div className="flex gap-3 flex-1 min-h-0">
+                          <div className="w-12 flex flex-col gap-2 pt-0.5">
+                            <div className="flex items-center gap-1.5">
                               <span
-                                className="w-2 h-2 rounded-full shrink-0"
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
                                 style={{ backgroundColor: accentColor }}
                               />
                               <span
-                                className="h-1.5 flex-1 rounded-full"
+                                className="h-2 flex-1 rounded-full"
                                 style={{ backgroundColor: accentColor }}
                               />
                             </div>
-                            <div className="h-1.5 w-full rounded-full bg-[#232733]" />
-                            <div className="h-1.5 w-4/5 rounded-full bg-[#232733]" />
-                            <div className="h-1.5 w-full rounded-full bg-[#232733]" />
+                            <div className="h-2 w-full rounded-full bg-[#232733]" />
+                            <div className="h-2 w-4/5 rounded-full bg-[#232733]" />
+                            <div className="h-2 w-full rounded-full bg-[#232733]" />
+                            <div className="h-2 w-3/4 rounded-full bg-[#232733]" />
                           </div>
-                          <div className="flex-1 bg-[#181B23] rounded-md p-2 flex flex-col gap-1.5 border border-[#232733]">
+                          <div className="flex-1 bg-[#181B23] rounded-md p-2.5 flex flex-col gap-2 border border-[#232733]">
                             <div className="flex items-center justify-between">
-                              <span className="text-[9px] font-normal text-[#F2F3F5]">
+                              <span className="text-[10px] font-normal text-[#F2F3F5]">
                                 Your dashboard
                               </span>
-                              <div className="flex items-center gap-1">
-                                <span className="h-2 w-4 rounded bg-[#232733]" />
+                              <div className="flex items-center gap-1.5">
+                                <span className="h-2.5 w-6 rounded bg-[#232733]" />
                                 <span
-                                  className="h-2 w-4 rounded"
+                                  className="h-2.5 w-6 rounded"
                                   style={{ backgroundColor: accentColor }}
                                 />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-1.5 flex-1">
+                            <div className="grid grid-cols-2 gap-2 flex-1">
                               <div className="rounded bg-[#20242F] border border-[#232733]" />
                               <div className="rounded bg-[#20242F] border border-[#232733]" />
                             </div>
