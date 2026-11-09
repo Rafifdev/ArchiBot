@@ -2434,6 +2434,19 @@ html.dark .agy-landing .footer-antigravity text,
   font-weight: 500;
 }
 
+.agy-landing .post .tag-chip {
+  background: var(--theme-surface-container, #f1f3f4);
+  color: var(--palette-grey-800, #3c4043);
+  border-radius: 12px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+}
+
 @media (width <= 1024px) {
   .agy-landing .post .breadcrumb-wrapper,
   .agy-landing .post .header-section,
@@ -2957,7 +2970,7 @@ html.dark .agy-landing .post .tag-chip,
 .agy-landing.dark .post .tag-chip {
   background-color: #181B23;
   color: #949BA4;
-  border: 1px solid #232733;
+  border: none !important;
 }
 
 html[data-theme='dark'] .agy-landing .post .tag-chip:hover,
@@ -2966,7 +2979,7 @@ html.dark .agy-landing .post .tag-chip:hover,
 .agy-landing.dark .post .tag-chip:hover {
   background-color: #20242F;
   color: #F2F3F5;
-  border-color: #343A4D;
+  border: none !important;
 }
 
 /* Landing Page Elements in Dark Mode */

@@ -1767,7 +1767,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
               </div>
             </div>
 
-            {/* Article Content Section (1:1 with Antigravity article body) */}
+            {/* Article Content Section (Pure text without blockquote border or dark code box) */}
             <div className="content-section">
               <p>
                 <strong>{currentArticle.summary}</strong>
@@ -1782,33 +1782,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
               </p>
 
-              <blockquote>
-                <p>
-                  "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
-                  totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae."
-                </p>
-              </blockquote>
+              <p>
+                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium,
+                totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae.
+              </p>
 
               <h3>Excepteur sint occaecat cupidatat</h3>
               <p>
                 Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni
                 dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
               </p>
-
-              <div className="article-code-box">
-                <pre>
-                  <code>{`// Example ArchiBot configuration snippet
-import { createArchiBotEngine } from '@archibot/core';
-
-const engine = createArchiBotEngine({
-  guildId: process.env.DISCORD_GUILD_ID,
-  features: ['architect', 'voice', 'giveaways', 'backup'],
-  analytics: { enabled: true, tracking: 'high-accuracy' }
-});
-
-await engine.start();`}</code>
-                </pre>
-              </div>
 
               <p>
                 At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti
