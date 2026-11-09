@@ -2320,9 +2320,9 @@ html.dark .agy-landing .footer-antigravity text,
 }
 
 .agy-landing .post .hero-image-wrapper {
-  width: calc(100% + 80px);
-  max-width: calc(100% + 80px);
-  margin: var(--space-xl, 32px) -40px var(--space-3xl, 56px);
+  width: calc(100% + 120px);
+  max-width: calc(100% + 120px);
+  margin: var(--space-xl, 32px) -60px var(--space-3xl, 56px);
   border-radius: var(--shape-corner-xl, 24px);
   grid-column: 3 / span 8;
   overflow: hidden;
