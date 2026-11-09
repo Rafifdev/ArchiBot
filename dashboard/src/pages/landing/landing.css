@@ -1711,6 +1711,15 @@ html.dark .agy-landing .footer-antigravity text,
   padding-block: 42px 32px;
 }
 
+.agy-landing .footer-google-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  width: 100%;
+}
+
 .agy-landing .footer-google-logo {
   color: var(--theme-surface-on-surface-variant);
   display: inline-flex;

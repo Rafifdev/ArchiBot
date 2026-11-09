@@ -3590,14 +3590,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
         {/* Bottom Legal / Brand Bar (Pure ArchiBot) */}
         <div className="footer-google-links">
           <div className="grid-container">
-            <div className="grid-row" style={{ alignItems: 'center' }}>
-              <div className="grid-col col-xs-4 col-sm-3 col-md-5">
-                <Link to="/" className="footer-google-logo" aria-label="ArchiBot" onClick={openLandingView}>
-                  <ArchiBrandMark size={20} />
-                  <span>ArchiBot</span>
-                </Link>
-              </div>
-              <div className="footer-google-nav grid-col col-xs-4 col-sm-5 col-md-7">
+            <div
+              className="footer-google-row"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+                width: '100%',
+              }}
+            >
+              <Link to="/" className="footer-google-logo" aria-label="ArchiBot" onClick={openLandingView}>
+                <ArchiBrandMark size={20} />
+                <span>ArchiBot</span>
+              </Link>
+              <div
+                className="footer-google-nav"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-lg)',
+                }}
+              >
                 <a href="#hero" className="caption" onClick={openLandingView}>
                   <span>About Archibot</span>
                 </a>
