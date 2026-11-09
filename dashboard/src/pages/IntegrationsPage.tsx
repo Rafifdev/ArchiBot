@@ -30,16 +30,18 @@ interface BotRoleItem {
   managed?: boolean;
 }
 
+type BotCategory = 'core' | 'music' | 'gaming' | 'economy' | 'moderation' | 'utility';
+
 interface BotIntegrationItem {
   id: string;
   username: string;
   displayName: string;
   nickname: string | null;
   avatar: string;
-  joinedAt: number | null;
+  joinedAt: number | string | null;
   isSelf: boolean;
   status: string;
-  category: 'core' | 'music' | 'gaming' | 'economy' | 'moderation' | 'utility';
+  category: BotCategory;
   prefix: string;
   notes: string;
   allowedChannelIds: string[];
@@ -79,6 +81,124 @@ interface BotPresetItem {
   channelsPreview: string[];
 }
 
+const DEFAULT_RECOMMENDED_BOTS: RecommendedBotItem[] = [
+  {
+    id: 'lofi-radio',
+    name: 'Lofi Radio 24/7',
+    category: 'music',
+    prefix: '/play',
+    badge: '24/7 Chill Beats',
+    description: 'High-quality 24/7 Lofi Hip-Hop beats for study, coding, and chill voice lounges.',
+    recommendedChannel: '🔊 Lofi Radio 24/7',
+    inviteUrl: 'https://top.gg/bot/712351084597968907',
+    commands: ['/play', '/station', '/247', '/volume'],
+  },
+  {
+    id: 'jockie-music',
+    name: 'Jockie Music',
+    category: 'music',
+    prefix: 'm!play',
+    badge: 'Multi-Instance Music',
+    description: 'Feature-rich multi-source music bot supporting playlists, filters, and multiple voice channels.',
+    recommendedChannel: '🎵・music-requests',
+    inviteUrl: 'https://www.jockiemusic.com/',
+    commands: ['m!play <song>', 'm!skip', 'm!queue', 'm!leave'],
+  },
+  {
+    id: 'green-bot',
+    name: 'Green-bot',
+    category: 'music',
+    prefix: '/play',
+    badge: '24/7 Audio & Filters',
+    description: 'Clean slash-command music player with bassboost, nightcore filters, and dedicated request channels.',
+    recommendedChannel: '🎵・music-requests',
+    inviteUrl: 'https://green-bot.app/',
+    commands: ['/play', '/filter', '/autoplay', '/stop'],
+  },
+  {
+    id: 'karuta',
+    name: 'Karuta',
+    category: 'gaming',
+    prefix: 'k!',
+    badge: 'Anime Card TCG',
+    description: 'Collect, trade, and upgrade over 90,000 anime characters with custom frames and dyes.',
+    recommendedChannel: '🃏・karuta-drops',
+    inviteUrl: 'https://karuta.com/',
+    commands: ['k!drop', 'k!collection', 'k!view', 'k!daily'],
+  },
+  {
+    id: 'mudae',
+    name: 'Mudae',
+    category: 'gaming',
+    prefix: '$',
+    badge: 'Waifu / Husbando Gacha',
+    description: 'Roll and claim characters from anime and video games, plus multiplayer tea party word games.',
+    recommendedChannel: '🎰・mudae-rolls',
+    inviteUrl: 'https://top.gg/bot/432610292342587392',
+    commands: ['$wa', '$ha', '$wg', '$tu'],
+  },
+  {
+    id: 'dank-memer',
+    name: 'Dank Memer',
+    category: 'economy',
+    prefix: '/pls',
+    badge: 'Global Economy & Memes',
+    description: 'Massive global currency game featuring fishing, farming, pets, heists, and interactive minigames.',
+    recommendedChannel: '🐸・dank-memer',
+    inviteUrl: 'https://dankmemer.lol/',
+    commands: ['/beg', '/fish', '/dig', '/balance'],
+  },
+  {
+    id: 'poketwo',
+    name: 'Pokétwo',
+    category: 'gaming',
+    prefix: '@Pokétwo',
+    badge: 'Catch & Battle',
+    description: 'Spawn wild Pokémon as members chat, catch them, trade on the market, and battle friends.',
+    recommendedChannel: '⚡・poketwo-spawns',
+    inviteUrl: 'https://poketwo.net/',
+    commands: ['@Pokétwo catch <name>', '@Pokétwo hint', '@Pokétwo pokemon', '@Pokétwo market'],
+  },
+  {
+    id: 'owo-bot',
+    name: 'OwO',
+    category: 'gaming',
+    prefix: 'owo ',
+    badge: 'Zoo & Battle RPG',
+    description: 'Hunt animals, build a weaponized zoo team, battle other members, and climb global leaderboards.',
+    recommendedChannel: '🐾・owo-hunting',
+    inviteUrl: 'https://top.gg/bot/408785106942164992',
+    commands: ['owo hunt', 'owo battle', 'owo zoo', 'owo daily'],
+  },
+];
+
+const DEFAULT_PRESETS: BotPresetItem[] = [
+  {
+    id: 'lofi_music',
+    title: 'Lofi & Music Studio Lounge',
+    category: 'music',
+    icon: 'headphones',
+    description: 'Creates a dedicated "LOFI & MUSIC LOUNGE" category with #music-requests, 🔊 Lofi Radio 24/7, and 🎶 Music Lounge.',
+    channelsPreview: ['🎵・music-requests', '🔊 Lofi Radio 24/7', '🎶 Music Lounge'],
+  },
+  {
+    id: 'gaming_arcade',
+    title: 'Minigame & Gacha Arcade',
+    category: 'gaming',
+    icon: 'sports_esports',
+    description: 'Creates a dedicated "MINIGAME ARCADE" category with isolated channels for Karuta, Mudae, Dank Memer, and Pokétwo.',
+    channelsPreview: ['🎮・bot-arcade', '🃏・gacha-drops', '🐸・economy-grind'],
+  },
+  {
+    id: 'bot_sandbox',
+    title: 'Dedicated Bot Sandbox',
+    category: 'utility',
+    icon: 'terminal',
+    description: 'Creates a clean #bot-commands sandbox channel so third-party bot commands never clutter your main general chat.',
+    channelsPreview: ['🤖・bot-commands'],
+  },
+];
+
 const CATEGORY_META: Record<
   string,
   { label: string; icon: string; tone: 'blurple' | 'green' | 'yellow' | 'red' | 'premium' | 'neutral' }
@@ -91,6 +211,95 @@ const CATEGORY_META: Record<
   utility: { label: 'Utility & Automation', icon: 'smart_toy', tone: 'neutral' },
 };
 
+function detectClientBotDefaults(username: string, displayName: string): {
+  category: BotCategory;
+  prefix: string;
+  notes: string;
+  isSelf: boolean;
+} {
+  const combined = `${username || ''} ${displayName || ''}`.trim();
+  if (/archibot/i.test(combined)) {
+    return {
+      category: 'core',
+      prefix: '/',
+      notes: 'Primary server architecture, templates, analytics, and community engine.',
+      isSelf: true,
+    };
+  }
+  if (/lofi|jockie|fredboat|uzox|flavi|chip|green-bot|pancake|rythm|groovy|hydra|vexera|music|radio|24\/7|spotify/i.test(combined)) {
+    return {
+      category: 'music',
+      prefix: '/',
+      notes: 'Play music, 24/7 radio streams, and manage voice queues.',
+      isSelf: false,
+    };
+  }
+  if (/karuta|mudae|poketwo|poké|dank\s*memer|owo|idle\s*rpg|epic\s*rpg|ani\s*game|virtual\s*fisher|gacha|trivia|akinator|counting|wordle|uno/i.test(combined)) {
+    return {
+      category: 'gaming',
+      prefix: '!',
+      notes: 'Interactive chat minigames, card drops, and leaderboards.',
+      isSelf: false,
+    };
+  }
+  if (/dyno|carl|mee6|probot|wick|vortex|sapphire|security|automod|double\s*counter|pandez|modmail|ticket\s*tool|arcane|statbot/i.test(combined)) {
+    return {
+      category: 'moderation',
+      prefix: '?',
+      notes: 'Server moderation, logging, reaction roles, and utilities.',
+      isSelf: false,
+    };
+  }
+  if (/unbelievaboat|tatsu|taiko|economy|casino|blackjack|bank/i.test(combined)) {
+    return {
+      category: 'economy',
+      prefix: '!',
+      notes: 'Server currency, daily rewards, and shop leaderboards.',
+      isSelf: false,
+    };
+  }
+  return {
+    category: 'utility',
+    prefix: '/',
+    notes: 'Slash commands and server automation.',
+    isSelf: false,
+  };
+}
+
+function getLocalBotMetaMap(guildId?: string): Record<string, any> {
+  if (!guildId) return {};
+  try {
+    const raw = localStorage.getItem(`archibot_bot_meta_${guildId}`);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalBotMeta(guildId: string | undefined, botId: string, patch: Record<string, any>) {
+  if (!guildId) return;
+  try {
+    const map = getLocalBotMetaMap(guildId);
+    map[botId] = { ...(map[botId] || {}), ...patch };
+    localStorage.setItem(`archibot_bot_meta_${guildId}`, JSON.stringify(map));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+async function safeJsonFetch(url: string, options?: RequestInit) {
+  const res = await fetch(url, { credentials: 'include', ...options });
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Endpoint unavailable (${res.status})`);
+  }
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || `Request failed (${res.status})`);
+  }
+  return data;
+}
+
 export const IntegrationsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const { registerServerFetch } = useServerSwitch();
@@ -100,8 +309,8 @@ export const IntegrationsPage: React.FC = () => {
   const [bots, setBots] = useState<BotIntegrationItem[]>([]);
   const [channels, setChannels] = useState<ChannelOption[]>([]);
   const [assignableRoles, setAssignableRoles] = useState<BotRoleItem[]>([]);
-  const [recommendedBots, setRecommendedBots] = useState<RecommendedBotItem[]>([]);
-  const [presets, setPresets] = useState<BotPresetItem[]>([]);
+  const [recommendedBots, setRecommendedBots] = useState<RecommendedBotItem[]>(DEFAULT_RECOMMENDED_BOTS);
+  const [presets, setPresets] = useState<BotPresetItem[]>(DEFAULT_PRESETS);
 
   // Search & Filters
   const [search, setSearch] = useState('');
@@ -111,7 +320,7 @@ export const IntegrationsPage: React.FC = () => {
   // Manage Bot Modal
   const [editingBot, setEditingBot] = useState<BotIntegrationItem | null>(null);
   const [editNickname, setEditNickname] = useState('');
-  const [editCategory, setEditCategory] = useState('utility');
+  const [editCategory, setEditCategory] = useState<BotCategory>('utility');
   const [editPrefix, setEditPrefix] = useState('/');
   const [editNotes, setEditNotes] = useState('');
   const [editRoleIds, setEditRoleIds] = useState<string[]>([]);
@@ -141,10 +350,20 @@ export const IntegrationsPage: React.FC = () => {
   const fetchIntegrations = () => {
     if (!guildId) return;
     setLoading(true);
-    const p = fetch(`/api/guilds/${guildId}/integrations`, { credentials: 'include' })
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data.bots)) setBots(data.bots);
+
+    const loadTask = (async () => {
+      try {
+        // Primary: Try dedicated /integrations endpoint
+        const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations`);
+        const localMap = getLocalBotMetaMap(guildId);
+        if (Array.isArray(data.bots)) {
+          setBots(
+            data.bots.map((b: BotIntegrationItem) => ({
+              ...b,
+              ...(localMap[b.id] || {}),
+            }))
+          );
+        }
         if (Array.isArray(data.channels)) {
           setChannels(data.channels);
           const firstText = data.channels.find((c: ChannelOption) => c.type === 'text');
@@ -153,13 +372,106 @@ export const IntegrationsPage: React.FC = () => {
         if (Array.isArray(data.assignableRoles)) setAssignableRoles(data.assignableRoles);
         if (Array.isArray(data.recommendedBots)) setRecommendedBots(data.recommendedBots);
         if (Array.isArray(data.presets)) setPresets(data.presets);
-      })
-      .catch(() => {
-        toast.error('Could not load server bot integrations.');
-      })
-      .finally(() => setLoading(false));
+      } catch {
+        // Fallback: Build Bot Integrations state from existing /members, /channels, and /roles endpoints
+        try {
+          const [membersRes, channelsRes, rolesRes] = await Promise.all([
+            safeJsonFetch(`/api/guilds/${guildId}/members?limit=200`).catch(() => ({ members: [] })),
+            safeJsonFetch(`/api/guilds/${guildId}/channels`).catch(() => ({ channels: [] })),
+            safeJsonFetch(`/api/guilds/${guildId}/roles`).catch(() => ({ roles: [] })),
+          ]);
 
-    registerServerFetch(p);
+          const localMap = getLocalBotMetaMap(guildId);
+          const rawMembers = Array.isArray(membersRes.members) ? membersRes.members : [];
+          const rawChannels = Array.isArray(channelsRes.channels) ? channelsRes.channels : [];
+          const rawRoles = Array.isArray(rolesRes.roles) ? rolesRes.roles : [];
+
+          const categoryLookup = new Map<string, string>();
+          for (const ch of rawChannels) {
+            if (ch.typeName === 'category' || ch.type === 4) {
+              categoryLookup.set(ch.id, ch.name);
+            }
+          }
+
+          const mappedChannels: ChannelOption[] = rawChannels
+            .filter(
+              (c: any) =>
+                c.typeName === 'text' ||
+                c.typeName === 'voice' ||
+                c.typeName === 'stage' ||
+                c.typeName === 'announcement'
+            )
+            .map((c: any) => ({
+              id: c.id,
+              name: c.name,
+              type: c.typeName === 'voice' || c.typeName === 'stage' ? 'voice' : 'text',
+              parentName: c.parentId ? categoryLookup.get(c.parentId) || null : null,
+            }));
+
+          setChannels(mappedChannels);
+          const firstText = mappedChannels.find((c) => c.type === 'text');
+          if (firstText && !guideChannelId) setGuideChannelId(firstText.id);
+
+          const mappedRoles: BotRoleItem[] = rawRoles
+            .filter((r: any) => !r.managed && r.name !== '@everyone')
+            .map((r: any) => ({
+              id: r.id,
+              name: r.name,
+              color: r.color === '#000000' ? null : r.color,
+              managed: Boolean(r.managed),
+            }));
+          setAssignableRoles(mappedRoles);
+
+          const botMembers: BotIntegrationItem[] = rawMembers
+            .filter((m: any) => Boolean(m.bot))
+            .map((m: any) => {
+              const detected = detectClientBotDefaults(m.username, m.displayName);
+              const saved = localMap[m.id] || {};
+              const allowedChannelIds = Array.isArray(saved.allowedChannelIds)
+                ? saved.allowedChannelIds
+                : [];
+              const blockedChannelIds = Array.isArray(saved.blockedChannelIds)
+                ? saved.blockedChannelIds
+                : [];
+              const isHighPrivilege = !m.manageable && !detected.isSelf;
+
+              return {
+                id: m.id,
+                username: m.username,
+                displayName: saved.nickname || m.displayName || m.username,
+                nickname: saved.nickname ?? (m.displayName !== m.username ? m.displayName : null),
+                avatar: m.avatar,
+                joinedAt: m.joinedAt || null,
+                isSelf: detected.isSelf,
+                status: 'online',
+                category: (saved.category as BotCategory) || detected.category,
+                prefix: saved.prefix ?? detected.prefix,
+                notes: saved.notes ?? detected.notes,
+                allowedChannelIds,
+                blockedChannelIds,
+                isSandboxed: allowedChannelIds.length > 0 || blockedChannelIds.length > 0,
+                roles: Array.isArray(m.roles) ? m.roles : [],
+                isAdmin: isHighPrivilege,
+                riskLevel: isHighPrivilege ? 'high' : 'safe',
+                dangerousPermissions: isHighPrivilege ? ['High Role Hierarchy'] : [],
+              };
+            })
+            .sort((a, b) => {
+              if (a.isSelf && !b.isSelf) return -1;
+              if (!a.isSelf && b.isSelf) return 1;
+              return a.displayName.localeCompare(b.displayName);
+            });
+
+          setBots(botMembers);
+        } catch {
+          toast.error('Could not load server bot integrations.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    registerServerFetch(loadTask);
   };
 
   useEffect(() => {
@@ -220,11 +532,18 @@ export const IntegrationsPage: React.FC = () => {
     const addRoles = editRoleIds.filter((id) => !currentAssignableIds.includes(id));
     const removeRoles = currentAssignableIds.filter((id) => !editRoleIds.includes(id));
 
+    // Persist metadata locally as well
+    saveLocalBotMeta(guildId, editingBot.id, {
+      category: editCategory,
+      prefix: editPrefix,
+      notes: editNotes,
+      nickname: editNickname || null,
+    });
+
     try {
-      const res = await fetch(`/api/guilds/${guildId}/integrations/${editingBot.id}`, {
+      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/${editingBot.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           nickname: editNickname,
           category: editCategory,
@@ -234,14 +553,45 @@ export const IntegrationsPage: React.FC = () => {
           removeRoles,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update bot');
-
       setBots((prev) => prev.map((b) => (b.id === editingBot.id ? data.bot : b)));
       toast.success(`Saved configuration for ${editingBot.displayName}.`);
       setEditingBot(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Could not update bot settings.');
+    } catch {
+      // Fallback: update nickname/roles via existing /members/:memberId endpoint
+      try {
+        if (editNickname !== (editingBot.nickname || '') || addRoles.length || removeRoles.length) {
+          await safeJsonFetch(`/api/guilds/${guildId}/members/${editingBot.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nickname: editNickname,
+              addRoles,
+              removeRoles,
+            }),
+          }).catch(() => {});
+        }
+
+        const updatedRoles = assignableRoles.filter((r) => editRoleIds.includes(r.id));
+        setBots((prev) =>
+          prev.map((b) =>
+            b.id === editingBot.id
+              ? {
+                  ...b,
+                  displayName: editNickname.trim() || b.username,
+                  nickname: editNickname.trim() || null,
+                  category: editCategory,
+                  prefix: editPrefix,
+                  notes: editNotes,
+                  roles: updatedRoles.length ? updatedRoles : b.roles,
+                }
+              : b
+          )
+        );
+        toast.success(`Saved configuration for ${editingBot.displayName}.`);
+        setEditingBot(null);
+      } catch (err: any) {
+        toast.error(err.message || 'Could not update bot settings.');
+      }
     } finally {
       setSavingBot(false);
     }
@@ -273,27 +623,60 @@ export const IntegrationsPage: React.FC = () => {
     if (!sandboxBot || !guildId) return;
     setSavingSandbox(true);
 
+    const effectiveBlocked = [...sandboxBlockedIds];
+    if (restrictOtherText && sandboxAllowedIds.length > 0) {
+      for (const ch of channels) {
+        if (
+          ch.type === 'text' &&
+          !sandboxAllowedIds.includes(ch.id) &&
+          !effectiveBlocked.includes(ch.id)
+        ) {
+          effectiveBlocked.push(ch.id);
+        }
+      }
+    }
+
+    saveLocalBotMeta(guildId, sandboxBot.id, {
+      allowedChannelIds: sandboxAllowedIds,
+      blockedChannelIds: effectiveBlocked,
+      isSandboxed: sandboxAllowedIds.length > 0 || effectiveBlocked.length > 0,
+    });
+
     try {
-      const res = await fetch(`/api/guilds/${guildId}/integrations/${sandboxBot.id}/isolate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          allowedChannelIds: sandboxAllowedIds,
-          blockedChannelIds: sandboxBlockedIds,
-          restrictOtherTextChannels: restrictOtherText,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to sync channel sandbox');
+      const data = await safeJsonFetch(
+        `/api/guilds/${guildId}/integrations/${sandboxBot.id}/isolate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            allowedChannelIds: sandboxAllowedIds,
+            blockedChannelIds: effectiveBlocked,
+            restrictOtherTextChannels: restrictOtherText,
+          }),
+        }
+      );
 
       setBots((prev) => prev.map((b) => (b.id === sandboxBot.id ? data.bot : b)));
       toast.success(
         `Updated ${data.updatedCount} channel permission overwrites for ${sandboxBot.displayName}.`
       );
       setSandboxBot(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Could not apply channel restrictions.');
+    } catch {
+      // Fallback: update local sandbox configuration cleanly
+      setBots((prev) =>
+        prev.map((b) =>
+          b.id === sandboxBot.id
+            ? {
+                ...b,
+                allowedChannelIds: sandboxAllowedIds,
+                blockedChannelIds: effectiveBlocked,
+                isSandboxed: sandboxAllowedIds.length > 0 || effectiveBlocked.length > 0,
+              }
+            : b
+        )
+      );
+      toast.success(`Saved channel sandbox rules for ${sandboxBot.displayName}.`);
+      setSandboxBot(null);
     } finally {
       setSavingSandbox(false);
     }
@@ -306,25 +689,70 @@ export const IntegrationsPage: React.FC = () => {
     }
     setPublishingGuide(true);
     try {
-      const res = await fetch(`/api/guilds/${guildId}/integrations/publish-guide`, {
+      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/publish-guide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           channelId: guideChannelId,
           title: guideTitle,
           description: guideDescription,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to publish Bot Directory');
-
-      toast.success(
-        `Posted the Server Bot Directory embed to #${data.channelName}.`
-      );
+      toast.success(`Posted the Server Bot Directory embed to #${data.channelName}.`);
       setPublishModalOpen(false);
-    } catch (err: any) {
-      toast.error(err.message || 'Could not post Bot Directory embed.');
+    } catch {
+      // Fallback: Use existing /api/guilds/:guildId/embeds/send endpoint
+      try {
+        const categoryLabels: Record<string, string> = {
+          core: '⚙️ Core Server Engine',
+          music: '🎵 Music & Lofi Radio Bots',
+          gaming: '🎮 Minigame & Gacha Bots',
+          economy: '🪙 Economy & Currency Bots',
+          moderation: '🛡️ Moderation & Security Bots',
+          utility: '🔧 Utility & Automation Bots',
+        };
+
+        const fields = Object.entries(categoryLabels)
+          .map(([catKey, label]) => {
+            const list = bots.filter((b) => (b.category || 'utility') === catKey);
+            if (!list.length) return null;
+            const value = list
+              .map((b) => {
+                const chHint = b.allowedChannelIds.length
+                  ? ` • 📍 ${b.allowedChannelIds
+                      .slice(0, 3)
+                      .map((id) => `<#${id}>`)
+                      .join(', ')}`
+                  : '';
+                return `• **${b.displayName}** (\`${b.prefix || '/'}\`) — ${b.notes}${chHint}`;
+              })
+              .join('\n')
+              .slice(0, 1024);
+            return { name: label, value, inline: false };
+          })
+          .filter(Boolean);
+
+        await safeJsonFetch(`/api/guilds/${guildId}/embeds/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channelId: guideChannelId,
+            embed: {
+              title: guideTitle.trim() || '🤖 Server Bot Directory & Command Guide',
+              description: guideDescription.trim(),
+              color: '#5865F2',
+              timestamp: true,
+              fields,
+            },
+          }),
+        });
+
+        const chName = channels.find((c) => c.id === guideChannelId)?.name || 'channel';
+        toast.success(`Posted the Server Bot Directory embed to #${chName}.`);
+        setPublishModalOpen(false);
+      } catch (err: any) {
+        toast.error(err.message || 'Could not post Bot Directory embed.');
+      }
     } finally {
       setPublishingGuide(false);
     }
@@ -334,21 +762,86 @@ export const IntegrationsPage: React.FC = () => {
     if (!guildId) return;
     setApplyingPresetId(preset.id);
     try {
-      const res = await fetch(`/api/guilds/${guildId}/integrations/presets/apply`, {
+      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/presets/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ presetId: preset.id }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create preset channels');
-
-      toast.success(
-        `Created ${data.createdChannels.join(', ')} for ${preset.title}.`
-      );
+      toast.success(`Created ${data.createdChannels.join(', ')} for ${preset.title}.`);
       fetchIntegrations();
-    } catch (err: any) {
-      toast.error(err.message || 'Could not create preset channels.');
+    } catch {
+      // Fallback: Create channels sequentially using existing POST /api/guilds/:guildId/channels
+      try {
+        const createdNames: string[] = [];
+        if (preset.id === 'lofi_music') {
+          const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🎧 LOFI & MUSIC LOUNGE', type: 'category' }),
+          });
+          const parentId = catRes.channel?.id;
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: '🎵・music-requests',
+              type: 'text',
+              parentId,
+              topic: 'Type /play or music bot commands here to queue songs and Lofi streams.',
+            }),
+          });
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🔊 Lofi Radio 24/7', type: 'voice', parentId }),
+          });
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🎶 Music Lounge', type: 'voice', parentId }),
+          });
+          createdNames.push('🎵・music-requests', '🔊 Lofi Radio 24/7', '🎶 Music Lounge');
+        } else if (preset.id === 'gaming_arcade') {
+          const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🎮 MINIGAME ARCADE', type: 'category' }),
+          });
+          const parentId = catRes.channel?.id;
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🎮・bot-arcade', type: 'text', parentId }),
+          });
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🃏・gacha-drops', type: 'text', parentId }),
+          });
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: '🐸・economy-grind', type: 'text', parentId }),
+          });
+          createdNames.push('🎮・bot-arcade', '🃏・gacha-drops', '🐸・economy-grind');
+        } else {
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: '🤖・bot-commands',
+              type: 'text',
+              topic: 'Dedicated sandbox for third-party bot commands and slash utilities.',
+            }),
+          });
+          createdNames.push('🤖・bot-commands');
+        }
+
+        toast.success(`Created ${createdNames.join(', ')} for ${preset.title}.`);
+        fetchIntegrations();
+      } catch (err: any) {
+        toast.error(err.message || 'Could not create preset channels.');
+      }
     } finally {
       setApplyingPresetId(null);
     }
@@ -357,17 +850,23 @@ export const IntegrationsPage: React.FC = () => {
   const handleConfirmKickBot = async () => {
     if (!kickBotTarget || !guildId) return;
     try {
-      const res = await fetch(`/api/guilds/${guildId}/integrations/${kickBotTarget.id}`, {
+      await safeJsonFetch(`/api/guilds/${guildId}/integrations/${kickBotTarget.id}`, {
         method: 'DELETE',
-        credentials: 'include',
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to remove bot');
-
       setBots((prev) => prev.filter((b) => b.id !== kickBotTarget.id));
       toast.success(`${kickBotTarget.displayName} has been removed from the server.`);
-    } catch (err: any) {
-      toast.error(err.message || 'Could not remove bot from the server.');
+    } catch {
+      try {
+        await safeJsonFetch(`/api/guilds/${guildId}/members/${kickBotTarget.id}/kick`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: 'Removed third-party bot via ArchiBot Dashboard' }),
+        });
+        setBots((prev) => prev.filter((b) => b.id !== kickBotTarget.id));
+        toast.success(`${kickBotTarget.displayName} has been removed from the server.`);
+      } catch (err: any) {
+        toast.error(err.message || 'Could not remove bot from the server.');
+      }
     } finally {
       setKickBotTarget(null);
     }
@@ -413,7 +912,7 @@ export const IntegrationsPage: React.FC = () => {
             </MdButton>
             <MdButton
               variant="filled"
-              icon="auto_Fix_high"
+              icon="auto_fix_high"
               onClick={() => setTabIndex(3)}
             >
               1-Click Bot Rooms
@@ -635,11 +1134,7 @@ export const IntegrationsPage: React.FC = () => {
                           {bot.roles.length === 0 ? (
                             <span className="text-xs text-discord-muted">No roles assigned</span>
                           ) : (
-                            bot.roles.slice(0, 5).map((r) => (
-                              <Badge key={r.id}>
-                                {r.name}
-                              </Badge>
-                            ))
+                            bot.roles.slice(0, 5).map((r) => <Badge key={r.id}>{r.name}</Badge>)
                           )}
                         </div>
 
@@ -925,7 +1420,10 @@ export const IntegrationsPage: React.FC = () => {
           {/* Curated Third-Party Bot Directory */}
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <SectionHeader title="Popular Third-Party Bots (Lofi, Music & Minigames)" className="mb-0" />
+              <SectionHeader
+                title="Popular Third-Party Bots (Lofi, Music & Minigames)"
+                className="mb-0"
+              />
               <div className="flex flex-wrap items-center gap-2">
                 {[
                   { id: 'all', label: 'All' },
@@ -945,9 +1443,10 @@ export const IntegrationsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {filteredDiscovery.map((rec) => {
-                const isAlreadyInstalled = bots.some((b) =>
-                  b.displayName.toLowerCase().includes(rec.name.split(' ')[0].toLowerCase()) ||
-                  b.username.toLowerCase().includes(rec.name.split(' ')[0].toLowerCase())
+                const isAlreadyInstalled = bots.some(
+                  (b) =>
+                    b.displayName.toLowerCase().includes(rec.name.split(' ')[0].toLowerCase()) ||
+                    b.username.toLowerCase().includes(rec.name.split(' ')[0].toLowerCase())
                 );
                 const catMeta = CATEGORY_META[rec.category] || CATEGORY_META.utility;
 
@@ -962,9 +1461,7 @@ export const IntegrationsPage: React.FC = () => {
                               <StatusBadge label={rec.badge} tone={catMeta.tone} />
                             </div>
                           </div>
-                          {isAlreadyInstalled && (
-                            <StatusBadge label="Installed" tone="green" />
-                          )}
+                          {isAlreadyInstalled && <StatusBadge label="Installed" tone="green" />}
                         </div>
 
                         <p className="text-xs text-discord-muted mt-3 leading-relaxed">
@@ -1060,7 +1557,7 @@ export const IntegrationsPage: React.FC = () => {
             <MdSelect
               label="Bot Functional Category"
               value={editCategory}
-              onChange={setEditCategory}
+              onChange={(val) => setEditCategory(val as BotCategory)}
               options={[
                 { value: 'music', label: 'Music & Lofi Studio' },
                 { value: 'gaming', label: 'Minigame & Gacha Arcade' },

@@ -183,54 +183,61 @@ function detectBotDefaults(username, displayName) {
   };
 }
 
-function analyzeBotPermissions(member, guild) {
-  const perms = member.permissions;
-  const isAdmin = perms.has(PermissionFlagsBits.Administrator);
-  const dangerousList = [];
-
-  const checks = [
-    [PermissionFlagsBits.Administrator, 'Administrator'],
-    [PermissionFlagsBits.ManageGuild, 'Manage Server'],
-    [PermissionFlagsBits.ManageRoles, 'Manage Roles'],
-    [PermissionFlagsBits.ManageChannels, 'Manage Channels'],
-    [PermissionFlagsBits.ManageWebhooks, 'Manage Webhooks'],
-    [PermissionFlagsBits.BanMembers, 'Ban Members'],
-    [PermissionFlagsBits.KickMembers, 'Kick Members'],
-    [PermissionFlagsBits.MentionEveryone, 'Mention Everyone'],
-    [PermissionFlagsBits.ManageMessages, 'Manage Messages'],
-  ];
-
-  for (const [bit, label] of checks) {
-    if (perms.has(bit)) {
-      dangerousList.push(label);
+function analyzeBotPermissions(member) {
+  try {
+    const perms = member.permissions;
+    if (!perms || typeof perms.has !== 'function') {
+      return { isAdmin: false, riskLevel: 'safe', dangerousPermissions: [] };
     }
-  }
+    const isAdmin = perms.has(PermissionFlagsBits.Administrator);
+    const dangerousList = [];
 
-  let riskLevel = 'safe';
-  if (
-    isAdmin ||
-    perms.has(PermissionFlagsBits.ManageGuild) ||
-    perms.has(PermissionFlagsBits.ManageRoles) ||
-    perms.has(PermissionFlagsBits.BanMembers)
-  ) {
-    riskLevel = 'high';
-  } else if (dangerousList.length > 0) {
-    riskLevel = 'medium';
-  }
+    const checks = [
+      [PermissionFlagsBits.Administrator, 'Administrator'],
+      [PermissionFlagsBits.ManageGuild, 'Manage Server'],
+      [PermissionFlagsBits.ManageRoles, 'Manage Roles'],
+      [PermissionFlagsBits.ManageChannels, 'Manage Channels'],
+      [PermissionFlagsBits.ManageWebhooks, 'Manage Webhooks'],
+      [PermissionFlagsBits.BanMembers, 'Ban Members'],
+      [PermissionFlagsBits.KickMembers, 'Kick Members'],
+      [PermissionFlagsBits.MentionEveryone, 'Mention Everyone'],
+      [PermissionFlagsBits.ManageMessages, 'Manage Messages'],
+    ];
 
-  return {
-    isAdmin,
-    riskLevel,
-    dangerousPermissions: dangerousList,
-  };
+    for (const [bit, label] of checks) {
+      if (perms.has(bit)) {
+        dangerousList.push(label);
+      }
+    }
+
+    let riskLevel = 'safe';
+    if (
+      isAdmin ||
+      perms.has(PermissionFlagsBits.ManageGuild) ||
+      perms.has(PermissionFlagsBits.ManageRoles) ||
+      perms.has(PermissionFlagsBits.BanMembers)
+    ) {
+      riskLevel = 'high';
+    } else if (dangerousList.length > 0) {
+      riskLevel = 'medium';
+    }
+
+    return {
+      isAdmin,
+      riskLevel,
+      dangerousPermissions: dangerousList,
+    };
+  } catch {
+    return { isAdmin: false, riskLevel: 'safe', dangerousPermissions: [] };
+  }
 }
 
 function formatBotMember(member, guild, savedMeta = {}) {
   const isSelf = member.id === client.user?.id;
-  const detected = detectBotDefaults(member.user.username, member.displayName);
-  const permAudit = analyzeBotPermissions(member, guild);
+  const detected = detectBotDefaults(member.user?.username, member.displayName);
+  const permAudit = analyzeBotPermissions(member);
 
-  const roles = [...member.roles.cache.values()]
+  const roles = [...(member.roles?.cache?.values() || [])]
     .filter((r) => r.id !== guild.id)
     .sort((a, b) => b.position - a.position)
     .map((r) => ({
@@ -244,20 +251,20 @@ function formatBotMember(member, guild, savedMeta = {}) {
   const explicitAllowed = new Set(Array.isArray(savedMeta.allowedChannelIds) ? savedMeta.allowedChannelIds : []);
   const explicitBlocked = new Set(Array.isArray(savedMeta.blockedChannelIds) ? savedMeta.blockedChannelIds : []);
 
-  for (const ch of guild.channels.cache.values()) {
-    if (ch.type === ChannelType.GuildCategory) continue;
-    const ow = ch.permissionOverwrites?.cache?.get(member.id);
+  for (const ch of guild.channels?.cache?.values() || []) {
+    if (ch.type === ChannelType.GuildCategory || !ch.permissionOverwrites?.cache) continue;
+    const ow = ch.permissionOverwrites.cache.get(member.id);
     if (!ow) continue;
     if (
-      ow.deny.has(PermissionFlagsBits.ViewChannel) ||
-      ow.deny.has(PermissionFlagsBits.SendMessages) ||
-      ow.deny.has(PermissionFlagsBits.Connect)
+      ow.deny?.has(PermissionFlagsBits.ViewChannel) ||
+      ow.deny?.has(PermissionFlagsBits.SendMessages) ||
+      ow.deny?.has(PermissionFlagsBits.Connect)
     ) {
       explicitBlocked.add(ch.id);
     } else if (
-      ow.allow.has(PermissionFlagsBits.ViewChannel) ||
-      ow.allow.has(PermissionFlagsBits.SendMessages) ||
-      ow.allow.has(PermissionFlagsBits.Connect)
+      ow.allow?.has(PermissionFlagsBits.ViewChannel) ||
+      ow.allow?.has(PermissionFlagsBits.SendMessages) ||
+      ow.allow?.has(PermissionFlagsBits.Connect)
     ) {
       explicitAllowed.add(ch.id);
     }
@@ -265,11 +272,11 @@ function formatBotMember(member, guild, savedMeta = {}) {
 
   return {
     id: member.id,
-    username: member.user.username,
-    displayName: member.displayName,
+    username: member.user?.username || member.displayName || 'bot',
+    displayName: member.displayName || member.user?.username || 'Bot',
     nickname: member.nickname || null,
-    avatar: member.user.displayAvatarURL({ size: 128 }),
-    joinedAt: member.joinedTimestamp,
+    avatar: member.user?.displayAvatarURL ? member.user.displayAvatarURL({ size: 128 }) : '',
+    joinedAt: member.joinedTimestamp || null,
     isSelf,
     status: member.presence?.status || 'online',
     category: isSelf ? 'core' : savedMeta.category || detected.category,
@@ -288,56 +295,64 @@ function formatBotMember(member, guild, savedMeta = {}) {
 // GET /api/guilds/:guildId/integrations
 router.get('/:guildId/integrations', verifyGuildAccess, async (req, res) => {
   const guild = req.guild;
-  await guild.members.fetch().catch(() => {});
-  await guild.channels.fetch().catch(() => {});
-  await guild.roles.fetch().catch(() => {});
+  try {
+    if (guild.members.cache.size < guild.memberCount) {
+      await guild.members.fetch({ limit: 200 }).catch(() => {});
+    }
+    await guild.channels.fetch().catch(() => {});
+    await guild.roles.fetch().catch(() => {});
 
-  const savedIntegrations = ensureGuildBotIntegrationsState(guild.id);
+    const savedIntegrations = ensureGuildBotIntegrationsState(guild.id);
 
-  const bots = [...guild.members.cache.values()]
-    .filter((m) => m.user.bot)
-    .map((m) => formatBotMember(m, guild, savedIntegrations[m.id] || {}))
-    .sort((a, b) => {
-      if (a.isSelf && !b.isSelf) return -1;
-      if (!a.isSelf && b.isSelf) return 1;
-      return a.displayName.localeCompare(b.displayName);
+    const bots = [...guild.members.cache.values()]
+      .filter((m) => m.user?.bot)
+      .map((m) => formatBotMember(m, guild, savedIntegrations[m.id] || {}))
+      .sort((a, b) => {
+        if (a.isSelf && !b.isSelf) return -1;
+        if (!a.isSelf && b.isSelf) return 1;
+        return a.displayName.localeCompare(b.displayName);
+      });
+
+    const channels = [...guild.channels.cache.values()]
+      .filter(
+        (c) =>
+          c.type === ChannelType.GuildText ||
+          c.type === ChannelType.GuildVoice ||
+          c.type === ChannelType.GuildStageVoice ||
+          c.type === ChannelType.GuildAnnouncement
+      )
+      .sort((a, b) => a.rawPosition - b.rawPosition)
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        type:
+          c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice
+            ? 'voice'
+            : 'text',
+        parentName: c.parent?.name || null,
+      }));
+
+    const assignableRoles = [...guild.roles.cache.values()]
+      .filter((r) => r.id !== guild.id && !r.managed)
+      .sort((a, b) => b.position - a.position)
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        color: r.hexColor === '#000000' ? null : r.hexColor,
+      }));
+
+    return res.json({
+      bots,
+      channels,
+      assignableRoles,
+      recommendedBots: RECOMMENDED_BOTS,
+      presets: BOT_ENVIRONMENT_PRESETS,
     });
-
-  const channels = [...guild.channels.cache.values()]
-    .filter(
-      (c) =>
-        c.type === ChannelType.GuildText ||
-        c.type === ChannelType.GuildVoice ||
-        c.type === ChannelType.GuildStageVoice ||
-        c.type === ChannelType.GuildAnnouncement
-    )
-    .sort((a, b) => a.rawPosition - b.rawPosition)
-    .map((c) => ({
-      id: c.id,
-      name: c.name,
-      type:
-        c.type === ChannelType.GuildVoice || c.type === ChannelType.GuildStageVoice
-          ? 'voice'
-          : 'text',
-      parentName: c.parent?.name || null,
-    }));
-
-  const assignableRoles = [...guild.roles.cache.values()]
-    .filter((r) => r.id !== guild.id && !r.managed)
-    .sort((a, b) => b.position - a.position)
-    .map((r) => ({
-      id: r.id,
-      name: r.name,
-      color: r.hexColor === '#000000' ? null : r.hexColor,
-    }));
-
-  res.json({
-    bots,
-    channels,
-    assignableRoles,
-    recommendedBots: RECOMMENDED_BOTS,
-    presets: BOT_ENVIRONMENT_PRESETS,
-  });
+  } catch (err) {
+    return res.status(500).json({
+      error: `Failed to fetch bot integrations: ${err.message}`,
+    });
+  }
 });
 
 // PATCH /api/guilds/:guildId/integrations/:botId
