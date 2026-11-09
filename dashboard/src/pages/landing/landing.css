@@ -1747,7 +1747,8 @@ html.dark .agy-landing .footer-antigravity text,
 
 .agy-landing .blog .main-left-container {
   grid-template-columns: repeat(var(--grid-columns, 12), 1fr);
-  gap: var(--grid-gutter, 32px);
+  column-gap: var(--grid-gutter, 32px);
+  row-gap: 12px;
   margin-bottom: 40px;
   display: grid;
 }
@@ -1761,16 +1762,16 @@ html.dark .agy-landing .footer-antigravity text,
 }
 
 .agy-landing .blog .main-left-container .left-content {
-  padding-top: 24px;
+  padding-top: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 .agy-landing .blog .main-left-container .featured-label {
+  grid-column: 1 / -1;
   color: var(--theme-surface-on-surface, #121317);
   margin: 0;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   font-weight: 500;
   font-size: 13.5px;
   letter-spacing: -0.01em;
