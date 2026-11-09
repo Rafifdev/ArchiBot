@@ -99,6 +99,12 @@ export const OverviewPage: React.FC = () => {
       to: `/guilds/${guildId}/members`,
     },
     {
+      title: 'Bot Integrations',
+      description: 'Manage Lofi, music, and minigame bots, isolate channel spam, and publish a bot directory',
+      icon: 'smart_toy',
+      to: `/guilds/${guildId}/integrations`,
+    },
+    {
       title: 'Member Milestones',
       description: 'Generate custom milestone celebration banners and grant reward roles',
       icon: 'emoji_events',
