@@ -2793,6 +2793,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         alignItems: 'center',
                         overflow: 'hidden',
                         position: 'relative',
+                        aspectRatio: '1120 / 920',
+                        width: '100%',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.65)',
                       }}
                     >
                       <video
@@ -2804,7 +2808,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'cover',
+                          objectFit: 'contain',
                           display: 'block',
                         }}
                       />
