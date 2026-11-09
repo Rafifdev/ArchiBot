@@ -1945,22 +1945,6 @@ await engine.start();`}</code>
                       }}
                     />
                   </div>
-
-                  {/* RSS Feed Button (1:1 with Antigravity Blog Toolbar) */}
-                  <button
-                    type="button"
-                    className="rss-feed-button"
-                    onClick={() => {
-                      navigator.clipboard?.writeText(window.location.origin + '/rss.xml').catch(() => {});
-                      alert(isID ? 'Tautan RSS feed berhasil disalin!' : 'RSS feed link copied to clipboard!');
-                    }}
-                    title="RSS Feed"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
-                      rss_feed
-                    </span>
-                    <span>RSS Feed</span>
-                  </button>
                 </div>
 
                 <div className="blog-cards">
