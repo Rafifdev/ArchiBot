@@ -1895,12 +1895,9 @@ html.dark .agy-landing .footer-antigravity text,
   transition: none;
 }
 
-.agy-landing .blog .latest-blogs .tabs ul li button:hover {
-  color: #121317;
-}
-
+.agy-landing .blog .latest-blogs .tabs ul li button:hover,
 .agy-landing .blog .latest-blogs .tabs ul li.active button {
-  color: #121317;
+  color: var(--palette-grey-800, #45474d);
   font-weight: 500;
 }
 
@@ -2718,28 +2715,39 @@ html.dark .agy-landing .blog-category-tabs,
 html[data-theme='dark'] .agy-landing .blog-category-btn,
 html.dark .agy-landing .blog-category-btn,
 .agy-landing[data-theme='dark'] .blog-category-btn,
-.agy-landing.dark .blog-category-btn {
-  color: #949BA4;
-}
-
+.agy-landing.dark .blog-category-btn,
 html[data-theme='dark'] .agy-landing .blog-category-btn:hover,
 html.dark .agy-landing .blog-category-btn:hover,
 .agy-landing[data-theme='dark'] .blog-category-btn:hover,
-.agy-landing.dark .blog-category-btn:hover {
-  color: #F2F3F5;
-}
-
+.agy-landing.dark .blog-category-btn:hover,
 html[data-theme='dark'] .agy-landing .blog-category-btn.active,
 html.dark .agy-landing .blog-category-btn.active,
 .agy-landing[data-theme='dark'] .blog-category-btn.active,
-.agy-landing.dark .blog-category-btn.active {
-  color: #F2F3F5;
+.agy-landing.dark .blog-category-btn.active,
+html[data-theme='dark'] .agy-landing .blog .latest-blogs .tabs ul li button,
+html.dark .agy-landing .blog .latest-blogs .tabs ul li button,
+.agy-landing[data-theme='dark'] .blog .latest-blogs .tabs ul li button,
+.agy-landing.dark .blog .latest-blogs .tabs ul li button,
+html[data-theme='dark'] .agy-landing .blog .latest-blogs .tabs ul li button:hover,
+html.dark .agy-landing .blog .latest-blogs .tabs ul li button:hover,
+.agy-landing[data-theme='dark'] .blog .latest-blogs .tabs ul li button:hover,
+.agy-landing.dark .blog .latest-blogs .tabs ul li button:hover,
+html[data-theme='dark'] .agy-landing .blog .latest-blogs .tabs ul li.active button,
+html.dark .agy-landing .blog .latest-blogs .tabs ul li.active button,
+.agy-landing[data-theme='dark'] .blog .latest-blogs .tabs ul li.active button,
+.agy-landing.dark .blog .latest-blogs .tabs ul li.active button {
+  color: #949BA4 !important;
+  font-weight: 500 !important;
 }
 
 html[data-theme='dark'] .agy-landing .blog-category-indicator,
 html.dark .agy-landing .blog-category-indicator,
 .agy-landing[data-theme='dark'] .blog-category-indicator,
-.agy-landing.dark .blog-category-indicator {
+.agy-landing.dark .blog-category-indicator,
+html[data-theme='dark'] .agy-landing .blog .latest-blogs .tabs .tab-indicator-line,
+html.dark .agy-landing .blog .latest-blogs .tabs .tab-indicator-line,
+.agy-landing[data-theme='dark'] .blog .latest-blogs .tabs .tab-indicator-line,
+.agy-landing.dark .blog .latest-blogs .tabs .tab-indicator-line {
   background-color: #5865F2;
 }
 
