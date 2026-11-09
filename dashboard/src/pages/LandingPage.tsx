@@ -1745,7 +1745,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   aspectRatio: '16 / 9',
                   background:
                     resolvedTheme === 'dark'
-                      ? '#2E3447'
+                      ? '#22252E'
                       : 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
                   border: 'none',
                   display: 'flex',
@@ -1876,7 +1876,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                           height: '100%',
                           background:
                             resolvedTheme === 'dark'
-                              ? '#2E3447'
+                              ? '#22252E'
                               : 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
                           border: 'none',
                           borderRadius: '16px',
@@ -3362,7 +3362,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                           height: '100%',
                           background:
                             resolvedTheme === 'dark'
-                              ? '#2E3447'
+                              ? '#22252E'
                               : 'linear-gradient(135deg, #f0f2f7 0%, #e4e8f0 100%)',
                           border: 'none',
                           borderRadius: 'inherit',

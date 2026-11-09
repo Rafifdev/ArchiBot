@@ -2797,7 +2797,7 @@ html[data-theme='dark'] .agy-landing .list-image-wrapper > div,
 html.dark .agy-landing .list-image-wrapper > div,
 .agy-landing[data-theme='dark'] .list-image-wrapper > div,
 .agy-landing.dark .list-image-wrapper > div {
-  background: #2E3447 !important;
+  background: #22252E !important;
   border: none !important;
 }
 
