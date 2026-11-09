@@ -700,10 +700,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
   const [showcaseTab, setShowcaseTab] = useState<'architect' | 'giveaways' | 'voice' | 'security'>('architect');
   const [showcaseAutoPlay, setShowcaseAutoPlay] = useState(true);
 
-  // Interactive Giveaway demo counter in Section 4
-  const [demoParticipants, setDemoParticipants] = useState(128);
-  const [hasParticipated, setHasParticipated] = useState(false);
-
   // Interactive Voice Room lock toggle in Section 4
   const [voiceLocked, setVoiceLocked] = useState(false);
   const [voiceLimit, setVoiceLimit] = useState(5);
@@ -2764,22 +2760,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 </div>
               </div>
 
-              {/* FEATURE 2: Interactive Giveaways & Custom Embed Studio (GiveawaysPage.tsx Motion Preview) */}
+              {/* FEATURE 2: Channels & Categories Management (ChannelsPage.tsx Automated Browser Motion) */}
               <div className="feature-item">
                 <div className="grid-row">
                   <div className="grid-col col-xs-4 col-sm-8 col-md-4">
                     <div className="feature-copy">
                       <a href={dashboardHref} className="feature-title-link">
                         <h3 className="heading-5 feature-title">
-                          {isID ? 'Giveaway interaktif & kustomisasi embed penuh' : 'Higher-level Giveaway & Embed Studio'}
+                          {isID ? 'Manajemen Channels & Categories presisi tinggi' : 'Precision Channels & Categories Studio'}
                         </h3>
                       </a>
                       <ScrollRevealText
                         className="body feature-description"
                         text={
                           isID
-                            ? 'Rancang giveaway profesional dengan pemilih warna embed (Pick Color), unggah thumbnail & banner gambar, teks footer kustom, serta tombol partisipasi live yang menghitung peserta secara real-time.'
-                            : 'Build high-conversion Discord giveaways with an intuitive visual Embed Studio: custom hex color picker, drag-and-drop thumbnail and banner uploads, custom footer branding, and live participation counters.'
+                            ? 'Kelola seluruh struktur channel dan kategori secara visual: filter pencarian instan, pembuatan kategori & channel baru lengkap dengan pengaturan slowmode dan NSFW, penguncian channel 1-klik, hingga drag-and-drop lintas kategori dengan sinkronisasi izin otomatis.'
+                            : 'Organize your entire Discord hierarchy visually: instant channel filtering, modal creation with slowmode and NSFW controls, 1-click channel locking, and drag-and-drop cross-category reordering with automatic permission synchronization.'
                         }
                       />
                     </div>
@@ -2790,111 +2786,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                       className="feature-media"
                       style={{
                         background: '#0b0d12',
-                        padding: '24px',
+                        padding: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        color: '#e6eaf0',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        position: 'relative',
                       }}
                     >
-                      {/* Authentic GiveawaysPage.tsx Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: 34, height: 34, borderRadius: '10px', background: 'rgba(99,102,241,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>celebration</span>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: 500, color: '#fff' }}>Giveaway Embed</div>
-                            <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Customize the appearance of the giveaway embed.</div>
-                          </div>
-                        </div>
-                        <span style={{ padding: '4px 10px', borderRadius: '999px', background: 'rgba(99,102,241,0.16)', color: '#a5b4fc', fontSize: '11px', fontWeight: 500 }}>
-                          ● LIVE SYNC
-                        </span>
-                      </div>
-
-                      {/* Exact 2-Button Pick Color + Swatch Bar + Upload Boxes from GiveawaysPage.tsx */}
-                      <div style={{ background: '#13161f', borderRadius: '14px', padding: '16px', border: '1px solid rgba(255,255,255,0.08)', margin: '14px 0', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        <div>
-                          <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }}>Embed Color</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                height: '36px',
-                                padding: '0 14px',
-                                borderRadius: '8px',
-                                background: '#6366f1',
-                                color: '#fff',
-                                fontSize: '12.5px',
-                              }}
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>format_color_fill</span>
-                              <span>Pick Color</span>
-                            </span>
-                            <div
-                              style={{
-                                height: '36px',
-                                flex: 1,
-                                maxWidth: '220px',
-                                borderRadius: '8px',
-                                background: ['#2b82d8', '#6366f1', '#10b981', '#f59e0b'][motionStep],
-                                transition: 'background 0.45s ease',
-                                border: '1px solid rgba(255,255,255,0.15)',
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Live Discord Giveaway Embed Card */}
-                        <div
-                          style={{
-                            background: '#2b2d31',
-                            borderRadius: '10px',
-                            borderLeft: `4px solid ${['#2b82d8', '#6366f1', '#10b981', '#f59e0b'][motionStep]}`,
-                            padding: '14px',
-                            transition: 'border-color 0.45s ease',
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                            <strong style={{ fontSize: '14px', color: '#fff' }}>🎁 Discord Nitro Yearly (2 Winners)</strong>
-                            <span style={{ fontSize: '11px', color: '#4ade80' }}>Ends in 23h 59m</span>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', gap: '10px', flexWrap: 'wrap' }}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setHasParticipated((p) => !p);
-                                setDemoParticipants((c) => (hasParticipated ? c - 1 : c + 1));
-                              }}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '7px 14px',
-                                borderRadius: '7px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontWeight: 500,
-                                fontSize: '12.5px',
-                                background: hasParticipated ? '#34a853' : '#5865f2',
-                                color: '#fff',
-                              }}
-                            >
-                              <span>🎉</span>
-                              <span>Participate ({demoParticipants + motionStep})</span>
-                            </button>
-                            <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>Footer: ArchiBot Giveaways</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
-                        <span>Thumbnail &amp; Image Upload Ready</span>
-                        <span style={{ color: '#a5b4fc' }}>Click Participate button to test</span>
-                      </div>
+                      <video
+                        src="/videos/channels-categories-motion.webm"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
