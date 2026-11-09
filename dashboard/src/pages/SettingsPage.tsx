@@ -854,7 +854,7 @@ export const SettingsPage: React.FC = () => {
         </div>
 
         {/* General Embed Color */}
-        <div className="max-w-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ColorPickerField
             label="General Embed Color"
             value={embedColor}
