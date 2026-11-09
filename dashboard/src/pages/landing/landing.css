@@ -1768,11 +1768,12 @@ html.dark .agy-landing .footer-antigravity text,
 }
 
 .agy-landing .blog .main-left-container .featured-label {
-  grid-column: 1 / -1;
   color: var(--theme-surface-on-surface, #121317);
   margin: 0;
-  margin-block-end: 0;
+  margin-bottom: 12px;
   font-weight: 500;
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
 }
 
 .agy-landing .blog .main-left-container .featured-title-link {

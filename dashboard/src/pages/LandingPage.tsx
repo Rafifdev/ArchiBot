@@ -1827,9 +1827,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
             <div className="grid-container">
               {/* 1:1 Featured Blog Article */}
               <div className="main-left-container">
-                <p className="caption featured-label">{isID ? 'Artikel Unggulan' : 'Featured Article'}</p>
                 <div className="main-element">
                   <div className="left-content">
+                    <p className="caption featured-label">{isID ? 'Artikel Unggulan' : 'Featured Article'}</p>
                     <a
                       href={`/blog/${FEATURED_BLOG_POST.slug}`}
                       className="featured-title-link"
