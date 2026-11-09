@@ -1839,7 +1839,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         {FEATURED_BLOG_POST.title}
                       </h1>
                     </a>
-                    <div className="tags-section" style={{ marginTop: '20px' }}>
+                    <div className="tags-section" style={{ marginTop: '16px' }}>
                       <div className="tags-caption">
                         <span>{FEATURED_BLOG_POST.date}</span>
                         <span className="dot">•</span>
@@ -1851,7 +1851,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                           </span>
                         ))}
                       </div>
-                      <div style={{ marginTop: '24px' }}>
+                      <div style={{ marginTop: '20px' }}>
                         <button
                           type="button"
                           className="button button-secondary"
