@@ -30,7 +30,15 @@ interface BotRoleItem {
   managed?: boolean;
 }
 
-type BotCategory = 'core' | 'music' | 'gaming' | 'economy' | 'moderation' | 'utility';
+type BotCategory =
+  | 'core'
+  | 'moderation'
+  | 'utility'
+  | 'ai'
+  | 'music'
+  | 'gaming'
+  | 'economy'
+  | 'custom';
 
 interface BotIntegrationItem {
   id: string;
@@ -43,6 +51,7 @@ interface BotIntegrationItem {
   status: string;
   category: BotCategory;
   prefix: string;
+  commands: string[];
   notes: string;
   allowedChannelIds: string[];
   blockedChannelIds: string[];
@@ -60,18 +69,6 @@ interface ChannelOption {
   parentName: string | null;
 }
 
-interface RecommendedBotItem {
-  id: string;
-  name: string;
-  category: string;
-  prefix: string;
-  badge: string;
-  description: string;
-  recommendedChannel: string;
-  inviteUrl: string;
-  commands: string[];
-}
-
 interface BotPresetItem {
   id: string;
   title: string;
@@ -81,121 +78,33 @@ interface BotPresetItem {
   channelsPreview: string[];
 }
 
-const DEFAULT_RECOMMENDED_BOTS: RecommendedBotItem[] = [
-  {
-    id: 'lofi-radio',
-    name: 'Lofi Radio 24/7',
-    category: 'music',
-    prefix: '/play',
-    badge: '24/7 Chill Beats',
-    description: 'High-quality 24/7 Lofi Hip-Hop beats for study, coding, and chill voice lounges.',
-    recommendedChannel: '🔊 Lofi Radio 24/7',
-    inviteUrl: 'https://top.gg/bot/712351084597968907',
-    commands: ['/play', '/station', '/247', '/volume'],
-  },
-  {
-    id: 'jockie-music',
-    name: 'Jockie Music',
-    category: 'music',
-    prefix: 'm!play',
-    badge: 'Multi-Instance Music',
-    description: 'Feature-rich multi-source music bot supporting playlists, filters, and multiple voice channels.',
-    recommendedChannel: '🎵・music-requests',
-    inviteUrl: 'https://www.jockiemusic.com/',
-    commands: ['m!play <song>', 'm!skip', 'm!queue', 'm!leave'],
-  },
-  {
-    id: 'green-bot',
-    name: 'Green-bot',
-    category: 'music',
-    prefix: '/play',
-    badge: '24/7 Audio & Filters',
-    description: 'Clean slash-command music player with bassboost, nightcore filters, and dedicated request channels.',
-    recommendedChannel: '🎵・music-requests',
-    inviteUrl: 'https://green-bot.app/',
-    commands: ['/play', '/filter', '/autoplay', '/stop'],
-  },
-  {
-    id: 'karuta',
-    name: 'Karuta',
-    category: 'gaming',
-    prefix: 'k!',
-    badge: 'Anime Card TCG',
-    description: 'Collect, trade, and upgrade over 90,000 anime characters with custom frames and dyes.',
-    recommendedChannel: '🃏・karuta-drops',
-    inviteUrl: 'https://karuta.com/',
-    commands: ['k!drop', 'k!collection', 'k!view', 'k!daily'],
-  },
-  {
-    id: 'mudae',
-    name: 'Mudae',
-    category: 'gaming',
-    prefix: '$',
-    badge: 'Waifu / Husbando Gacha',
-    description: 'Roll and claim characters from anime and video games, plus multiplayer tea party word games.',
-    recommendedChannel: '🎰・mudae-rolls',
-    inviteUrl: 'https://top.gg/bot/432610292342587392',
-    commands: ['$wa', '$ha', '$wg', '$tu'],
-  },
-  {
-    id: 'dank-memer',
-    name: 'Dank Memer',
-    category: 'economy',
-    prefix: '/pls',
-    badge: 'Global Economy & Memes',
-    description: 'Massive global currency game featuring fishing, farming, pets, heists, and interactive minigames.',
-    recommendedChannel: '🐸・dank-memer',
-    inviteUrl: 'https://dankmemer.lol/',
-    commands: ['/beg', '/fish', '/dig', '/balance'],
-  },
-  {
-    id: 'poketwo',
-    name: 'Pokétwo',
-    category: 'gaming',
-    prefix: '@Pokétwo',
-    badge: 'Catch & Battle',
-    description: 'Spawn wild Pokémon as members chat, catch them, trade on the market, and battle friends.',
-    recommendedChannel: '⚡・poketwo-spawns',
-    inviteUrl: 'https://poketwo.net/',
-    commands: ['@Pokétwo catch <name>', '@Pokétwo hint', '@Pokétwo pokemon', '@Pokétwo market'],
-  },
-  {
-    id: 'owo-bot',
-    name: 'OwO',
-    category: 'gaming',
-    prefix: 'owo ',
-    badge: 'Zoo & Battle RPG',
-    description: 'Hunt animals, build a weaponized zoo team, battle other members, and climb global leaderboards.',
-    recommendedChannel: '🐾・owo-hunting',
-    inviteUrl: 'https://top.gg/bot/408785106942164992',
-    commands: ['owo hunt', 'owo battle', 'owo zoo', 'owo daily'],
-  },
-];
-
 const DEFAULT_PRESETS: BotPresetItem[] = [
   {
-    id: 'lofi_music',
-    title: 'Lofi & Music Studio Lounge',
-    category: 'music',
-    icon: 'headphones',
-    description: 'Creates a dedicated "LOFI & MUSIC LOUNGE" category with #music-requests, 🔊 Lofi Radio 24/7, and 🎶 Music Lounge.',
-    channelsPreview: ['🎵・music-requests', '🔊 Lofi Radio 24/7', '🎶 Music Lounge'],
-  },
-  {
-    id: 'gaming_arcade',
-    title: 'Minigame & Gacha Arcade',
-    category: 'gaming',
-    icon: 'sports_esports',
-    description: 'Creates a dedicated "MINIGAME ARCADE" category with isolated channels for Karuta, Mudae, Dank Memer, and Pokétwo.',
-    channelsPreview: ['🎮・bot-arcade', '🃏・gacha-drops', '🐸・economy-grind'],
-  },
-  {
     id: 'bot_sandbox',
-    title: 'Dedicated Bot Sandbox',
+    title: 'Dedicated Bot Command Sandbox',
     category: 'utility',
     icon: 'terminal',
-    description: 'Creates a clean #bot-commands sandbox channel so third-party bot commands never clutter your main general chat.',
+    description:
+      'Creates a dedicated #bot-commands text channel so bot interactions and slash commands stay organized away from general chat.',
     channelsPreview: ['🤖・bot-commands'],
+  },
+  {
+    id: 'voice_bot_lounge',
+    title: 'Audio & Voice Bot Lounge',
+    category: 'music',
+    icon: 'graphic_eq',
+    description:
+      'Creates an "AUDIO & VOICE BOTS" category with a #audio-controls text channel and a dedicated 🔊 Bot Audio Lounge voice room.',
+    channelsPreview: ['🎛️・audio-controls', '🔊 Bot Audio Lounge'],
+  },
+  {
+    id: 'interactive_bot_zone',
+    title: 'Interactive & Activity Bot Zone',
+    category: 'gaming',
+    icon: 'extension',
+    description:
+      'Creates a "BOT ACTIVITIES" category with isolated channels for interactive bots, leveling checks, and community activities.',
+    channelsPreview: ['🤖・bot-activities', '📊・rank-and-stats'],
   },
 ];
 
@@ -203,12 +112,14 @@ const CATEGORY_META: Record<
   string,
   { label: string; icon: string; tone: 'blurple' | 'green' | 'yellow' | 'red' | 'premium' | 'neutral' }
 > = {
-  core: { label: 'Core Engine', icon: 'verified', tone: 'blurple' },
-  music: { label: 'Music & Lofi', icon: 'headphones', tone: 'premium' },
-  gaming: { label: 'Minigame & Gacha', icon: 'sports_esports', tone: 'green' },
-  economy: { label: 'Economy & Grinding', icon: 'monetization_on', tone: 'yellow' },
+  core: { label: 'Core & System', icon: 'verified', tone: 'blurple' },
   moderation: { label: 'Moderation & Security', icon: 'shield', tone: 'blurple' },
-  utility: { label: 'Utility & Automation', icon: 'smart_toy', tone: 'neutral' },
+  utility: { label: 'Utility & Automation', icon: 'build', tone: 'neutral' },
+  ai: { label: 'AI & Webhooks', icon: 'auto_awesome', tone: 'premium' },
+  music: { label: 'Audio & Voice', icon: 'graphic_eq', tone: 'premium' },
+  gaming: { label: 'Games & Entertainment', icon: 'sports_esports', tone: 'green' },
+  economy: { label: 'Economy & Leveling', icon: 'monitoring', tone: 'yellow' },
+  custom: { label: 'Custom Bot', icon: 'smart_toy', tone: 'neutral' },
 };
 
 function detectClientBotDefaults(username: string, displayName: string): {
@@ -226,42 +137,50 @@ function detectClientBotDefaults(username: string, displayName: string): {
       isSelf: true,
     };
   }
-  if (/lofi|jockie|fredboat|uzox|flavi|chip|green-bot|pancake|rythm|groovy|hydra|vexera|music|radio|24\/7|spotify/i.test(combined)) {
+  if (/dyno|carl|mee6|probot|wick|vortex|sapphire|security|automod|double\s*counter|pandez|modmail|ticket|logger|audit|guard|shield|mod/i.test(combined)) {
+    return {
+      category: 'moderation',
+      prefix: '/',
+      notes: 'Server moderation, security, logging, and automated protection.',
+      isSelf: false,
+    };
+  }
+  if (/music|radio|audio|sound|voice|lofi|jockie|fredboat|uzox|flavi|chip|green-bot|pancake|rythm|hydra|vexera|spotify|tts/i.test(combined)) {
     return {
       category: 'music',
       prefix: '/',
-      notes: 'Play music, 24/7 radio streams, and manage voice queues.',
+      notes: 'Voice channel audio, radio streaming, and sound utilities.',
       isSelf: false,
     };
   }
-  if (/karuta|mudae|poketwo|poké|dank\s*memer|owo|idle\s*rpg|epic\s*rpg|ani\s*game|virtual\s*fisher|gacha|trivia|akinator|counting|wordle|uno/i.test(combined)) {
+  if (/game|rpg|gacha|trivia|card|arcade|play|karuta|mudae|poketwo|poké|dank|owo|fisher|akinator|counting|wordle|uno/i.test(combined)) {
     return {
       category: 'gaming',
-      prefix: '!',
-      notes: 'Interactive chat minigames, card drops, and leaderboards.',
+      prefix: '/',
+      notes: 'Interactive chat games, multiplayer activities, and entertainment.',
       isSelf: false,
     };
   }
-  if (/dyno|carl|mee6|probot|wick|vortex|sapphire|security|automod|double\s*counter|pandez|modmail|ticket\s*tool|arcane|statbot/i.test(combined)) {
-    return {
-      category: 'moderation',
-      prefix: '?',
-      notes: 'Server moderation, logging, reaction roles, and utilities.',
-      isSelf: false,
-    };
-  }
-  if (/unbelievaboat|tatsu|taiko|economy|casino|blackjack|bank/i.test(combined)) {
+  if (/economy|level|xp|rank|coin|bank|shop|currency|unbelievaboat|tatsu|arcane/i.test(combined)) {
     return {
       category: 'economy',
-      prefix: '!',
-      notes: 'Server currency, daily rewards, and shop leaderboards.',
+      prefix: '/',
+      notes: 'Server leveling, XP progression, and community rewards.',
+      isSelf: false,
+    };
+  }
+  if (/ai|gpt|claude|gemini|midjourney|chat|assistant|translate|webhook|github|notify|rss/i.test(combined)) {
+    return {
+      category: 'ai',
+      prefix: '/',
+      notes: 'AI assistant, external webhook integration, and automated feeds.',
       isSelf: false,
     };
   }
   return {
     category: 'utility',
     prefix: '/',
-    notes: 'Slash commands and server automation.',
+    notes: 'Slash commands, utilities, and server automation.',
     isSelf: false,
   };
 }
@@ -309,19 +228,29 @@ export const IntegrationsPage: React.FC = () => {
   const [bots, setBots] = useState<BotIntegrationItem[]>([]);
   const [channels, setChannels] = useState<ChannelOption[]>([]);
   const [assignableRoles, setAssignableRoles] = useState<BotRoleItem[]>([]);
-  const [recommendedBots, setRecommendedBots] = useState<RecommendedBotItem[]>(DEFAULT_RECOMMENDED_BOTS);
   const [presets, setPresets] = useState<BotPresetItem[]>(DEFAULT_PRESETS);
 
   // Search & Filters
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [discoveryCategory, setDiscoveryCategory] = useState<string>('all');
+
+  // Universal OAuth2 Bot Invite Generator State
+  const [inviteClientId, setInviteClientId] = useState('');
+  const [invitePermLevel, setInvitePermLevel] = useState('standard');
+
+  // Custom Bot Room Builder State
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [customTextChannel, setCustomTextChannel] = useState('');
+  const [customVoiceChannel, setCustomVoiceChannel] = useState('');
+  const [customRoomBotIds, setCustomRoomBotIds] = useState<string[]>([]);
+  const [creatingCustomRoom, setCreatingCustomRoom] = useState(false);
 
   // Manage Bot Modal
   const [editingBot, setEditingBot] = useState<BotIntegrationItem | null>(null);
   const [editNickname, setEditNickname] = useState('');
   const [editCategory, setEditCategory] = useState<BotCategory>('utility');
   const [editPrefix, setEditPrefix] = useState('/');
+  const [editCommandsText, setEditCommandsText] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editRoleIds, setEditRoleIds] = useState<string[]>([]);
   const [savingBot, setSavingBot] = useState(false);
@@ -353,13 +282,13 @@ export const IntegrationsPage: React.FC = () => {
 
     const loadTask = (async () => {
       try {
-        // Primary: Try dedicated /integrations endpoint
         const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations`);
         const localMap = getLocalBotMetaMap(guildId);
         if (Array.isArray(data.bots)) {
           setBots(
             data.bots.map((b: BotIntegrationItem) => ({
               ...b,
+              commands: Array.isArray(b.commands) ? b.commands : [],
               ...(localMap[b.id] || {}),
             }))
           );
@@ -370,7 +299,6 @@ export const IntegrationsPage: React.FC = () => {
           if (firstText && !guideChannelId) setGuideChannelId(firstText.id);
         }
         if (Array.isArray(data.assignableRoles)) setAssignableRoles(data.assignableRoles);
-        if (Array.isArray(data.recommendedBots)) setRecommendedBots(data.recommendedBots);
         if (Array.isArray(data.presets)) setPresets(data.presets);
       } catch {
         // Fallback: Build Bot Integrations state from existing /members, /channels, and /roles endpoints
@@ -446,6 +374,7 @@ export const IntegrationsPage: React.FC = () => {
                 status: 'online',
                 category: (saved.category as BotCategory) || detected.category,
                 prefix: saved.prefix ?? detected.prefix,
+                commands: Array.isArray(saved.commands) ? saved.commands : [],
                 notes: saved.notes ?? detected.notes,
                 allowedChannelIds,
                 blockedChannelIds,
@@ -453,7 +382,7 @@ export const IntegrationsPage: React.FC = () => {
                 roles: Array.isArray(m.roles) ? m.roles : [],
                 isAdmin: isHighPrivilege,
                 riskLevel: isHighPrivilege ? 'high' : 'safe',
-                dangerousPermissions: isHighPrivilege ? ['High Role Hierarchy'] : [],
+                dangerousPermissions: isHighPrivilege ? ['Elevated Role Hierarchy'] : [],
               };
             })
             .sort((a, b) => {
@@ -486,32 +415,24 @@ export const IntegrationsPage: React.FC = () => {
       return (
         b.displayName.toLowerCase().includes(q) ||
         b.username.toLowerCase().includes(q) ||
+        b.id.includes(q) ||
         b.prefix.toLowerCase().includes(q) ||
         b.notes.toLowerCase().includes(q)
       );
     });
   }, [bots, search, categoryFilter]);
 
-  const filteredDiscovery = useMemo(() => {
-    return recommendedBots.filter((item) => {
-      if (discoveryCategory !== 'all' && item.category !== discoveryCategory) return false;
-      return true;
-    });
-  }, [recommendedBots, discoveryCategory]);
-
   const stats = useMemo(() => {
     const thirdPartyCount = bots.filter((b) => !b.isSelf).length;
+    const onlineCount = bots.filter((b) => b.status !== 'offline').length;
     const highRiskCount = bots.filter((b) => !b.isSelf && b.riskLevel === 'high').length;
     const sandboxedCount = bots.filter((b) => b.isSandboxed).length;
-    const musicAndGameCount = bots.filter(
-      (b) => b.category === 'music' || b.category === 'gaming' || b.category === 'economy'
-    ).length;
     return {
       total: bots.length,
       thirdPartyCount,
+      onlineCount,
       highRiskCount,
       sandboxedCount,
-      musicAndGameCount,
     };
   }, [bots]);
 
@@ -520,6 +441,7 @@ export const IntegrationsPage: React.FC = () => {
     setEditNickname(bot.nickname || '');
     setEditCategory(bot.category || 'utility');
     setEditPrefix(bot.prefix || '/');
+    setEditCommandsText(Array.isArray(bot.commands) ? bot.commands.join(', ') : '');
     setEditNotes(bot.notes || '');
     setEditRoleIds(bot.roles.filter((r) => !r.managed).map((r) => r.id));
   };
@@ -528,14 +450,19 @@ export const IntegrationsPage: React.FC = () => {
     if (!editingBot || !guildId) return;
     setSavingBot(true);
 
+    const parsedCommands = editCommandsText
+      .split(',')
+      .map((c) => c.trim())
+      .filter(Boolean);
+
     const currentAssignableIds = editingBot.roles.filter((r) => !r.managed).map((r) => r.id);
     const addRoles = editRoleIds.filter((id) => !currentAssignableIds.includes(id));
     const removeRoles = currentAssignableIds.filter((id) => !editRoleIds.includes(id));
 
-    // Persist metadata locally as well
     saveLocalBotMeta(guildId, editingBot.id, {
       category: editCategory,
       prefix: editPrefix,
+      commands: parsedCommands,
       notes: editNotes,
       nickname: editNickname || null,
     });
@@ -548,16 +475,20 @@ export const IntegrationsPage: React.FC = () => {
           nickname: editNickname,
           category: editCategory,
           prefix: editPrefix,
+          commands: parsedCommands,
           notes: editNotes,
           addRoles,
           removeRoles,
         }),
       });
-      setBots((prev) => prev.map((b) => (b.id === editingBot.id ? data.bot : b)));
+      setBots((prev) =>
+        prev.map((b) =>
+          b.id === editingBot.id ? { ...data.bot, commands: parsedCommands } : b
+        )
+      );
       toast.success(`Saved configuration for ${editingBot.displayName}.`);
       setEditingBot(null);
     } catch {
-      // Fallback: update nickname/roles via existing /members/:memberId endpoint
       try {
         if (editNickname !== (editingBot.nickname || '') || addRoles.length || removeRoles.length) {
           await safeJsonFetch(`/api/guilds/${guildId}/members/${editingBot.id}`, {
@@ -581,6 +512,7 @@ export const IntegrationsPage: React.FC = () => {
                   nickname: editNickname.trim() || null,
                   category: editCategory,
                   prefix: editPrefix,
+                  commands: parsedCommands,
                   notes: editNotes,
                   roles: updatedRoles.length ? updatedRoles : b.roles,
                 }
@@ -662,7 +594,6 @@ export const IntegrationsPage: React.FC = () => {
       );
       setSandboxBot(null);
     } catch {
-      // Fallback: update local sandbox configuration cleanly
       setBots((prev) =>
         prev.map((b) =>
           b.id === sandboxBot.id
@@ -701,15 +632,16 @@ export const IntegrationsPage: React.FC = () => {
       toast.success(`Posted the Server Bot Directory embed to #${data.channelName}.`);
       setPublishModalOpen(false);
     } catch {
-      // Fallback: Use existing /api/guilds/:guildId/embeds/send endpoint
       try {
         const categoryLabels: Record<string, string> = {
-          core: '⚙️ Core Server Engine',
-          music: '🎵 Music & Lofi Radio Bots',
-          gaming: '🎮 Minigame & Gacha Bots',
-          economy: '🪙 Economy & Currency Bots',
+          core: '⚙️ Core & System Bots',
           moderation: '🛡️ Moderation & Security Bots',
           utility: '🔧 Utility & Automation Bots',
+          ai: '✨ AI & Webhook Integrations',
+          music: '🎵 Audio & Voice Bots',
+          gaming: '🎮 Games & Entertainment Bots',
+          economy: '🪙 Economy & Leveling Bots',
+          custom: '🧩 Custom & Other Bots',
         };
 
         const fields = Object.entries(categoryLabels)
@@ -724,7 +656,11 @@ export const IntegrationsPage: React.FC = () => {
                       .map((id) => `<#${id}>`)
                       .join(', ')}`
                   : '';
-                return `• **${b.displayName}** (\`${b.prefix || '/'}\`) — ${b.notes}${chHint}`;
+                const cmdHint =
+                  Array.isArray(b.commands) && b.commands.length > 0
+                    ? ` (${b.commands.slice(0, 4).map((c) => `\`${c}\``).join(', ')})`
+                    : '';
+                return `• **${b.displayName}** (\`${b.prefix || '/'}\`) — ${b.notes}${cmdHint}${chHint}`;
               })
               .join('\n')
               .slice(0, 1024);
@@ -758,6 +694,114 @@ export const IntegrationsPage: React.FC = () => {
     }
   };
 
+  const handleOpenBotAuthorize = (botIdOrInput: string, permPreset = 'standard') => {
+    const raw = botIdOrInput.trim();
+    if (!raw) {
+      toast.warning('Please enter a Discord Bot Client ID or Invite URL.');
+      return;
+    }
+
+    // If full URL was pasted, open directly
+    if (/^https?:\/\//i.test(raw)) {
+      window.open(raw, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const clientIdMatch = /\d{15,22}/.exec(raw);
+    if (!clientIdMatch) {
+      toast.warning('Please enter a valid numeric Discord Application / Client ID (17-20 digits).');
+      return;
+    }
+
+    const permMap: Record<string, string> = {
+      minimal: '2147485696', // View Channels, Send Messages, Embed Links, Use Slash Commands
+      voice: '36702208', // View Channels, Connect, Speak, Use Voice Activity
+      standard: '1099511627775', // Standard Moderation & Utility
+      admin: '8', // Administrator
+    };
+    const permissions = permMap[permPreset] || '2147485696';
+    const guildParam = guildId ? `&guild_id=${guildId}&disable_guild_select=false` : '';
+    const url = `https://discord.com/oauth2/authorize?client_id=${clientIdMatch[0]}&permissions=${permissions}&scope=bot%20applications.commands${guildParam}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleCreateCustomBotRoom = async () => {
+    if (!guildId) return;
+    if (!customTextChannel.trim() && !customVoiceChannel.trim()) {
+      toast.warning('Please provide at least a Text Channel or Voice Channel name.');
+      return;
+    }
+
+    setCreatingCustomRoom(true);
+    try {
+      const data = await safeJsonFetch(`/api/guilds/${guildId}/integrations/presets/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          presetId: 'custom',
+          customCategoryName,
+          customTextChannel,
+          customVoiceChannel,
+          allowedBotIds: customRoomBotIds,
+        }),
+      });
+      toast.success(`Created ${data.createdChannels.join(', ')} successfully.`);
+      setCustomCategoryName('');
+      setCustomTextChannel('');
+      setCustomVoiceChannel('');
+      setCustomRoomBotIds([]);
+      fetchIntegrations();
+    } catch {
+      try {
+        const createdNames: string[] = [];
+        let parentId: string | undefined;
+        if (customCategoryName.trim()) {
+          const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: customCategoryName.trim(), type: 'category' }),
+          });
+          parentId = catRes.channel?.id;
+        }
+        if (customTextChannel.trim()) {
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: customTextChannel.trim(),
+              type: 'text',
+              parentId,
+              topic: 'Dedicated channel for bot commands and integrations.',
+            }),
+          });
+          createdNames.push(customTextChannel.trim());
+        }
+        if (customVoiceChannel.trim()) {
+          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: customVoiceChannel.trim(),
+              type: 'voice',
+              parentId,
+            }),
+          });
+          createdNames.push(customVoiceChannel.trim());
+        }
+        toast.success(`Created ${createdNames.join(', ')} successfully.`);
+        setCustomCategoryName('');
+        setCustomTextChannel('');
+        setCustomVoiceChannel('');
+        setCustomRoomBotIds([]);
+        fetchIntegrations();
+      } catch (err: any) {
+        toast.error(err.message || 'Could not create custom bot channels.');
+      }
+    } finally {
+      setCreatingCustomRoom(false);
+    }
+  };
+
   const handleApplyPreset = async (preset: BotPresetItem) => {
     if (!guildId) return;
     setApplyingPresetId(preset.id);
@@ -770,60 +814,49 @@ export const IntegrationsPage: React.FC = () => {
       toast.success(`Created ${data.createdChannels.join(', ')} for ${preset.title}.`);
       fetchIntegrations();
     } catch {
-      // Fallback: Create channels sequentially using existing POST /api/guilds/:guildId/channels
       try {
         const createdNames: string[] = [];
-        if (preset.id === 'lofi_music') {
+        if (preset.id === 'voice_bot_lounge') {
           const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🎧 LOFI & MUSIC LOUNGE', type: 'category' }),
+            body: JSON.stringify({ name: '🔊 AUDIO & VOICE BOTS', type: 'category' }),
           });
           const parentId = catRes.channel?.id;
           await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: '🎵・music-requests',
+              name: '🎛️・audio-controls',
               type: 'text',
               parentId,
-              topic: 'Type /play or music bot commands here to queue songs and Lofi streams.',
+              topic: 'Use audio and voice bot commands here.',
             }),
           });
           await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🔊 Lofi Radio 24/7', type: 'voice', parentId }),
+            body: JSON.stringify({ name: '🔊 Bot Audio Lounge', type: 'voice', parentId }),
           });
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🎶 Music Lounge', type: 'voice', parentId }),
-          });
-          createdNames.push('🎵・music-requests', '🔊 Lofi Radio 24/7', '🎶 Music Lounge');
-        } else if (preset.id === 'gaming_arcade') {
+          createdNames.push('🎛️・audio-controls', '🔊 Bot Audio Lounge');
+        } else if (preset.id === 'interactive_bot_zone') {
           const catRes = await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🎮 MINIGAME ARCADE', type: 'category' }),
+            body: JSON.stringify({ name: '🤖 BOT ACTIVITIES', type: 'category' }),
           });
           const parentId = catRes.channel?.id;
           await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🎮・bot-arcade', type: 'text', parentId }),
+            body: JSON.stringify({ name: '🤖・bot-activities', type: 'text', parentId }),
           });
           await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🃏・gacha-drops', type: 'text', parentId }),
+            body: JSON.stringify({ name: '📊・rank-and-stats', type: 'text', parentId }),
           });
-          await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: '🐸・economy-grind', type: 'text', parentId }),
-          });
-          createdNames.push('🎮・bot-arcade', '🃏・gacha-drops', '🐸・economy-grind');
+          createdNames.push('🤖・bot-activities', '📊・rank-and-stats');
         } else {
           await safeJsonFetch(`/api/guilds/${guildId}/channels`, {
             method: 'POST',
@@ -860,7 +893,7 @@ export const IntegrationsPage: React.FC = () => {
         await safeJsonFetch(`/api/guilds/${guildId}/members/${kickBotTarget.id}/kick`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reason: 'Removed third-party bot via ArchiBot Dashboard' }),
+          body: JSON.stringify({ reason: 'Removed bot via ArchiBot Dashboard' }),
         });
         setBots((prev) => prev.filter((b) => b.id !== kickBotTarget.id));
         toast.success(`${kickBotTarget.displayName} has been removed from the server.`);
@@ -900,7 +933,7 @@ export const IntegrationsPage: React.FC = () => {
       <PageHeader
         category="SERVER MANAGEMENT"
         title="Bot Integrations"
-        description="Manage third-party bots (Lofi Radio, Music, Karuta, Mudae, Economy, and Moderation), isolate bot spam to dedicated sandbox channels, and publish a unified command directory."
+        description="Universal control center for all bots in your server — manage roles, nicknames, command prefixes, channel access permissions, and security privileges from one place."
         actions={
           <div className="flex flex-wrap items-center gap-2.5">
             <MdButton
@@ -912,26 +945,26 @@ export const IntegrationsPage: React.FC = () => {
             </MdButton>
             <MdButton
               variant="filled"
-              icon="auto_fix_high"
+              icon="person_add"
               onClick={() => setTabIndex(3)}
             >
-              1-Click Bot Rooms
+              Add Bot / Create Sandbox
             </MdButton>
           </div>
         }
       />
 
-      {/* Top Summary Metrics */}
+      {/* Top Universal Summary Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SurfaceCard>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[11px] uppercase tracking-wider text-discord-muted">
-                Installed Bots
+                Total Installed Bots
               </div>
               <div className="text-2xl font-normal text-discord-white mt-1">{stats.total}</div>
               <div className="text-xs text-discord-muted mt-1">
-                {stats.thirdPartyCount} third-party + ArchiBot
+                {stats.thirdPartyCount} external + ArchiBot
               </div>
             </div>
             <div className="w-11 h-11 rounded-xl bg-discord-surface border border-discord-border flex items-center justify-center text-discord-blurple">
@@ -944,17 +977,17 @@ export const IntegrationsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[11px] uppercase tracking-wider text-discord-muted">
-                Music & Game Bots
+                Active & Online
               </div>
               <div className="text-2xl font-normal text-discord-white mt-1">
-                {stats.musicAndGameCount}
+                {stats.onlineCount}
               </div>
               <div className="text-xs text-discord-muted mt-1">
-                Lofi, radio, gacha & minigames
+                Connected & responding in guild
               </div>
             </div>
             <div className="w-11 h-11 rounded-xl bg-discord-surface border border-discord-border flex items-center justify-center text-discord-green">
-              <MdIcon name="headphones" className="text-xl" />
+              <MdIcon name="sensors" className="text-xl" />
             </div>
           </div>
         </SurfaceCard>
@@ -969,7 +1002,7 @@ export const IntegrationsPage: React.FC = () => {
                 {stats.sandboxedCount}
               </div>
               <div className="text-xs text-discord-muted mt-1">
-                Isolated from general chat spam
+                Scoped to specific channels
               </div>
             </div>
             <div className="w-11 h-11 rounded-xl bg-discord-surface border border-discord-border flex items-center justify-center text-discord-blurple">
@@ -989,7 +1022,7 @@ export const IntegrationsPage: React.FC = () => {
               </div>
               <div className="text-xs text-discord-muted mt-1">
                 {stats.highRiskCount === 0
-                  ? 'No risky third-party admins'
+                  ? 'All external bots scoped safely'
                   : 'Has Admin / Manage Server'}
               </div>
             </div>
@@ -1011,15 +1044,15 @@ export const IntegrationsPage: React.FC = () => {
       <MdTabs
         tabs={[
           { id: 'installed', label: `Installed Bots (${bots.length})`, icon: 'smart_toy' },
-          { id: 'sandboxes', label: 'Channel Sandboxes', icon: 'tune' },
-          { id: 'commands', label: 'Commands & Prefixes', icon: 'terminal' },
-          { id: 'discovery', label: 'Bot Presets & Discovery', icon: 'explore' },
+          { id: 'sandboxes', label: 'Channel Access', icon: 'lock_person' },
+          { id: 'commands', label: 'Command Registry', icon: 'terminal' },
+          { id: 'builder', label: 'Add Bot & Rooms', icon: 'add_circle' },
         ]}
         activeIndex={tabIndex}
         onChange={setTabIndex}
       />
 
-      {/* TAB 0: INSTALLED BOTS */}
+      {/* TAB 0: INSTALLED BOTS (UNIVERSAL ROSTER) */}
       {tabIndex === 0 && (
         <div className="space-y-4">
           <SurfaceCard>
@@ -1027,11 +1060,13 @@ export const IntegrationsPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2">
                 {[
                   { id: 'all', label: 'All Bots', icon: 'apps' },
-                  { id: 'music', label: 'Music & Lofi', icon: 'headphones' },
-                  { id: 'gaming', label: 'Minigame & Gacha', icon: 'sports_esports' },
-                  { id: 'economy', label: 'Economy', icon: 'monetization_on' },
                   { id: 'moderation', label: 'Moderation', icon: 'shield' },
                   { id: 'utility', label: 'Utility', icon: 'build' },
+                  { id: 'ai', label: 'AI & Webhooks', icon: 'auto_awesome' },
+                  { id: 'music', label: 'Audio & Voice', icon: 'graphic_eq' },
+                  { id: 'gaming', label: 'Games', icon: 'sports_esports' },
+                  { id: 'economy', label: 'Economy & XP', icon: 'monitoring' },
+                  { id: 'custom', label: 'Custom', icon: 'smart_toy' },
                 ].map((cat) => (
                   <MdChip
                     key={cat.id}
@@ -1044,7 +1079,7 @@ export const IntegrationsPage: React.FC = () => {
               </div>
               <div className="w-full lg:w-72">
                 <MdTextField
-                  label="Search bot name or prefix..."
+                  label="Search bot name, ID, or prefix..."
                   value={search}
                   onChange={setSearch}
                   debounceMs={250}
@@ -1058,10 +1093,10 @@ export const IntegrationsPage: React.FC = () => {
             <EmptyState
               icon="smart_toy"
               title="No matching bots found"
-              description="Try clearing your category filter or explore popular Lofi & Minigame bots in the Discovery tab."
+              description="Try clearing your search filter or authorize a new bot in the Add Bot & Rooms tab."
               action={
-                <MdButton variant="tonal" icon="explore" onClick={() => setTabIndex(3)}>
-                  Browse Recommended Bots
+                <MdButton variant="tonal" icon="person_add" onClick={() => setTabIndex(3)}>
+                  Add Bot to Server
                 </MdButton>
               }
             />
@@ -1092,10 +1127,12 @@ export const IntegrationsPage: React.FC = () => {
                                 {bot.displayName}
                               </span>
                               <StatusBadge label={catMeta.label} tone={catMeta.tone} />
-                              {bot.isSelf && <StatusBadge label="Primary Bot" tone="blurple" />}
+                              {bot.isSelf && <StatusBadge label="Primary Engine" tone="blurple" />}
                             </div>
                             <div className="text-xs text-discord-muted mt-0.5 flex flex-wrap items-center gap-2">
                               <span>@{bot.username}</span>
+                              <span>•</span>
+                              <span>ID: {bot.id}</span>
                               <span>•</span>
                               <span>
                                 Prefix:{' '}
@@ -1147,14 +1184,14 @@ export const IntegrationsPage: React.FC = () => {
                                 <span className="text-discord-white">
                                   {bot.allowedChannelIds.length}
                                 </span>{' '}
-                                ch • Blocked in{' '}
+                                ch • Restricted in{' '}
                                 <span className="text-discord-white">
                                   {bot.blockedChannelIds.length}
                                 </span>{' '}
                                 ch
                               </span>
                             ) : (
-                              <span>Unrestricted (can respond in all visible channels)</span>
+                              <span>Default access (follows role permissions)</span>
                             )}
                           </div>
 
@@ -1162,10 +1199,10 @@ export const IntegrationsPage: React.FC = () => {
                             <MdButton
                               size="sm"
                               variant="tonal"
-                              icon="tune"
+                              icon="lock_person"
                               onClick={() => openSandboxModal(bot)}
                             >
-                              Sandbox
+                              Channels
                             </MdButton>
                             <MdButton
                               size="sm"
@@ -1175,6 +1212,11 @@ export const IntegrationsPage: React.FC = () => {
                             >
                               Configure
                             </MdButton>
+                            <MdIconButton
+                              icon="open_in_new"
+                              title="Re-authorize / OAuth2 Link"
+                              onClick={() => handleOpenBotAuthorize(bot.id, 'standard')}
+                            />
                             {!bot.isSelf && (
                               <MdIconButton
                                 icon="person_remove"
@@ -1194,12 +1236,12 @@ export const IntegrationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 1: CHANNEL SANDBOXES */}
+      {/* TAB 1: UNIVERSAL CHANNEL ACCESS & SANDBOXES */}
       {tabIndex === 1 && (
         <div className="space-y-4">
           <SurfaceCard
-            title="Channel Sandbox & Anti-Spam Isolation"
-            subtitle="Restrict Lofi music bots to voice lounges and keep gacha/minigame bots (Karuta, Mudae, Dank Memer) inside dedicated arcade channels so they never clutter general chat."
+            title="Universal Channel Access & Sandbox Control"
+            subtitle="Control exactly which text and voice channels each bot is allowed to read, message, or connect to — preventing unwanted bot responses in general chat."
             headerAction={
               <MdButton
                 size="sm"
@@ -1207,7 +1249,7 @@ export const IntegrationsPage: React.FC = () => {
                 icon="add_circle"
                 onClick={() => setTabIndex(3)}
               >
-                Create Sandbox Channels
+                Create Bot Channel
               </MdButton>
             }
           >
@@ -1237,15 +1279,15 @@ export const IntegrationsPage: React.FC = () => {
                           </span>
                           <StatusBadge label={catMeta.label} tone={catMeta.tone} />
                           {bot.isSandboxed ? (
-                            <StatusBadge label="Sandboxed" tone="green" />
+                            <StatusBadge label="Custom Channel Scope" tone="green" />
                           ) : (
-                            <StatusBadge label="All Channels" tone="neutral" />
+                            <StatusBadge label="Default Role Scope" tone="neutral" />
                           )}
                         </div>
                         <div className="text-xs text-discord-muted mt-1 flex flex-wrap items-center gap-1.5">
                           {allowedNames.length > 0 ? (
                             <>
-                              <span>Allowed in:</span>
+                              <span>Explicitly allowed in:</span>
                               {allowedNames.slice(0, 4).map((name) => (
                                 <span
                                   key={name}
@@ -1259,11 +1301,11 @@ export const IntegrationsPage: React.FC = () => {
                               )}
                             </>
                           ) : (
-                            <span>No specific channel whitelist configured yet.</span>
+                            <span>No explicit channel whitelist configured yet.</span>
                           )}
                           {blockedCount > 0 && (
                             <span className="text-discord-muted">
-                              • Muted in {blockedCount} channel{blockedCount > 1 ? 's' : ''}
+                              • Restricted in {blockedCount} channel{blockedCount > 1 ? 's' : ''}
                             </span>
                           )}
                         </div>
@@ -1277,7 +1319,7 @@ export const IntegrationsPage: React.FC = () => {
                         icon="lock_person"
                         onClick={() => openSandboxModal(bot)}
                       >
-                        Configure Allowed Channels
+                        Manage Channel Access
                       </MdButton>
                     </div>
                   </div>
@@ -1288,19 +1330,19 @@ export const IntegrationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: COMMANDS & PREFIXES */}
+      {/* TAB 2: UNIVERSAL COMMAND & PREFIX REGISTRY */}
       {tabIndex === 2 && (
         <div className="space-y-4">
           <SurfaceCard
-            title="Bot Command Prefix Registry & Server Directory"
-            subtitle="Document each bot's prefix and usage notes so members never get confused, then publish a clean Bot Directory embed directly to Discord."
+            title="Universal Bot Command & Prefix Registry"
+            subtitle="Document prefixes, key slash commands, and usage notes for every bot in your server, then publish an automated Server Bot Directory embed to Discord."
             headerAction={
               <MdButton
                 variant="filled"
                 icon="send"
                 onClick={() => setPublishModalOpen(true)}
               >
-                Publish Guide to Discord
+                Publish Directory to Discord
               </MdButton>
             }
           >
@@ -1329,10 +1371,27 @@ export const IntegrationsPage: React.FC = () => {
                           </code>
                         </div>
                         <p className="text-xs text-discord-muted mt-1">{bot.notes}</p>
+
+                        {Array.isArray(bot.commands) && bot.commands.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span className="text-[11px] text-discord-muted">Commands:</span>
+                            {bot.commands.map((cmd) => (
+                              <code
+                                key={cmd}
+                                className="px-1.5 py-0.5 rounded text-[11px] bg-discord-card border border-discord-border text-discord-white"
+                              >
+                                {cmd}
+                              </code>
+                            ))}
+                          </div>
+                        )}
+
                         {bot.dangerousPermissions.length > 0 && (
                           <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                            <span className="text-[11px] text-discord-muted">Key Permissions:</span>
-                            {bot.dangerousPermissions.slice(0, 5).map((perm) => (
+                            <span className="text-[11px] text-discord-muted">
+                              Elevated Permissions:
+                            </span>
+                            {bot.dangerousPermissions.slice(0, 6).map((perm) => (
                               <span
                                 key={perm}
                                 className="px-1.5 py-0.5 rounded text-[11px] bg-discord-card border border-discord-border text-discord-muted"
@@ -1352,7 +1411,7 @@ export const IntegrationsPage: React.FC = () => {
                         icon="edit"
                         onClick={() => openManageModal(bot)}
                       >
-                        Edit Prefix & Notes
+                        Edit Prefix & Commands
                       </MdButton>
                     </div>
                   </div>
@@ -1363,12 +1422,129 @@ export const IntegrationsPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: BOT PRESETS & DISCOVERY */}
+      {/* TAB 3: UNIVERSAL ADD BOT (BY CLIENT ID / URL) & CUSTOM SANDBOX ROOM BUILDER */}
       {tabIndex === 3 && (
         <div className="space-y-6">
-          {/* 1-Click Environment Builders */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {/* 1. Universal OAuth2 Bot Invite Generator */}
+            <SurfaceCard
+              title="Authorize Any Discord Bot (OAuth2 Generator)"
+              subtitle="Invite any public or custom Discord bot directly into this server using its Application / Client ID or OAuth2 invite link."
+            >
+              <div className="space-y-4">
+                <MdTextField
+                  label="Bot Application / Client ID or Invite URL"
+                  value={inviteClientId}
+                  onChange={setInviteClientId}
+                  placeholder="e.g. 123456789012345678 or https://discord.com/oauth2/authorize..."
+                  icon="smart_toy"
+                />
+
+                <MdSelect
+                  label="Initial Permission Scope"
+                  value={invitePermLevel}
+                  onChange={setInvitePermLevel}
+                  options={[
+                    {
+                      value: 'minimal',
+                      label: 'Minimal Safe Scope (View, Send Messages, Embeds & Slash Commands)',
+                    },
+                    {
+                      value: 'voice',
+                      label: 'Audio & Voice Scope (View, Connect, Speak & Voice Activity)',
+                    },
+                    {
+                      value: 'standard',
+                      label: 'Standard Utility & Moderation Scope',
+                    },
+                    {
+                      value: 'admin',
+                      label: 'Full Administrator (Only for trusted bots)',
+                    },
+                  ]}
+                />
+
+                <div className="flex items-center justify-end pt-1">
+                  <MdButton
+                    variant="filled"
+                    icon="open_in_new"
+                    onClick={() => handleOpenBotAuthorize(inviteClientId, invitePermLevel)}
+                  >
+                    Authorize Bot to Server
+                  </MdButton>
+                </div>
+              </div>
+            </SurfaceCard>
+
+            {/* 2. Universal Custom Bot Room & Category Builder */}
+            <SurfaceCard
+              title="Custom Bot Room & Sandbox Builder"
+              subtitle="Create custom text or voice channels for any bot workflow and immediately grant channel access to selected bots."
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <MdTextField
+                    label="Category Name (Optional)"
+                    value={customCategoryName}
+                    onChange={setCustomCategoryName}
+                    placeholder="e.g. 🤖 BOT ZONE"
+                  />
+                  <MdTextField
+                    label="Text Channel Name"
+                    value={customTextChannel}
+                    onChange={setCustomTextChannel}
+                    placeholder="e.g. 🤖・bot-commands"
+                  />
+                  <MdTextField
+                    label="Voice Channel (Optional)"
+                    value={customVoiceChannel}
+                    onChange={setCustomVoiceChannel}
+                    placeholder="e.g. 🔊 Bot Lounge"
+                  />
+                </div>
+
+                <div>
+                  <div className="text-xs text-discord-muted mb-2">
+                    Grant Channel Access to Installed Bots (Optional):
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-2.5 rounded-xl bg-discord-surface border border-discord-border">
+                    {bots.map((b) => {
+                      const selected = customRoomBotIds.includes(b.id);
+                      return (
+                        <MdChip
+                          key={b.id}
+                          label={b.displayName}
+                          selected={selected}
+                          onClick={() =>
+                            setCustomRoomBotIds((prev) =>
+                              prev.includes(b.id)
+                                ? prev.filter((id) => id !== b.id)
+                                : [...prev, b.id]
+                            )
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end pt-1">
+                  <MdButton
+                    variant="filled"
+                    icon="add_circle"
+                    loading={creatingCustomRoom}
+                    onClick={handleCreateCustomBotRoom}
+                  >
+                    Create Bot Channels
+                  </MdButton>
+                </div>
+              </div>
+            </SurfaceCard>
+          </div>
+
+          {/* 3. Generic 1-Click Bot Sandbox Templates */}
           <div>
-            <SectionHeader title="1-Click Bot Environment Builders" />
+            <SectionHeader title="Quick Sandbox Environment Templates" />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {presets.map((preset) => (
                 <SurfaceCard key={preset.id}>
@@ -1378,7 +1554,7 @@ export const IntegrationsPage: React.FC = () => {
                         <div className="w-10 h-10 rounded-xl bg-discord-surface border border-discord-border flex items-center justify-center text-discord-blurple">
                           <MdIcon name={preset.icon} className="text-xl" />
                         </div>
-                        <StatusBadge label="1-Click Setup" tone="blurple" />
+                        <StatusBadge label="1-Click Template" tone="blurple" />
                       </div>
                       <h3 className="text-base font-normal text-discord-white">{preset.title}</h3>
                       <p className="text-xs text-discord-muted mt-1 leading-relaxed">
@@ -1403,7 +1579,7 @@ export const IntegrationsPage: React.FC = () => {
                     </div>
 
                     <MdButton
-                      variant="filled"
+                      variant="tonal"
                       icon="add_business"
                       loading={applyingPresetId === preset.id}
                       onClick={() => handleApplyPreset(preset)}
@@ -1416,107 +1592,10 @@ export const IntegrationsPage: React.FC = () => {
               ))}
             </div>
           </div>
-
-          {/* Curated Third-Party Bot Directory */}
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <SectionHeader
-                title="Popular Third-Party Bots (Lofi, Music & Minigames)"
-                className="mb-0"
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'music', label: 'Lofi & Music' },
-                  { id: 'gaming', label: 'Minigames & Gacha' },
-                  { id: 'economy', label: 'Economy' },
-                ].map((cat) => (
-                  <MdChip
-                    key={cat.id}
-                    label={cat.label}
-                    selected={discoveryCategory === cat.id}
-                    onClick={() => setDiscoveryCategory(cat.id)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              {filteredDiscovery.map((rec) => {
-                const isAlreadyInstalled = bots.some(
-                  (b) =>
-                    b.displayName.toLowerCase().includes(rec.name.split(' ')[0].toLowerCase()) ||
-                    b.username.toLowerCase().includes(rec.name.split(' ')[0].toLowerCase())
-                );
-                const catMeta = CATEGORY_META[rec.category] || CATEGORY_META.utility;
-
-                return (
-                  <SurfaceCard key={rec.id}>
-                    <div className="flex flex-col justify-between h-full gap-4">
-                      <div>
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h4 className="text-sm font-normal text-discord-white">{rec.name}</h4>
-                            <div className="mt-1">
-                              <StatusBadge label={rec.badge} tone={catMeta.tone} />
-                            </div>
-                          </div>
-                          {isAlreadyInstalled && <StatusBadge label="Installed" tone="green" />}
-                        </div>
-
-                        <p className="text-xs text-discord-muted mt-3 leading-relaxed">
-                          {rec.description}
-                        </p>
-
-                        <div className="mt-3 space-y-1.5 text-xs">
-                          <div className="flex items-center justify-between text-discord-muted">
-                            <span>Default Prefix:</span>
-                            <code className="px-1.5 py-0.5 rounded bg-discord-surface border border-discord-border text-discord-white">
-                              {rec.prefix}
-                            </code>
-                          </div>
-                          <div className="flex items-center justify-between text-discord-muted">
-                            <span>Best Room:</span>
-                            <span className="text-discord-white">{rec.recommendedChannel}</span>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 pt-3 border-t border-discord-border">
-                          <div className="text-[11px] text-discord-muted mb-1.5">
-                            Popular Commands:
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {rec.commands.map((cmd) => (
-                              <code
-                                key={cmd}
-                                className="px-1.5 py-0.5 rounded bg-discord-surface border border-discord-border text-[11px] text-discord-muted"
-                              >
-                                {cmd}
-                              </code>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      <MdButton
-                        variant={isAlreadyInstalled ? 'tonal' : 'outlined'}
-                        size="sm"
-                        icon="open_in_new"
-                        onClick={() => window.open(rec.inviteUrl, '_blank', 'noopener,noreferrer')}
-                        className="w-full justify-center"
-                      >
-                        {isAlreadyInstalled ? 'View Official Docs' : `Invite ${rec.name}`}
-                      </MdButton>
-                    </div>
-                  </SurfaceCard>
-                );
-              })}
-            </div>
-          </div>
         </div>
       )}
 
-      {/* MODAL 1: CONFIGURE BOT METADATA, PREFIX & ROLES */}
+      {/* MODAL 1: CONFIGURE BOT METADATA, PREFIX, COMMANDS & ROLES */}
       <MdDialog
         open={Boolean(editingBot)}
         onClose={() => setEditingBot(null)}
@@ -1550,7 +1629,7 @@ export const IntegrationsPage: React.FC = () => {
                 label="Command Prefix"
                 value={editPrefix}
                 onChange={setEditPrefix}
-                placeholder="e.g. / or k! or $"
+                placeholder="e.g. / or ! or ?"
               />
             </div>
 
@@ -1559,13 +1638,22 @@ export const IntegrationsPage: React.FC = () => {
               value={editCategory}
               onChange={(val) => setEditCategory(val as BotCategory)}
               options={[
-                { value: 'music', label: 'Music & Lofi Studio' },
-                { value: 'gaming', label: 'Minigame & Gacha Arcade' },
-                { value: 'economy', label: 'Economy & Currency' },
                 { value: 'moderation', label: 'Moderation & Security' },
                 { value: 'utility', label: 'Utility & Automation' },
-                { value: 'core', label: 'Core Server Engine' },
+                { value: 'ai', label: 'AI & Webhook Integration' },
+                { value: 'music', label: 'Audio & Voice' },
+                { value: 'gaming', label: 'Games & Entertainment' },
+                { value: 'economy', label: 'Economy & Leveling' },
+                { value: 'core', label: 'Core & System' },
+                { value: 'custom', label: 'Custom / Other' },
               ]}
+            />
+
+            <MdTextField
+              label="Key Commands (Comma-separated)"
+              value={editCommandsText}
+              onChange={setEditCommandsText}
+              placeholder="e.g. /help, /settings, /play, /ticket"
             />
 
             <MdTextField
@@ -1574,7 +1662,7 @@ export const IntegrationsPage: React.FC = () => {
               label="Usage Notes (Displayed in Server Bot Directory)"
               value={editNotes}
               onChange={setEditNotes}
-              placeholder="Describe what members can do with this bot..."
+              placeholder="Describe what members or staff can do with this bot..."
             />
 
             <div>
@@ -1614,7 +1702,7 @@ export const IntegrationsPage: React.FC = () => {
         open={Boolean(sandboxBot)}
         onClose={() => setSandboxBot(null)}
         headline={
-          sandboxBot ? `Channel Sandbox — ${sandboxBot.displayName}` : 'Channel Sandbox'
+          sandboxBot ? `Channel Access — ${sandboxBot.displayName}` : 'Channel Access'
         }
         actions={
           <div className="flex items-center justify-end gap-2">
@@ -1636,7 +1724,7 @@ export const IntegrationsPage: React.FC = () => {
           <div className="space-y-4">
             <p className="text-xs text-discord-muted leading-relaxed">
               Choose which channels <span className="text-discord-white">{sandboxBot.displayName}</span> is explicitly{' '}
-              <span className="text-discord-green">Allowed</span> to use or{' '}
+              <span className="text-discord-green">Allowed</span> to access or{' '}
               <span className="text-discord-red">Blocked</span> from messaging/connecting. ArchiBot will automatically apply Discord permission overwrites.
             </p>
 
@@ -1729,7 +1817,7 @@ export const IntegrationsPage: React.FC = () => {
       >
         <div className="space-y-4">
           <p className="text-xs text-discord-muted leading-relaxed">
-            ArchiBot will generate a formatted Discord embed listing all installed bots grouped by category (Music & Lofi, Minigames, Economy, Moderation, and Utilities), including each bot&apos;s prefix and allowed channels.
+            ArchiBot will generate a formatted Discord embed listing all installed bots in your server grouped by category, including each bot&apos;s command prefix, registered commands, and designated channels.
           </p>
 
           <MdSelect
@@ -1764,7 +1852,7 @@ export const IntegrationsPage: React.FC = () => {
         title={kickBotTarget ? `Remove ${kickBotTarget.displayName}?` : 'Remove Bot?'}
         message={
           kickBotTarget
-            ? `Are you sure you want to kick ${kickBotTarget.displayName} (@${kickBotTarget.username}) from the server? You can always re-invite it later.`
+            ? `Are you sure you want to kick ${kickBotTarget.displayName} (@${kickBotTarget.username}) from the server? You can always re-authorize it later.`
             : ''
         }
         confirmLabel="Remove Bot"

@@ -100,7 +100,7 @@ export const OverviewPage: React.FC = () => {
     },
     {
       title: 'Bot Integrations',
-      description: 'Manage Lofi, music, and minigame bots, isolate channel spam, and publish a bot directory',
+      description: 'Manage all bots in your server, configure roles, prefixes, channel access, and permissions',
       icon: 'smart_toy',
       to: `/guilds/${guildId}/integrations`,
     },

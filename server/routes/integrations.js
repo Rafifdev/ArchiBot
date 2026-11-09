@@ -6,153 +6,68 @@ import {
   PermissionFlagsBits,
 } from 'discord.js';
 import { verifySession, verifyGuildAccess } from '../middleware/auth.js';
-import { client, state, saveState, DANGEROUS_PERMS } from '../botClient.js';
+import { client, state, saveState } from '../botClient.js';
 
 const router = Router();
 router.use(verifySession);
 
-const KNOWN_BOT_PATTERNS = [
+const UNIVERSAL_CATEGORY_PATTERNS = [
   {
-    match: /lofi|jockie|fredboat|uzox|flavi|chip|green-bot|pancake|rythm|groovy|hydra|vexera|music|radio|24\/7|spotify/i,
+    match: /dyno|carl|mee6|probot|wick|vortex|sapphire|security|automod|double\s*counter|pandez|modmail|ticket|logger|audit|guard|shield|mod/i,
+    category: 'moderation',
+    defaultPrefix: '/',
+    defaultNotes: 'Server moderation, security, logging, and automated protection.',
+  },
+  {
+    match: /music|radio|audio|sound|voice|lofi|jockie|fredboat|uzox|flavi|chip|green-bot|pancake|rythm|hydra|vexera|spotify|tts/i,
     category: 'music',
     defaultPrefix: '/',
-    defaultNotes: 'Play music, 24/7 radio streams, and manage voice queues.',
+    defaultNotes: 'Voice channel audio, radio streaming, and sound utilities.',
   },
   {
-    match: /karuta|mudae|poketwo|poké|dank\s*memer|owo|idle\s*rpg|epic\s*rpg|ani\s*game|virtual\s*fisher|gacha|trivia|akinator|truth\s*or\s*dare|counting|wordle|uno/i,
+    match: /game|rpg|gacha|trivia|card|arcade|play|karuta|mudae|poketwo|poké|dank|owo|fisher|akinator|counting|wordle|uno/i,
     category: 'gaming',
-    defaultPrefix: '!',
-    defaultNotes: 'Interactive chat minigames, card drops, and leaderboards.',
+    defaultPrefix: '/',
+    defaultNotes: 'Interactive chat games, multiplayer activities, and entertainment.',
   },
   {
-    match: /dyno|carl|mee6|probot|wick|vortex|sapphire|security|automod|double\s*counter|pandez|modmail|ticket\s*tool|arcane|statbot/i,
-    category: 'moderation',
-    defaultPrefix: '?',
-    defaultNotes: 'Server moderation, logging, reaction roles, and utilities.',
-  },
-  {
-    match: /unbelievaboat|tatsu|taiko|economy|casino|blackjack|bank/i,
+    match: /economy|level|xp|rank|coin|bank|shop|currency|unbelievaboat|tatsu|arcane/i,
     category: 'economy',
-    defaultPrefix: '!',
-    defaultNotes: 'Server currency, daily rewards, and shop leaderboards.',
-  },
-];
-
-export const RECOMMENDED_BOTS = [
-  {
-    id: 'lofi-radio',
-    name: 'Lofi Radio 24/7',
-    category: 'music',
-    prefix: '/play',
-    badge: '24/7 Chill Beats',
-    description: 'High-quality 24/7 Lofi Hip-Hop beats for study, coding, and chill voice lounges.',
-    recommendedChannel: '🔊 Lofi Radio 24/7',
-    inviteUrl: 'https://top.gg/bot/712351084597968907',
-    commands: ['/play', '/station', '/247', '/volume'],
+    defaultPrefix: '/',
+    defaultNotes: 'Server leveling, XP progression, and community rewards.',
   },
   {
-    id: 'jockie-music',
-    name: 'Jockie Music',
-    category: 'music',
-    prefix: 'm!play',
-    badge: 'Multi-Instance Music',
-    description: 'Feature-rich multi-source music bot supporting playlists, filters, and multiple voice channels.',
-    recommendedChannel: '🎵・music-requests',
-    inviteUrl: 'https://www.jockiemusic.com/',
-    commands: ['m!play <song>', 'm!skip', 'm!queue', 'm!leave'],
-  },
-  {
-    id: 'green-bot',
-    name: 'Green-bot',
-    category: 'music',
-    prefix: '/play',
-    badge: '24/7 Audio & Filters',
-    description: 'Clean slash-command music player with bassboost, nightcore filters, and dedicated request channels.',
-    recommendedChannel: '🎵・music-requests',
-    inviteUrl: 'https://green-bot.app/',
-    commands: ['/play', '/filter', '/autoplay', '/stop'],
-  },
-  {
-    id: 'karuta',
-    name: 'Karuta',
-    category: 'gaming',
-    prefix: 'k!',
-    badge: 'Anime Card TCG',
-    description: 'Collect, trade, and upgrade over 90,000 anime characters with custom frames and dyes.',
-    recommendedChannel: '🃏・karuta-drops',
-    inviteUrl: 'https://karuta.com/',
-    commands: ['k!drop', 'k!collection', 'k!view', 'k!daily'],
-  },
-  {
-    id: 'mudae',
-    name: 'Mudae',
-    category: 'gaming',
-    prefix: '$',
-    badge: 'Waifu / Husbando Gacha',
-    description: 'Roll and claim characters from anime and video games, plus multiplayer tea party word games.',
-    recommendedChannel: '🎰・mudae-rolls',
-    inviteUrl: 'https://top.gg/bot/432610292342587392',
-    commands: ['$wa', '$ha', '$wg', '$tu'],
-  },
-  {
-    id: 'dank-memer',
-    name: 'Dank Memer',
-    category: 'economy',
-    prefix: '/pls',
-    badge: 'Global Economy & Memes',
-    description: 'Massive global currency game featuring fishing, farming, pets, heists, and interactive minigames.',
-    recommendedChannel: '🐸・dank-memer',
-    inviteUrl: 'https://dankmemer.lol/',
-    commands: ['/beg', '/fish', '/dig', '/balance'],
-  },
-  {
-    id: 'poketwo',
-    name: 'Pokétwo',
-    category: 'gaming',
-    prefix: '@Pokétwo',
-    badge: 'Catch & Battle',
-    description: 'Spawn wild Pokémon as members chat, catch them, trade on the market, and battle friends.',
-    recommendedChannel: '⚡・poketwo-spawns',
-    inviteUrl: 'https://poketwo.net/',
-    commands: ['@Pokétwo catch <name>', '@Pokétwo hint', '@Pokétwo pokemon', '@Pokétwo market'],
-  },
-  {
-    id: 'owo-bot',
-    name: 'OwO',
-    category: 'gaming',
-    prefix: 'owo ',
-    badge: 'Zoo & Battle RPG',
-    description: 'Hunt animals, build a weaponized zoo team, battle other members, and climb global leaderboards.',
-    recommendedChannel: '🐾・owo-hunting',
-    inviteUrl: 'https://top.gg/bot/408785106942164992',
-    commands: ['owo hunt', 'owo battle', 'owo zoo', 'owo daily'],
+    match: /ai|gpt|claude|gemini|midjourney|chat|assistant|translate|webhook|github|notify|rss/i,
+    category: 'ai',
+    defaultPrefix: '/',
+    defaultNotes: 'AI assistant, external webhook integration, and automated feeds.',
   },
 ];
 
 export const BOT_ENVIRONMENT_PRESETS = [
   {
-    id: 'lofi_music',
-    title: 'Lofi & Music Studio Lounge',
-    category: 'music',
-    icon: 'headphones',
-    description: 'Creates a dedicated "LOFI & MUSIC LOUNGE" category with #music-requests, 🔊 Lofi Radio 24/7, and 🎶 Music Stage.',
-    channelsPreview: ['🎵・music-requests', '🔊 Lofi Radio 24/7', '🎶 Music Lounge'],
-  },
-  {
-    id: 'gaming_arcade',
-    title: 'Minigame & Gacha Arcade',
-    category: 'gaming',
-    icon: 'sports_esports',
-    description: 'Creates a dedicated "MINIGAME ARCADE" category with isolated channels for Karuta, Mudae, Dank Memer, and Pokétwo.',
-    channelsPreview: ['🎮・bot-arcade', '🃏・gacha-drops', '🐸・economy-grind'],
-  },
-  {
     id: 'bot_sandbox',
-    title: 'Dedicated Bot Sandbox',
+    title: 'Dedicated Bot Command Sandbox',
     category: 'utility',
     icon: 'terminal',
-    description: 'Creates a clean #bot-commands sandbox channel so third-party bot commands never clutter your main general chat.',
-    channelsPreview: ['🤖・bot-commands', '📋・bot-directory'],
+    description: 'Creates a dedicated #bot-commands text channel so bot interactions and slash commands stay organized away from general chat.',
+    channelsPreview: ['🤖・bot-commands'],
+  },
+  {
+    id: 'voice_bot_lounge',
+    title: 'Audio & Voice Bot Lounge',
+    category: 'music',
+    icon: 'graphic_eq',
+    description: 'Creates an "AUDIO & VOICE BOTS" category with a #audio-controls text channel and a dedicated 🔊 Bot Audio Stage voice room.',
+    channelsPreview: ['🎛️・audio-controls', '🔊 Bot Audio Lounge'],
+  },
+  {
+    id: 'interactive_bot_zone',
+    title: 'Interactive & Activity Bot Zone',
+    category: 'gaming',
+    icon: 'extension',
+    description: 'Creates a "BOT ACTIVITIES" category with isolated channels for interactive bots, leveling checks, and community activities.',
+    channelsPreview: ['🤖・bot-activities', '📊・rank-and-stats'],
   },
 ];
 
@@ -167,7 +82,7 @@ function ensureGuildBotIntegrationsState(guildId) {
 
 function detectBotDefaults(username, displayName) {
   const combined = `${username || ''} ${displayName || ''}`.trim();
-  for (const rule of KNOWN_BOT_PATTERNS) {
+  for (const rule of UNIVERSAL_CATEGORY_PATTERNS) {
     if (rule.match.test(combined)) {
       return {
         category: rule.category,
@@ -179,7 +94,7 @@ function detectBotDefaults(username, displayName) {
   return {
     category: 'utility',
     prefix: '/',
-    notes: 'Slash commands and server automation.',
+    notes: 'Slash commands, utilities, and server automation.',
   };
 }
 
@@ -247,7 +162,6 @@ function formatBotMember(member, guild, savedMeta = {}) {
       managed: Boolean(r.managed),
     }));
 
-  // Inspect existing channel-level member overwrites to see where bot is already explicitly allowed/blocked
   const explicitAllowed = new Set(Array.isArray(savedMeta.allowedChannelIds) ? savedMeta.allowedChannelIds : []);
   const explicitBlocked = new Set(Array.isArray(savedMeta.blockedChannelIds) ? savedMeta.blockedChannelIds : []);
 
@@ -281,6 +195,7 @@ function formatBotMember(member, guild, savedMeta = {}) {
     status: member.presence?.status || 'online',
     category: isSelf ? 'core' : savedMeta.category || detected.category,
     prefix: isSelf ? '/' : savedMeta.prefix ?? detected.prefix,
+    commands: Array.isArray(savedMeta.commands) ? savedMeta.commands : [],
     notes: isSelf
       ? 'Primary server architecture, templates, analytics, and community engine.'
       : savedMeta.notes ?? detected.notes,
@@ -345,7 +260,6 @@ router.get('/:guildId/integrations', verifyGuildAccess, async (req, res) => {
       bots,
       channels,
       assignableRoles,
-      recommendedBots: RECOMMENDED_BOTS,
       presets: BOT_ENVIRONMENT_PRESETS,
     });
   } catch (err) {
@@ -363,6 +277,7 @@ router.patch('/:guildId/integrations/:botId', verifyGuildAccess, async (req, res
     nickname,
     category,
     prefix,
+    commands,
     notes,
     addRoles,
     removeRoles,
@@ -382,6 +297,7 @@ router.patch('/:guildId/integrations/:botId', verifyGuildAccess, async (req, res
     if (category !== undefined) currentMeta.category = String(category).trim();
     if (prefix !== undefined) currentMeta.prefix = String(prefix).trim();
     if (notes !== undefined) currentMeta.notes = String(notes).trim();
+    if (Array.isArray(commands)) currentMeta.commands = commands.map((c) => String(c).trim()).filter(Boolean);
     if (Array.isArray(allowedChannelIds)) currentMeta.allowedChannelIds = allowedChannelIds;
     if (Array.isArray(blockedChannelIds)) currentMeta.blockedChannelIds = blockedChannelIds;
 
@@ -389,7 +305,7 @@ router.patch('/:guildId/integrations/:botId', verifyGuildAccess, async (req, res
     saveState();
 
     if (nickname !== undefined && nickname !== member.nickname) {
-      await member.setNickname(nickname ? nickname.trim() : null, 'Updated via ArchiBot Bot Integrations Studio');
+      await member.setNickname(nickname ? nickname.trim() : null, 'Updated via ArchiBot Bot Integrations');
     }
 
     if (Array.isArray(addRoles) && addRoles.length > 0) {
@@ -502,7 +418,9 @@ router.post('/:guildId/integrations/publish-guide', verifyGuildAccess, async (re
   }
 
   await guild.channels.fetch().catch(() => {});
-  await guild.members.fetch().catch(() => {});
+  if (guild.members.cache.size < guild.memberCount) {
+    await guild.members.fetch({ limit: 200 }).catch(() => {});
+  }
 
   const channel = guild.channels.cache.get(channelId);
   if (!channel || !channel.isTextBased()) {
@@ -511,16 +429,18 @@ router.post('/:guildId/integrations/publish-guide', verifyGuildAccess, async (re
 
   const savedIntegrations = ensureGuildBotIntegrationsState(guild.id);
   const bots = [...guild.members.cache.values()]
-    .filter((m) => m.user.bot)
+    .filter((m) => m.user?.bot)
     .map((m) => formatBotMember(m, guild, savedIntegrations[m.id] || {}));
 
   const categoryLabels = {
-    core: '⚙️ Core Server Engine',
-    music: '🎵 Music & Lofi Radio Bots',
-    gaming: '🎮 Minigame & Gacha Bots',
-    economy: '🪙 Economy & Currency Bots',
+    core: '⚙️ Core & System Bots',
     moderation: '🛡️ Moderation & Security Bots',
     utility: '🔧 Utility & Automation Bots',
+    ai: '✨ AI & Webhook Integrations',
+    music: '🎵 Audio & Voice Bots',
+    gaming: '🎮 Games & Entertainment Bots',
+    economy: '🪙 Economy & Leveling Bots',
+    custom: '🧩 Custom & Other Bots',
   };
 
   const grouped = {};
@@ -532,10 +452,10 @@ router.post('/:guildId/integrations/publish-guide', verifyGuildAccess, async (re
 
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
-    .setTitle(title?.trim() || `🤖 ${guild.name} — Bot Directory & Command Guide`)
+    .setTitle(title?.trim() || `🤖 ${guild.name} — Server Bot Directory`)
     .setDescription(
       description?.trim() ||
-        'Use the right prefix and designated channels below when interacting with bots in our server.'
+        'Use the designated prefixes and channels below when interacting with bots in our server.'
     )
     .setTimestamp();
 
@@ -553,7 +473,11 @@ router.post('/:guildId/integrations/publish-guide', verifyGuildAccess, async (re
         .map((id) => `<#${id}>`)
         .join(', ');
       const channelHint = allowedMentions ? ` • 📍 ${allowedMentions}` : '';
-      return `• **${b.displayName}** (\`${b.prefix || '/'}\`) — ${b.notes || 'Server bot'}${channelHint}`;
+      const cmdHint =
+        Array.isArray(b.commands) && b.commands.length > 0
+          ? ` (${b.commands.slice(0, 4).map((c) => `\`${c}\``).join(', ')})`
+          : '';
+      return `• **${b.displayName}** (\`${b.prefix || '/'}\`) — ${b.notes || 'Server bot'}${cmdHint}${channelHint}`;
     });
 
     embed.addFields({
@@ -580,69 +504,90 @@ router.post('/:guildId/integrations/publish-guide', verifyGuildAccess, async (re
 // POST /api/guilds/:guildId/integrations/presets/apply
 router.post('/:guildId/integrations/presets/apply', verifyGuildAccess, async (req, res) => {
   const guild = req.guild;
-  const { presetId } = req.body;
+  const { presetId, customCategoryName, customTextChannel, customVoiceChannel, allowedBotIds = [] } = req.body;
 
   await guild.channels.fetch().catch(() => {});
 
   try {
     const createdChannels = [];
+    const createdChannelObjects = [];
 
-    if (presetId === 'lofi_music') {
+    if (presetId === 'custom') {
+      let parentId = null;
+      if (customCategoryName?.trim()) {
+        const cat = await guild.channels.create({
+          name: customCategoryName.trim(),
+          type: ChannelType.GuildCategory,
+          reason: 'ArchiBot Bot Integrations: Custom Bot Category',
+        });
+        parentId = cat.id;
+      }
+
+      if (customTextChannel?.trim()) {
+        const textCh = await guild.channels.create({
+          name: customTextChannel.trim(),
+          type: ChannelType.GuildText,
+          parent: parentId || undefined,
+          topic: 'Dedicated channel for bot commands and integrations.',
+        });
+        createdChannels.push(textCh.name);
+        createdChannelObjects.push(textCh);
+      }
+
+      if (customVoiceChannel?.trim()) {
+        const voiceCh = await guild.channels.create({
+          name: customVoiceChannel.trim(),
+          type: ChannelType.GuildVoice,
+          parent: parentId || undefined,
+        });
+        createdChannels.push(voiceCh.name);
+        createdChannelObjects.push(voiceCh);
+      }
+    } else if (presetId === 'voice_bot_lounge') {
       const category = await guild.channels.create({
-        name: '🎧 LOFI & MUSIC LOUNGE',
+        name: '🔊 AUDIO & VOICE BOTS',
         type: ChannelType.GuildCategory,
-        reason: 'ArchiBot Bot Integrations Preset: Lofi & Music Lounge',
+        reason: 'ArchiBot Bot Integrations Preset: Audio & Voice Bots',
       });
 
       const textCh = await guild.channels.create({
-        name: '🎵・music-requests',
+        name: '🎛️・audio-controls',
         type: ChannelType.GuildText,
         parent: category.id,
-        topic: 'Type /play or music bot commands here to queue songs and Lofi streams.',
+        topic: 'Use audio and voice bot commands here.',
       });
 
-      const lofiVoice = await guild.channels.create({
-        name: '🔊 Lofi Radio 24/7',
+      const voiceCh = await guild.channels.create({
+        name: '🔊 Bot Audio Lounge',
         type: ChannelType.GuildVoice,
         parent: category.id,
       });
 
-      const stageVoice = await guild.channels.create({
-        name: '🎶 Music Lounge',
-        type: ChannelType.GuildVoice,
-        parent: category.id,
-      });
-
-      createdChannels.push(textCh.name, lofiVoice.name, stageVoice.name);
-    } else if (presetId === 'gaming_arcade') {
+      createdChannels.push(textCh.name, voiceCh.name);
+      createdChannelObjects.push(textCh, voiceCh);
+    } else if (presetId === 'interactive_bot_zone') {
       const category = await guild.channels.create({
-        name: '🎮 MINIGAME ARCADE',
+        name: '🤖 BOT ACTIVITIES',
         type: ChannelType.GuildCategory,
-        reason: 'ArchiBot Bot Integrations Preset: Minigame Arcade',
+        reason: 'ArchiBot Bot Integrations Preset: Bot Activities',
       });
 
       const ch1 = await guild.channels.create({
-        name: '🎮・bot-arcade',
+        name: '🤖・bot-activities',
         type: ChannelType.GuildText,
         parent: category.id,
-        topic: 'General chat games, trivia, Pokétwo, and OwO commands.',
+        topic: 'Dedicated channel for interactive bot commands and activities.',
       });
 
       const ch2 = await guild.channels.create({
-        name: '🃏・gacha-drops',
+        name: '📊・rank-and-stats',
         type: ChannelType.GuildText,
         parent: category.id,
-        topic: 'Dedicated room for Karuta (k!d) and Mudae ($wa / $ha) card rolls.',
+        topic: 'Check your server rank, levels, and bot statistics here.',
       });
 
-      const ch3 = await guild.channels.create({
-        name: '🐸・economy-grind',
-        type: ChannelType.GuildText,
-        parent: category.id,
-        topic: 'Dank Memer, UnbelievaBoat, and currency grinding commands.',
-      });
-
-      createdChannels.push(ch1.name, ch2.name, ch3.name);
+      createdChannels.push(ch1.name, ch2.name);
+      createdChannelObjects.push(ch1, ch2);
     } else if (presetId === 'bot_sandbox') {
       const sandboxCh = await guild.channels.create({
         name: '🤖・bot-commands',
@@ -651,8 +596,33 @@ router.post('/:guildId/integrations/presets/apply', verifyGuildAccess, async (re
         reason: 'ArchiBot Bot Integrations Preset: Dedicated Bot Sandbox',
       });
       createdChannels.push(sandboxCh.name);
+      createdChannelObjects.push(sandboxCh);
     } else {
       return res.status(400).json({ error: 'Unknown preset ID.' });
+    }
+
+    // If specific bots were selected, grant them explicit access to the newly created channels
+    if (Array.isArray(allowedBotIds) && allowedBotIds.length > 0 && createdChannelObjects.length > 0) {
+      const savedIntegrations = ensureGuildBotIntegrationsState(guild.id);
+      for (const botId of allowedBotIds) {
+        const meta = savedIntegrations[botId] || {};
+        const allowedSet = new Set(Array.isArray(meta.allowedChannelIds) ? meta.allowedChannelIds : []);
+        for (const ch of createdChannelObjects) {
+          allowedSet.add(ch.id);
+          const isVoice = ch.type === ChannelType.GuildVoice || ch.type === ChannelType.GuildStageVoice;
+          await ch.permissionOverwrites
+            ?.edit(
+              botId,
+              isVoice
+                ? { ViewChannel: true, Connect: true, Speak: true }
+                : { ViewChannel: true, SendMessages: true, EmbedLinks: true, UseApplicationCommands: true },
+              { type: OverwriteType.Member, reason: 'ArchiBot Bot Sandbox Assignment' }
+            )
+            .catch(() => {});
+        }
+        savedIntegrations[botId] = { ...meta, allowedChannelIds: [...allowedSet] };
+      }
+      saveState();
     }
 
     res.json({
@@ -688,7 +658,7 @@ router.delete('/:guildId/integrations/:botId', verifyGuildAccess, async (req, re
   }
 
   try {
-    await member.kick('Removed third-party bot via ArchiBot Bot Integrations Studio');
+    await member.kick('Removed bot via ArchiBot Bot Integrations');
     const savedIntegrations = ensureGuildBotIntegrationsState(guild.id);
     delete savedIntegrations[botId];
     saveState();
