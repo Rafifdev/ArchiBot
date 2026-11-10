@@ -450,7 +450,7 @@ const SortablePreviewChannelRow: React.FC<{
       style={style}
       {...attributes}
       {...listeners}
-      className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-grab active:cursor-grabbing select-none ${
+      className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-move select-none ${
         isDragging ? 'opacity-25' : ''
       }`}
     >
@@ -461,8 +461,10 @@ const SortablePreviewChannelRow: React.FC<{
 
 const SortablePreviewCategoryBlock: React.FC<{
   group: ParsedCategoryGroup;
+  isCollapsed: boolean;
+  onToggleCollapse: (id: string) => void;
   children: React.ReactNode;
-}> = ({ group, children }) => {
+}> = ({ group, isCollapsed, onToggleCollapse, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: group.id,
     data: { type: 'category', group },
@@ -483,15 +485,23 @@ const SortablePreviewCategoryBlock: React.FC<{
         <div
           {...attributes}
           {...listeners}
-          className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-grab active:cursor-grabbing select-none"
+          onClick={() => onToggleCollapse(group.id)}
+          className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-move select-none"
         >
-          <MdIcon name="expand_more" className="text-sm leading-none" />
+          <MdIcon
+            name="expand_more"
+            className={`text-sm leading-none transition-transform duration-150 ${
+              isCollapsed ? '-rotate-90' : ''
+            }`}
+          />
           <span className="truncate">{group.category}</span>
         </div>
       )}
-      <SortableContext items={group.channels.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-0.5 min-h-[4px]">{children}</div>
-      </SortableContext>
+      {!isCollapsed && (
+        <SortableContext items={group.channels.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-0.5 min-h-[4px]">{children}</div>
+        </SortableContext>
+      )}
     </div>
   );
 };
@@ -507,11 +517,21 @@ const ChannelTreePreview: React.FC<{
     [controlledGroups, spec]
   );
 
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set());
   const [activeItem, setActiveItem] = useState<
     | { type: 'category'; group: ParsedCategoryGroup }
     | { type: 'channel'; channel: ParsedChannelItem }
     | null
   >(null);
+
+  const toggleCollapse = (id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -526,26 +546,40 @@ const ChannelTreePreview: React.FC<{
       <div
         className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
       >
-        {groups.map((group) => (
-          <div key={group.id} className="flex flex-col gap-0.5">
-            {group.category && (
-              <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider">
-                <MdIcon name="expand_more" className="text-sm leading-none" />
-                <span className="truncate">{group.category}</span>
-              </div>
-            )}
-            <div className="flex flex-col gap-0.5">
-              {group.channels.map((ch) => (
-                <div
-                  key={ch.id}
-                  className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text"
+        {groups.map((group) => {
+          const isCollapsed = collapsedIds.has(group.id);
+          return (
+            <div key={group.id} className="flex flex-col gap-0.5">
+              {group.category && (
+                <button
+                  type="button"
+                  onClick={() => toggleCollapse(group.id)}
+                  className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider text-left cursor-pointer select-none bg-transparent border-0"
                 >
-                  <PreviewChannelRowContent ch={ch} />
+                  <MdIcon
+                    name="expand_more"
+                    className={`text-sm leading-none transition-transform duration-150 ${
+                      isCollapsed ? '-rotate-90' : ''
+                    }`}
+                  />
+                  <span className="truncate">{group.category}</span>
+                </button>
+              )}
+              {!isCollapsed && (
+                <div className="flex flex-col gap-0.5">
+                  {group.channels.map((ch) => (
+                    <div
+                      key={ch.id}
+                      className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text"
+                    >
+                      <PreviewChannelRowContent ch={ch} />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -650,7 +684,12 @@ const ChannelTreePreview: React.FC<{
       >
         <SortableContext items={groups.map((g) => g.id)} strategy={verticalListSortingStrategy}>
           {groups.map((group) => (
-            <SortablePreviewCategoryBlock key={group.id} group={group}>
+            <SortablePreviewCategoryBlock
+              key={group.id}
+              group={group}
+              isCollapsed={collapsedIds.has(group.id)}
+              onToggleCollapse={toggleCollapse}
+            >
               {group.channels.map((ch) => (
                 <SortablePreviewChannelRow key={ch.id} ch={ch} parentId={group.id} />
               ))}
@@ -661,12 +700,17 @@ const ChannelTreePreview: React.FC<{
 
       <DragOverlay>
         {activeItem?.type === 'category' && activeItem.group.category ? (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-discord-card/95 shadow-lg text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-grabbing select-none">
-            <MdIcon name="expand_more" className="text-sm leading-none" />
+          <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-move select-none">
+            <MdIcon
+              name="expand_more"
+              className={`text-sm leading-none ${
+                collapsedIds.has(activeItem.group.id) ? '-rotate-90' : ''
+              }`}
+            />
             <span className="truncate">{activeItem.group.category}</span>
           </div>
         ) : activeItem?.type === 'channel' ? (
-          <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-md bg-discord-card/95 shadow-lg text-xs font-normal text-discord-text cursor-grabbing select-none">
+          <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-move select-none">
             <PreviewChannelRowContent ch={activeItem.channel} />
           </div>
         ) : null}
