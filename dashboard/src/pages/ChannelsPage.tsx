@@ -36,7 +36,6 @@ import {
   MdDialog,
   ConfirmDialog,
   PageHeader,
-  SurfaceCard,
   SwitchRow,
   toast,
 } from '../components/ui';
@@ -96,7 +95,7 @@ const SortableChannelRow: React.FC<SortableChannelRowProps> = ({
       {...attributes}
       {...listeners}
       title={!isSearchActive ? 'Tarik untuk mengubah urutan atau memindahkan antar kategori' : undefined}
-      className={`relative flex items-center justify-between px-3.5 py-2.5 bg-discord-surface hover:bg-discord-card-hover border border-discord-border rounded-lg mb-1.5 gap-3 transition-colors duration-150 ${
+      className={`relative flex items-center justify-between px-3.5 py-2.5 bg-discord-card hover:bg-discord-card-hover border border-discord-border rounded-lg mb-1.5 gap-3 transition-colors duration-150 ${
         !isSearchActive && !isLocking ? 'cursor-move select-none' : ''
       } ${isDragging ? 'opacity-25' : ''}`}
     >
@@ -170,13 +169,13 @@ const DroppableCategoryCard: React.FC<{
   });
 
   return (
-    <SurfaceCard
+    <div
       ref={setNodeRef}
-      className={`p-4 transition-all ${
-        isOver ? 'ring-2 ring-discord-blurple bg-discord-blurple/5' : ''
+      className={`transition-all rounded-xl ${
+        isOver ? 'ring-2 ring-discord-blurple bg-discord-blurple/5 p-2 -m-2' : ''
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2.5">
           <MdIcon name="folder" className="text-xl text-discord-blurple" />
           <span className="font-normal text-xs text-discord-white uppercase tracking-wider">{cat.name}</span>
@@ -231,7 +230,7 @@ const DroppableCategoryCard: React.FC<{
           children
         )}
       </SortableContext>
-    </SurfaceCard>
+    </div>
   );
 };
 
@@ -248,13 +247,13 @@ const DroppableUnparentedCard: React.FC<{
   });
 
   return (
-    <SurfaceCard
+    <div
       ref={setNodeRef}
-      className={`p-4 border-dashed transition-all ${
-        isOver ? 'ring-2 ring-discord-blurple bg-discord-blurple/5 border-discord-blurple' : ''
+      className={`transition-all rounded-xl ${
+        isOver ? 'ring-2 ring-discord-blurple bg-discord-blurple/5 p-2 -m-2' : ''
       }`}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <MdIcon name="grid_view" className="text-xl text-discord-muted" />
           <h3 className="text-xs font-normal text-discord-muted uppercase tracking-wider">
@@ -281,7 +280,7 @@ const DroppableUnparentedCard: React.FC<{
           children
         )}
       </SortableContext>
-    </SurfaceCard>
+    </div>
   );
 };
 
@@ -979,7 +978,7 @@ export const ChannelsPage: React.FC = () => {
 
         <DragOverlay dropAnimation={dropAnimationConfig}>
           {activeChannel ? (
-            <div className="w-full h-full box-border flex items-center justify-between px-3.5 py-2.5 bg-discord-surface rounded-lg shadow-2xl gap-3 cursor-move select-none">
+            <div className="w-full h-full box-border flex items-center justify-between px-3.5 py-2.5 bg-discord-card border border-discord-border rounded-lg shadow-[var(--md-elevation-menu)] gap-3 cursor-move select-none">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <MdIcon
                   name={channelTypeIcon(activeChannel.typeName, activeChannel.isAutoVoiceHub)}
