@@ -90,12 +90,12 @@ export const MdButton: React.FC<MdButtonProps> = ({
   ...rest
 }) => {
   const sizeStyles: Record<string, string> = {
-    xs: 'h-7 min-h-[28px] px-2.5 text-[11px] gap-1.5 rounded-lg font-medium',
-    sm: 'h-9 min-h-[36px] px-3.5 text-xs gap-1.5 rounded-lg font-medium',
-    md: 'h-10 min-h-[40px] px-4 text-xs sm:text-sm gap-2 rounded-xl font-medium',
-    lg: 'h-11 min-h-[44px] px-5 text-sm gap-2.5 rounded-xl font-medium',
-    xl: 'h-12 min-h-[48px] px-6 text-base gap-3 rounded-2xl font-medium',
-    '2xl': 'h-14 min-h-[56px] px-8 text-lg gap-3.5 rounded-2xl font-semibold',
+    xs: 'h-7 min-h-[28px] px-2.5 text-[11px] gap-1.5 rounded-lg font-normal',
+    sm: 'h-9 min-h-[36px] px-3.5 text-xs gap-1.5 rounded-lg font-normal',
+    md: 'h-10 min-h-[40px] px-4 text-xs sm:text-sm gap-2 rounded-xl font-normal',
+    lg: 'h-11 min-h-[44px] px-5 text-sm gap-2.5 rounded-xl font-normal',
+    xl: 'h-12 min-h-[48px] px-6 text-base gap-3 rounded-2xl font-normal',
+    '2xl': 'h-14 min-h-[56px] px-8 text-lg gap-3.5 rounded-2xl font-normal',
   };
 
   const iconSizes: Record<string, string> = {
@@ -108,12 +108,17 @@ export const MdButton: React.FC<MdButtonProps> = ({
   };
 
   const variantStyles: Record<string, string> = {
-    filled: 'bg-discord-blurple text-white hover:bg-discord-blurple-hover shadow-sm hover:shadow-md',
-    tonal: 'bg-discord-surface text-discord-white border border-discord-border hover:bg-discord-card-hover hover:border-discord-border-hover',
-    outlined: 'bg-transparent border border-discord-border text-discord-white hover:bg-discord-surface hover:border-discord-blurple',
-    text: 'bg-transparent text-discord-white hover:bg-discord-surface/60',
-    elevated: 'bg-discord-card text-discord-white border border-discord-border shadow-md hover:shadow-lg hover:bg-discord-card-hover',
-    danger: 'bg-discord-red text-white hover:bg-[#c93b3e] shadow-sm',
+    filled:
+      'bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] hover:bg-discord-blurple-hover shadow-xs hover:shadow-sm disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:shadow-none disabled:opacity-100',
+    tonal:
+      'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] border border-transparent hover:brightness-95',
+    outlined:
+      'bg-transparent border border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/8',
+    text: 'bg-transparent text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/8',
+    elevated:
+      'bg-[var(--md-sys-color-surface-container-low)] text-[var(--md-sys-color-primary)] border border-discord-border/80 shadow-sm hover:shadow-md hover:bg-[var(--md-sys-color-surface-container)]',
+    danger:
+      'bg-[var(--md-sys-color-error)] text-[var(--md-sys-color-on-error)] hover:brightness-95 shadow-xs',
   };
 
   return (
@@ -121,17 +126,18 @@ export const MdButton: React.FC<MdButtonProps> = ({
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`inline-flex items-center justify-center font-sans tracking-wide transition-all duration-150 select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${sizeStyles[size] || sizeStyles.md} ${variantStyles[variant] || variantStyles.filled} ${className}`.trim()}
+      className={`relative overflow-hidden inline-flex items-center justify-center font-sans tracking-wide transition-all duration-150 select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${sizeStyles[size] || sizeStyles.md} ${variantStyles[variant] || variantStyles.filled} ${className}`.trim()}
       {...rest}
     >
+      {!(disabled || loading) && <md-ripple />}
       {loading ? (
-        <span className="inline-block animate-spin rounded-full border-2 border-white/20 border-t-white w-4 h-4 mr-1 shrink-0" />
+        <span className="relative z-10 inline-block animate-spin rounded-full border-2 border-current/25 border-t-current w-4 h-4 mr-1 shrink-0" />
       ) : icon && !iconTrailing ? (
-        <MdIcon name={icon} className={`shrink-0 leading-none ${iconSizes[size] || 'text-base'}`} />
+        <MdIcon name={icon} className={`relative z-10 shrink-0 leading-none ${iconSizes[size] || 'text-base'}`} />
       ) : null}
-      {children && <span className="whitespace-nowrap leading-normal flex items-center">{children}</span>}
+      {children && <span className="relative z-10 whitespace-nowrap leading-normal flex items-center">{children}</span>}
       {!loading && icon && iconTrailing && (
-        <MdIcon name={icon} className={`shrink-0 leading-none ${iconSizes[size] || 'text-base'}`} />
+        <MdIcon name={icon} className={`relative z-10 shrink-0 leading-none ${iconSizes[size] || 'text-base'}`} />
       )}
     </button>
   );
@@ -342,7 +348,9 @@ export const MdTextField: React.FC<MdTextFieldProps> = ({
 export interface MdSelectOptionItem {
   value: string;
   label: string;
+  icon?: string;
   iconUrl?: string;
+  color?: string;
 }
 
 export interface MdSelectProps {
@@ -351,6 +359,7 @@ export interface MdSelectProps {
   options: (string | MdSelectOptionItem)[];
   onChange: (value: string) => void;
   disabled?: boolean;
+  compact?: boolean;
   className?: string;
   placeholder?: string;
 }
@@ -361,13 +370,14 @@ export const MdSelect: React.FC<MdSelectProps> = ({
   options,
   onChange,
   disabled = false,
+  compact = false,
   className = 'w-full',
   placeholder = 'Select an option...',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [openUpwards, setOpenUpwards] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
 
   const containerRef = useRef<HTMLDivElement>(null);
   const textFieldRef = useRef<any>(null);
@@ -383,8 +393,8 @@ export const MdSelect: React.FC<MdSelectProps> = ({
     });
   }, [options]);
 
-  // Search feature is automatically activated if dropdown contains 8 or more items
-  const isSearchable = normalizedOptions.length >= 8;
+  // Search feature is automatically activated if dropdown contains 8 or more items (disabled in compact trigger mode)
+  const isSearchable = !compact && normalizedOptions.length >= 8;
 
   // Selected item
   const selectedItem = useMemo(() => {
@@ -445,36 +455,57 @@ export const MdSelect: React.FC<MdSelectProps> = ({
     }
   }, [highlightedIndex, isOpen]);
 
-  // Check if dropdown should flip upwards when near bottom of viewport
-  const checkPosition = () => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      if (spaceBelow < 260 && spaceAbove > spaceBelow) {
-        setOpenUpwards(true);
-      } else {
-        setOpenUpwards(false);
-      }
-    }
-  };
+  // Fixed-position measurement so menu is never clipped by overflow-hidden cards or <md-dialog> scroll containers
+  const updateMenuPosition = useCallback(() => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const gap = 6;
+    const viewportH = window.innerHeight;
+    const viewportW = window.innerWidth;
+    const spaceBelow = viewportH - rect.bottom - gap - 12;
+    const spaceAbove = rect.top - gap - 12;
+    const openUpwards = spaceBelow < 200 && spaceAbove > spaceBelow;
+    const availableHeight = Math.max(120, Math.min(256, openUpwards ? spaceAbove : spaceBelow));
+    const width = Math.max(rect.width, 210);
+    const left = Math.min(Math.max(8, rect.left), Math.max(8, viewportW - width - 8));
+
+    setMenuStyle({
+      position: 'fixed',
+      left: `${left}px`,
+      width: `${width}px`,
+      maxHeight: `${availableHeight}px`,
+      ...(openUpwards
+        ? { bottom: `${viewportH - rect.top + gap}px`, top: 'auto', transformOrigin: 'bottom' }
+        : { top: `${rect.bottom + gap}px`, bottom: 'auto', transformOrigin: 'top' }),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updateMenuPosition();
+    const handleReposition = () => updateMenuPosition();
+    window.addEventListener('scroll', handleReposition, true);
+    window.addEventListener('resize', handleReposition);
+    return () => {
+      window.removeEventListener('scroll', handleReposition, true);
+      window.removeEventListener('resize', handleReposition);
+    };
+  }, [isOpen, updateMenuPosition]);
 
   const handleOpen = () => {
     if (disabled) return;
-    checkPosition();
-    setHighlightedIndex(0);
+    const selectedIdx = Math.max(
+      0,
+      normalizedOptions.findIndex((o) => o.value === value)
+    );
+    setHighlightedIndex(isSearchable ? 0 : selectedIdx);
     setSearchQuery('');
+    updateMenuPosition();
     setIsOpen(true);
-    if (textFieldRef.current) {
-      if (isSearchable) {
-        textFieldRef.current.value = '';
-      }
+    if (isSearchable && textFieldRef.current) {
       setTimeout(() => {
         textFieldRef.current?.focus?.();
-        if (isSearchable) {
-          textFieldRef.current?.select?.();
-        }
-      }, 30);
+      }, 20);
     }
   };
 
@@ -496,6 +527,11 @@ export const MdSelect: React.FC<MdSelectProps> = ({
     }
   };
 
+  const handleTrailingIconMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
   const handleTrailingIconClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (disabled) return;
@@ -506,7 +542,7 @@ export const MdSelect: React.FC<MdSelectProps> = ({
     }
   };
 
-  // Click outside listener
+  // Click outside & Escape listener
   useEffect(() => {
     if (!isOpen) return;
 
@@ -515,12 +551,19 @@ export const MdSelect: React.FC<MdSelectProps> = ({
         handleClose();
       }
     };
+    const handleDocKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleDocKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleDocKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, selectedLabel]);
 
   const handleSelectOption = (optValue: string) => {
     onChange(optValue);
@@ -531,15 +574,15 @@ export const MdSelect: React.FC<MdSelectProps> = ({
     if (disabled) return;
 
     if (!isOpen) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || (!isSearchable && e.key === ' ')) {
         e.preventDefault();
         handleOpen();
       }
       return;
     }
 
-    if (e.key === 'Escape') {
-      e.preventDefault();
+    if (e.key === 'Escape' || e.key === 'Tab') {
+      if (e.key === 'Escape') e.preventDefault();
       handleClose();
       return;
     }
@@ -565,7 +608,7 @@ export const MdSelect: React.FC<MdSelectProps> = ({
   };
 
   // Label and placeholder for authentic Material 3 notched outline
-  const effectiveLabel = label || placeholder || undefined;
+  const effectiveLabel = label || (!compact ? placeholder : undefined) || undefined;
   const effectivePlaceholder = isOpen && isSearchable
     ? (selectedLabel || placeholder || 'Type to search...')
     : (!selectedLabel ? placeholder : undefined);
@@ -576,53 +619,89 @@ export const MdSelect: React.FC<MdSelectProps> = ({
       onKeyDown={handleKeyDown}
       className={`relative select-none text-left ${className}`.trim()}
     >
-      <div onClick={handleFieldClick} className="w-full">
-        <md-outlined-text-field
-          ref={textFieldRef}
-          label={effectiveLabel}
-          value={displayValue}
-          placeholder={effectivePlaceholder}
-          disabled={disabled || undefined}
-          class={`w-full ${!isSearchable ? 'cursor-pointer' : ''}`.trim()}
+      {compact ? (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={handleFieldClick}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+          className={`relative overflow-hidden h-10 min-w-[168px] w-full px-3.5 rounded-xl bg-[var(--md-sys-color-surface-container-low)] hover:bg-[var(--md-sys-color-surface-container)] border text-xs font-normal flex items-center justify-between gap-2.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            isOpen
+              ? 'border-[var(--md-sys-color-primary)] ring-1 ring-[var(--md-sys-color-primary)] text-discord-white'
+              : 'border-discord-border hover:border-[var(--md-sys-color-outline)] text-discord-white'
+          }`}
         >
-          {selectedItem?.iconUrl && (
-            <span
-              slot="leading-icon"
-              className="inline-flex items-center justify-center w-6 h-6 pointer-events-none select-none"
-            >
+          <md-ripple />
+          <div className="relative z-10 flex items-center gap-2 min-w-0">
+            {selectedItem?.icon && (
+              <MdIcon name={selectedItem.icon} className="text-base text-discord-muted shrink-0" />
+            )}
+            {selectedItem?.iconUrl && (
               <img
                 src={selectedItem.iconUrl}
                 alt=""
-                className="w-5 h-3.5 object-cover rounded-[2px] border border-discord-border/60 shadow-xs"
+                className="w-5 h-3.5 object-cover rounded-[2px] border border-discord-border/60 shrink-0"
               />
-            </span>
-          )}
-          <md-icon
-            slot="trailing-icon"
-            onClick={handleTrailingIconClick}
-            class={`cursor-pointer transition-transform duration-200 select-none ${
-              isOpen ? 'rotate-180 text-discord-blurple' : 'text-discord-muted hover:text-discord-white'
+            )}
+            <span className="truncate">{selectedLabel || placeholder}</span>
+          </div>
+          <MdIcon
+            name="expand_more"
+            className={`relative z-10 text-base shrink-0 transition-transform duration-200 ${
+              isOpen ? 'rotate-180 text-[var(--md-sys-color-primary)]' : 'text-discord-muted'
             }`}
+          />
+        </button>
+      ) : (
+        <div onClick={handleFieldClick} className="w-full">
+          <md-outlined-text-field
+            ref={textFieldRef}
+            label={effectiveLabel}
+            value={displayValue}
+            placeholder={effectivePlaceholder}
+            disabled={disabled || undefined}
+            class={`w-full ${!isSearchable ? 'cursor-pointer' : ''}`.trim()}
           >
-            expand_more
-          </md-icon>
-        </md-outlined-text-field>
-      </div>
+            {selectedItem?.icon && (
+              <MdIcon slot="leading-icon" name={selectedItem.icon} className="text-lg text-discord-muted" />
+            )}
+            {selectedItem?.iconUrl && (
+              <span
+                slot="leading-icon"
+                className="inline-flex items-center justify-center w-6 h-6 pointer-events-none select-none"
+              >
+                <img
+                  src={selectedItem.iconUrl}
+                  alt=""
+                  className="w-5 h-3.5 object-cover rounded-[2px] border border-discord-border/60 shadow-xs"
+                />
+              </span>
+            )}
+            <md-icon
+              slot="trailing-icon"
+              onMouseDown={handleTrailingIconMouseDown}
+              onClick={handleTrailingIconClick}
+              class={`cursor-pointer transition-transform duration-200 select-none ${
+                isOpen ? 'rotate-180 text-discord-blurple' : 'text-discord-muted hover:text-discord-white'
+              }`}
+            >
+              expand_more
+            </md-icon>
+          </md-outlined-text-field>
+        </div>
+      )}
 
-      {/* Dropdown Menu Popover: Options list directly, NO nested search bar */}
+      {/* Material Design 3 Elevated Menu Popover (Fixed viewport coordinates prevent overflow clipping) */}
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute left-0 right-0 z-50 bg-discord-card border border-discord-border rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-150 ${
-            openUpwards
-              ? 'bottom-[calc(100%+6px)] origin-bottom'
-              : 'top-[calc(100%+6px)] origin-top'
-          }`}
-          style={{ minWidth: '220px' }}
+          style={menuStyle}
+          className="z-[999] bg-[var(--md-menu-container-color)] border border-discord-border rounded-xl shadow-[var(--md-elevation-menu)] overflow-hidden flex flex-col transition-opacity duration-150"
         >
           <div
             ref={listRef}
-            className="max-h-60 overflow-y-auto py-1 scrollbar-thin"
+            className="overflow-y-auto py-1.5 scrollbar-thin"
           >
             {filteredOptions.length === 0 ? (
               <div className="px-4 py-4 text-xs font-normal text-discord-muted text-center flex flex-col items-center gap-1.5">
@@ -638,17 +717,27 @@ export const MdSelect: React.FC<MdSelectProps> = ({
                     key={opt.value}
                     role="option"
                     aria-selected={isSelected}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelectOption(opt.value)}
                     onMouseEnter={() => setHighlightedIndex(idx)}
-                    className={`px-3.5 py-2.5 text-xs font-normal flex items-center justify-between cursor-pointer transition-colors ${
+                    className={`relative overflow-hidden min-h-[38px] px-3.5 py-2 text-xs font-normal flex items-center justify-between cursor-pointer transition-colors ${
                       isSelected
-                        ? 'bg-discord-blurple/20 text-discord-white'
+                        ? 'bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)]'
                         : isHighlighted
-                        ? 'bg-discord-surface text-discord-white'
-                        : 'text-discord-text hover:text-discord-white hover:bg-discord-surface'
+                        ? 'bg-[var(--md-sys-color-surface-container-high)] text-[var(--md-sys-color-on-surface)]'
+                        : 'text-[var(--md-sys-color-on-surface)] hover:bg-[var(--md-sys-color-surface-container-high)]'
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0 mr-2">
+                    <md-ripple />
+                    <div className="relative z-10 flex items-center gap-2.5 min-w-0 mr-2">
+                      {opt.icon && (
+                        <MdIcon
+                          name={opt.icon}
+                          className={`text-base shrink-0 ${
+                            isSelected ? 'text-[var(--md-sys-color-primary)]' : 'text-discord-muted'
+                          }`}
+                        />
+                      )}
                       {opt.iconUrl && (
                         <img
                           src={opt.iconUrl}
@@ -656,12 +745,18 @@ export const MdSelect: React.FC<MdSelectProps> = ({
                           className="w-5 h-3.5 object-cover rounded-[2px] shrink-0 border border-discord-border/60 shadow-xs"
                         />
                       )}
+                      {opt.color && (
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: opt.color }}
+                        />
+                      )}
                       <span className="truncate">{opt.label}</span>
                     </div>
                     {isSelected && (
                       <MdIcon
                         name="check"
-                        className="text-discord-blurple text-base shrink-0"
+                        className="relative z-10 text-[var(--md-sys-color-primary)] text-base shrink-0"
                       />
                     )}
                   </div>
@@ -1154,28 +1249,28 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const content = children ?? label;
 
-  // Solid tones (vibrant background, high contrast text, NO BORDER)
+  // Solid tones (vibrant background, high contrast text, NO BORDER, strictly font-normal per MD3)
   const solidTones: Record<BadgeTone, string> = {
-    blurple: 'bg-discord-blurple text-white font-medium',
-    green: 'bg-discord-green text-discord-canvas font-semibold',
-    yellow: 'bg-discord-yellow text-discord-canvas font-semibold',
-    red: 'bg-discord-red text-white font-medium',
-    premium: 'bg-discord-fuchsia text-white font-medium',
-    fuchsia: 'bg-discord-fuchsia text-white font-medium',
+    blurple: 'bg-discord-blurple text-white font-normal',
+    green: 'bg-discord-green text-[var(--color-discord-on-green,#003915)] font-normal',
+    yellow: 'bg-discord-yellow text-[var(--color-discord-on-yellow,#2B2200)] font-normal',
+    red: 'bg-discord-red text-white font-normal',
+    premium: 'bg-discord-fuchsia text-white font-normal',
+    fuchsia: 'bg-discord-fuchsia text-white font-normal',
     neutral: 'bg-discord-surface text-discord-text font-normal',
     surface: 'bg-discord-surface text-discord-text font-normal',
-    dark: 'bg-[#111214] text-white font-medium',
-    white: 'bg-white text-[#111214] font-semibold',
+    dark: 'bg-[#111214] text-white font-normal',
+    white: 'bg-white text-[#111214] font-normal',
   };
 
-  // Soft tones (subtle translucent background, colored text, NO BORDER)
+  // Soft tones (MD3 tonal container background, colored text, NO BORDER)
   const softTones: Record<BadgeTone, string> = {
-    blurple: 'bg-discord-blurple/20 text-discord-blurple font-normal',
-    green: 'bg-discord-green/20 text-discord-green font-normal',
-    yellow: 'bg-discord-yellow/20 text-discord-yellow font-normal',
-    red: 'bg-discord-red/20 text-discord-red font-normal',
-    premium: 'bg-discord-fuchsia/20 text-discord-fuchsia font-normal',
-    fuchsia: 'bg-discord-fuchsia/20 text-discord-fuchsia font-normal',
+    blurple: 'bg-discord-blurple/15 text-discord-blurple font-normal',
+    green: 'bg-discord-green/15 text-discord-green font-normal',
+    yellow: 'bg-discord-yellow/15 text-discord-yellow font-normal',
+    red: 'bg-discord-red/15 text-discord-red font-normal',
+    premium: 'bg-discord-fuchsia/15 text-discord-fuchsia font-normal',
+    fuchsia: 'bg-discord-fuchsia/15 text-discord-fuchsia font-normal',
     neutral: 'bg-discord-surface text-discord-muted font-normal',
     surface: 'bg-discord-surface text-discord-text font-normal',
     dark: 'bg-discord-surface text-discord-muted font-normal',
@@ -2520,7 +2615,7 @@ export const EmojiPickerField: React.FC<EmojiPickerFieldProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+6px)] left-0 z-50 p-3 rounded-2xl bg-discord-card border border-discord-border shadow-2xl flex flex-col gap-2.5 w-72">
+        <div className="absolute top-[calc(100%+6px)] left-0 z-50 p-3 rounded-2xl bg-[var(--md-menu-container-color)] border border-discord-border shadow-[var(--md-elevation-menu)] flex flex-col gap-2.5 w-72">
           <div className="relative">
             <input
               type="text"

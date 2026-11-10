@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   MdButton,
-  MdIconButton,
+  MdSelect,
   MdLoading,
-  MdIcon,
   DiscordMark,
-  Badge,
   StatusBadge,
   PageHeader,
   SurfaceCard,
@@ -49,7 +47,7 @@ const GuildAvatar: React.FC<{
 
   return (
     <div
-      className={`${sizeClass} ${roundedClass} ${ringClass} bg-discord-blurple text-white flex items-center justify-center shrink-0 shadow-sm`}
+      className={`${sizeClass} ${roundedClass} ${ringClass} bg-discord-blurple text-white flex items-center justify-center shrink-0 shadow-xs`}
     >
       <DiscordMark className="w-1/2 h-1/2" />
     </div>
@@ -143,19 +141,15 @@ export const ServerSelectPage: React.FC = () => {
   const navigate = useNavigate();
   const [guilds, setGuilds] = useState<GuildSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     return (localStorage.getItem('server_view_mode') as ViewMode) || 'featured';
   });
 
-  const viewOptions: { id: ViewMode; label: string; icon: string }[] = [
-    { id: 'featured', label: 'Featured Cards', icon: 'dashboard' },
-    { id: 'grid', label: 'Grid Cards', icon: 'view_module' },
-    { id: 'list', label: 'List View', icon: 'view_list' },
+  const viewOptions: { value: ViewMode; label: string; icon: string }[] = [
+    { value: 'featured', label: 'Featured Cards', icon: 'dashboard' },
+    { value: 'grid', label: 'Grid Cards', icon: 'view_module' },
+    { value: 'list', label: 'List View', icon: 'view_list' },
   ];
-
-  const currentOption = viewOptions.find((o) => o.id === viewMode) || viewOptions[0];
 
   const handleSetViewMode = (mode: ViewMode) => {
     setViewMode(mode);
@@ -201,16 +195,6 @@ export const ServerSelectPage: React.FC = () => {
     }
   });
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
@@ -219,63 +203,19 @@ export const ServerSelectPage: React.FC = () => {
         description="Choose a server to configure with ArchiBot or invite the bot to a new community."
         actions={
           <div className="flex items-center gap-2">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                type="button"
-                onClick={() => setDropdownOpen((prev) => !prev)}
-                className="min-w-[168px] flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-discord-card hover:bg-discord-card-hover border border-discord-border text-discord-white text-xs font-medium cursor-pointer transition-colors shadow-sm select-none"
-              >
-                <div className="flex items-center gap-2">
-                  <MdIcon name={currentOption.icon} className="text-base text-discord-white shrink-0" />
-                  <span>{currentOption.label}</span>
-                </div>
-                <MdIcon
-                  name="expand_more"
-                  className={`text-base text-discord-white/80 shrink-0 transition-transform duration-200 ${
-                    dropdownOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-1.5 min-w-full w-max bg-discord-card border border-discord-border rounded-xl shadow-2xl p-1.5 z-50 flex flex-col gap-1">
-                  {viewOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        handleSetViewMode(opt.id);
-                        setDropdownOpen(false);
-                      }}
-                      className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border-0 whitespace-nowrap text-left ${
-                        viewMode === opt.id
-                          ? 'bg-discord-blurple text-white shadow-sm font-semibold'
-                          : 'bg-transparent text-discord-text hover:text-discord-white hover:bg-discord-surface'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <MdIcon
-                          name={opt.icon}
-                          className={`text-base shrink-0 ${
-                            viewMode === opt.id ? 'text-white' : 'text-discord-muted'
-                          }`}
-                        />
-                        <span>{opt.label}</span>
-                      </div>
-                      {viewMode === opt.id && (
-                        <MdIcon name="check" className="text-sm text-white shrink-0 ml-1.5" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <MdSelect
+              compact
+              value={viewMode}
+              onChange={(val) => handleSetViewMode(val as ViewMode)}
+              options={viewOptions}
+              className="w-48"
+            />
           </div>
         }
       />
 
       {loading ? (
-        <div className="overflow-y-auto max-h-[calc(100vh-220px)] pr-2 -mr-2 pt-2 pb-6">
+        <div className="pt-2 pb-6">
           <ServerSelectSkeleton viewMode={viewMode} />
         </div>
       ) : guilds.length === 0 ? (
@@ -287,9 +227,9 @@ export const ServerSelectPage: React.FC = () => {
           />
         </SurfaceCard>
       ) : (
-        <div className="overflow-y-auto max-h-[calc(100vh-220px)] pr-2 -mr-2 pt-2 pb-6">
+        <div className="pt-2 pb-6">
           {viewMode === 'featured' ? (
-            /* OPSI 1: Berbentuk Kaya Gini (Featured vertical square card with top banner & centered avatar - 4 columns) */
+            /* OPSI 1: Featured vertical square card with top banner & centered avatar - 4 columns */
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {guilds.map((g) => (
                 <div
@@ -301,7 +241,7 @@ export const ServerSelectPage: React.FC = () => {
                       window.open(g.inviteUrl, '_blank');
                     }
                   }}
-                  className="relative rounded-2xl overflow-hidden bg-discord-card border border-discord-border transition-all duration-200 ease-out flex flex-col justify-between group select-none hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
+                  className="relative rounded-2xl overflow-hidden bg-discord-card border border-discord-border transition-all duration-200 ease-out flex flex-col justify-between group select-none hover:-translate-y-1 hover:shadow-[var(--md-elevation-card-hover)] cursor-pointer"
                 >
                   {/* Top Banner Area with subtle controller aura & centered circular avatar */}
                   <div className="relative h-36 bg-gradient-to-b from-discord-blurple/20 via-discord-blurple/8 to-discord-card flex items-center justify-center overflow-hidden">
@@ -314,14 +254,14 @@ export const ServerSelectPage: React.FC = () => {
                       name={g.name}
                       sizeClass="w-14 h-14"
                       roundedClass="rounded-full"
-                      ringClass="ring-4 ring-discord-card/80 shadow-2xl relative z-10 transition-transform duration-200 group-hover:scale-105"
+                      ringClass="ring-4 ring-discord-card/80 shadow-md relative z-10 transition-transform duration-200 group-hover:scale-105"
                     />
                   </div>
 
-                  {/* Bottom Info Row: Server Name on left & Manage / Invite Button on right (No horizontal line) */}
+                  {/* Bottom Info Row: Server Name on left & Manage / Invite Button on right */}
                   <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-discord-card min-h-[56px]">
                     <span
-                      className="font-semibold text-xs sm:text-sm text-discord-white truncate min-w-0 flex-1 leading-normal"
+                      className="font-normal text-xs sm:text-sm text-discord-white truncate min-w-0 flex-1 leading-normal"
                       title={g.name}
                     >
                       {g.name}
@@ -332,7 +272,7 @@ export const ServerSelectPage: React.FC = () => {
                         <MdButton
                           size="sm"
                           variant="filled"
-                          className="px-4 shadow-sm"
+                          className="px-4"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/guilds/${g.id}`);
@@ -359,7 +299,7 @@ export const ServerSelectPage: React.FC = () => {
               ))}
             </div>
           ) : viewMode === 'grid' ? (
-            /* OPSI 2: Berbentuk Card Kotak (Compact grid cards) */
+            /* OPSI 2: Compact grid cards */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {guilds.map((g) => (
                 <SurfaceCard
@@ -371,7 +311,7 @@ export const ServerSelectPage: React.FC = () => {
                       window.open(g.inviteUrl, '_blank');
                     }
                   }}
-                  className="p-4 flex flex-col justify-between gap-4 transition-all duration-200 ease-out select-none hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
+                  className="p-4 flex flex-col justify-between gap-4 transition-all duration-200 ease-out select-none hover:-translate-y-1 hover:shadow-[var(--md-elevation-card-hover)] cursor-pointer"
                 >
                   <div className="flex items-center gap-3.5">
                     <GuildAvatar
@@ -379,20 +319,20 @@ export const ServerSelectPage: React.FC = () => {
                       name={g.name}
                       sizeClass="w-12 h-12"
                       roundedClass="rounded-lg"
-                      ringClass="shadow-sm border border-discord-border/50"
+                      ringClass="shadow-xs border border-discord-border/50"
                     />
 
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm text-discord-white truncate leading-tight" title={g.name}>
+                      <div className="font-normal text-sm text-discord-white truncate leading-tight" title={g.name}>
                         {g.name}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                         {g.botInGuild ? (
-                          <StatusBadge label="Active" tone="green" />
+                          <StatusBadge label="Active" tone="green" variant="soft" />
                         ) : (
-                          <StatusBadge label="Not Added" tone="neutral" />
+                          <StatusBadge label="Not Added" tone="neutral" variant="soft" />
                         )}
-                        {g.isOwner && <StatusBadge label="Owner" tone="blurple" />}
+                        {g.isOwner && <StatusBadge label="Owner" tone="blurple" variant="soft" />}
                       </div>
                     </div>
                   </div>
@@ -407,7 +347,7 @@ export const ServerSelectPage: React.FC = () => {
                         <span>{g.rolesCount} roles</span>
                       </>
                     ) : (
-                      <span className="text-discord-muted/60 text-[11px] italic">Not connected to ArchiBot</span>
+                      <span className="text-discord-muted/70 text-[11px] italic">Not connected to ArchiBot</span>
                     )}
                   </div>
 
@@ -442,7 +382,7 @@ export const ServerSelectPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            /* OPSI 3: Berbentuk List (Horizontal rows) */
+            /* OPSI 3: List view (Horizontal rows) */
             <div className="flex flex-col gap-3">
               {guilds.map((g) => (
                 <SurfaceCard
@@ -462,20 +402,20 @@ export const ServerSelectPage: React.FC = () => {
                       name={g.name}
                       sizeClass="w-10 h-10"
                       roundedClass="rounded-lg"
-                      ringClass="shadow-sm border border-discord-border/50"
+                      ringClass="shadow-xs border border-discord-border/50"
                     />
 
                     <div className="min-w-0">
-                      <div className="font-semibold text-sm text-discord-white truncate leading-tight" title={g.name}>
+                      <div className="font-normal text-sm text-discord-white truncate leading-tight" title={g.name}>
                         {g.name}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         {g.botInGuild ? (
-                          <StatusBadge label="Active" tone="green" />
+                          <StatusBadge label="Active" tone="green" variant="soft" />
                         ) : (
-                          <StatusBadge label="Not Added" tone="neutral" />
+                          <StatusBadge label="Not Added" tone="neutral" variant="soft" />
                         )}
-                        {g.isOwner && <StatusBadge label="Owner" tone="blurple" />}
+                        {g.isOwner && <StatusBadge label="Owner" tone="blurple" variant="soft" />}
                       </div>
                     </div>
                   </div>
@@ -495,7 +435,7 @@ export const ServerSelectPage: React.FC = () => {
                       <MdButton
                         size="sm"
                         variant="filled"
-                        className="px-4 shadow-sm"
+                        className="px-4"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/guilds/${g.id}`);

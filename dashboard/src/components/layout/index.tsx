@@ -241,7 +241,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 className="w-8 h-8 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-xs shrink-0 font-medium">
+              <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-xs shrink-0 font-normal">
                 {(displayName || user?.username || 'U')[0].toUpperCase()}
               </div>
             )}
@@ -259,7 +259,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 onClick={() => setUserDropdownOpen(false)}
               />
               <div
-                className="absolute right-0 mt-2 w-64 bg-discord-card border border-discord-border rounded-xl shadow-xl py-2 z-50 text-xs"
+                className="absolute right-0 mt-2 w-64 bg-[var(--md-menu-container-color)] border border-discord-border rounded-xl shadow-[var(--md-elevation-menu)] py-2 z-50 text-xs"
                 onClick={() => setUserDropdownOpen(false)}
               >
                 <div className="px-4 py-2 border-b border-discord-border flex items-center gap-3">
@@ -271,12 +271,12 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                       className="w-10 h-10 rounded-full object-cover shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm shrink-0 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm shrink-0 font-normal">
                       {(displayName || user?.username || 'U')[0].toUpperCase()}
                     </div>
                   )}
                   <div className="overflow-hidden">
-                    <div className="font-medium text-discord-white truncate text-sm">
+                    <div className="font-normal text-discord-white truncate text-sm">
                       {displayName}
                     </div>
                     {user?.username && (
@@ -404,7 +404,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
           <>
             <div className="fixed inset-0 z-40" onClick={() => setServerDropdownOpen(false)} />
             <div
-              className="absolute left-3 right-3 mt-1.5 bg-discord-card border border-discord-border rounded-xl shadow-2xl py-1 z-50 max-h-64 overflow-y-auto"
+              className="absolute left-3 right-3 mt-1.5 bg-[var(--md-menu-container-color)] border border-discord-border rounded-xl shadow-[var(--md-elevation-menu)] py-1 z-50 max-h-64 overflow-y-auto"
               onClick={() => setServerDropdownOpen(false)}
             >
               <md-list>

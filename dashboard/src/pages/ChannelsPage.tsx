@@ -221,7 +221,7 @@ const DroppableCategoryCard: React.FC<{
           <div
             className={`text-xs text-center border-2 border-dashed rounded-lg py-4 transition-all ${
               isOver
-                ? 'border-discord-blurple bg-discord-blurple/15 text-discord-white font-medium'
+                ? 'border-discord-blurple bg-discord-blurple/15 text-discord-white font-normal'
                 : 'border-discord-border/50 text-discord-muted'
             }`}
           >
@@ -271,7 +271,7 @@ const DroppableUnparentedCard: React.FC<{
           <div
             className={`text-xs text-center border-2 border-dashed rounded-lg py-3.5 transition-all ${
               isOver
-                ? 'border-discord-blurple bg-discord-blurple/15 text-discord-white font-medium'
+                ? 'border-discord-blurple bg-discord-blurple/15 text-discord-white font-normal'
                 : 'border-discord-border/50 text-discord-muted'
             }`}
           >
@@ -1232,10 +1232,10 @@ export const ChannelsPage: React.FC = () => {
       >
         <div className="flex flex-col gap-3.5">
           <p className="text-discord-text text-xs leading-relaxed">
-            Channel <strong className="text-discord-white font-medium">#{pendingMove?.sourceCh.name}</strong> dipindahkan ke kategori <strong className="text-discord-white font-medium">{pendingMove?.categoryName}</strong>.
+            Channel <strong className="text-discord-white font-normal">#{pendingMove?.sourceCh.name}</strong> dipindahkan ke kategori <strong className="text-discord-white font-normal">{pendingMove?.categoryName}</strong>.
           </p>
           <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border space-y-2">
-            <div className="flex items-center gap-2 text-discord-white text-xs font-medium">
+            <div className="flex items-center gap-2 text-discord-white text-xs font-normal">
               <MdIcon name="warning" className="text-base text-amber-400 shrink-0" />
               <span>Pemberitahuan Izin Channel</span>
             </div>

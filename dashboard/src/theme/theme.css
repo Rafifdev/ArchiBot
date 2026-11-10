@@ -12,7 +12,9 @@
   --color-discord-blurple-hover: #4752C4;
   --color-discord-blurple-soft: #1E2238;
   --color-discord-green: #57F287;
+  --color-discord-on-green: #003915;
   --color-discord-yellow: #FEE75C;
+  --color-discord-on-yellow: #2B2200;
   --color-discord-fuchsia: #EB459E;
   --color-discord-red: #ED4245;
   --color-discord-white: #FFFFFF;
@@ -181,42 +183,80 @@
   --md-slider-label-text-color: #FFFFFF;
   --md-slider-label-text-size: 11px;
   --md-slider-label-text-weight: 400;
+  --md-elevation-menu: 0px 8px 24px rgba(0, 0, 0, 0.45), 0px 2px 6px rgba(0, 0, 0, 0.3);
+  --md-elevation-card-hover: 0px 10px 28px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 }
 
-/* Complete Light Theme Tokens for Dashboard & Material Web */
+/* Complete Material Design 3 Light Theme Tokens for Dashboard & @material/web */
 [data-theme='light'] {
   color-scheme: light;
-  --color-discord-white: #060607;
+  --color-discord-white: #1B1B1F;
   --color-discord-black: #FFFFFF;
-  --color-discord-sidebar: #F0F2F5;
-  --color-discord-canvas: #F6F7F9;
+  --color-discord-sidebar: #F3F4F9;
+  --color-discord-canvas: #F8F9FC;
   --color-discord-card: #FFFFFF;
-  --color-discord-card-hover: #F3F5F8;
-  --color-discord-surface: #EBEEF3;
-  --color-discord-active: #E0E3FF;
-  --color-discord-border: #DCDEE4;
-  --color-discord-border-hover: #B5BAC1;
-  --color-discord-divider: #D1D5DB;
-  --color-discord-text: #2E3035;
-  --color-discord-muted: #5C5E66;
-  --color-discord-blurple-soft: #E8EAFF;
-  --color-discord-green: #16A34A;
-  --color-discord-yellow: #D97706;
-  --color-discord-red: #DC2626;
-  --color-discord-fuchsia: #C026D3;
+  --color-discord-card-hover: #E7E9F2;
+  --color-discord-surface: #EEF0F7;
+  --color-discord-active: #DFE0FF;
+  --color-discord-border: #E0E2EC;
+  --color-discord-border-hover: #C5C6D0;
+  --color-discord-divider: #E0E2EC;
+  --color-discord-text: #1B1B1F;
+  --color-discord-muted: #45464F;
+  --color-discord-blurple-soft: #DFE0FF;
+  --color-discord-green: #15803D;
+  --color-discord-on-green: #FFFFFF;
+  --color-discord-yellow: #B45309;
+  --color-discord-on-yellow: #FFFFFF;
+  --color-discord-red: #B3261E;
+  --color-discord-fuchsia: #A21CAF;
   --color-discord-premium-bg: #FEF3C7;
-  --color-discord-premium-text: #B45309;
+  --color-discord-premium-text: #92400E;
 
-  /* Material Web Switch & Slider Light Mode Contrast */
-  --md-switch-track-color: #CBD0D8;
-  --md-switch-handle-color: #5C5E66;
-  --md-switch-hover-track-color: #B8BFC9;
-  --md-switch-hover-handle-color: #2E3035;
-  --md-slider-inactive-track-color: #CBD0D8;
+  /* Material Design 3 Explicit Light Color System Roles */
+  --md-sys-color-primary: var(--color-discord-blurple);
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #DFE0FF;
+  --md-sys-color-on-primary-container: #0E154B;
+  --md-sys-color-secondary: #5A5D72;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E1E3F0;
+  --md-sys-color-on-secondary-container: #181A2C;
+  --md-sys-color-tertiary: #15803D;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-background: #F8F9FC;
+  --md-sys-color-on-background: #1B1B1F;
+  --md-sys-color-surface: #FFFFFF;
+  --md-sys-color-on-surface: #1B1B1F;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F3F4F9;
+  --md-sys-color-surface-container: #EEF0F7;
+  --md-sys-color-surface-container-high: #E7E9F2;
+  --md-sys-color-surface-container-highest: #E1E3ED;
+  --md-sys-color-on-surface-variant: #45464F;
+  --md-sys-color-outline: #757680;
+  --md-sys-color-outline-variant: #E0E2EC;
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+
+  --md-menu-container-color: #F3F4F9;
+  --md-dialog-container-color: #FFFFFF;
+  --md-elevation-menu: 0px 2px 6px 2px rgba(27, 27, 31, 0.12), 0px 1px 2px 0px rgba(27, 27, 31, 0.2);
+  --md-elevation-card-hover: 0px 4px 12px rgba(27, 27, 31, 0.08), 0px 1px 3px rgba(27, 27, 31, 0.06);
+
+  /* Material Design 3 Switch & Slider Light Mode Contrast (Includes MD3 Unselected Outline) */
+  --md-switch-track-color: #E1E3ED;
+  --md-switch-track-outline-width: 1.5px;
+  --md-switch-track-outline-color: #757680;
+  --md-switch-selected-track-outline-width: 0px;
+  --md-switch-handle-color: #757680;
+  --md-switch-hover-track-color: #D7DAE6;
+  --md-switch-hover-handle-color: #45464F;
+  --md-slider-inactive-track-color: #D7DAE6;
 }
 
 /* Global Unified Material Symbols: Refined Light Weight (wght 300) matching Poppins 400 */
@@ -376,21 +416,18 @@ md-select-option .headline {
   background: var(--color-discord-border-hover);
 }
 
-/* Smooth Modal Mode Transition (e.g., Switch between Channel and Category creation) */
+/* Smooth Modal Mode Transition without retaining transform containing-block */
 @keyframes modalSwitchIn {
   0% {
     opacity: 0;
-    transform: translateY(8px) scale(0.985);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 .animate-modal-switch {
-  animation: modalSwitchIn 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+  animation: modalSwitchIn 200ms cubic-bezier(0.2, 0, 0, 1) forwards;
 }
 
 /* ==========================================================================

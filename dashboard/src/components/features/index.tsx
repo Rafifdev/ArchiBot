@@ -531,7 +531,7 @@ export const DiscordMessageComposer: React.FC<DiscordMessageComposerProps> = ({
                     }`}
                   >
                     <div className="flex flex-col min-w-0">
-                      <span className="font-mono text-xs font-semibold text-discord-blurple group-hover:text-discord-white transition-colors">
+                      <span className="font-mono text-xs font-normal text-discord-blurple group-hover:text-discord-white transition-colors">
                         {v.token}
                       </span>
                       <span className="text-[11px] text-discord-muted truncate font-normal">
