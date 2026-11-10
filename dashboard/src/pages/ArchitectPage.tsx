@@ -4,7 +4,6 @@ import {
   Badge,
   EmptyState,
   MdButton,
-  MdDivider,
   MdIconButton,
   MdTextField,
   ArchitectSkeleton,
@@ -125,24 +124,24 @@ const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
   return (
     <SurfaceCard
       onClick={onToggle}
-      className={`p-4 flex flex-col justify-between gap-3 cursor-pointer select-none transition-all duration-150 ${
+      className={`p-4 flex flex-col justify-between gap-3.5 cursor-pointer select-none transition-all duration-150 ${
         isSelected
-          ? 'border-discord-blurple bg-discord-card opacity-100'
-          : 'bg-discord-surface/50 border-discord-border opacity-65 hover:opacity-95 hover:border-discord-border-hover'
+          ? 'border-discord-blurple bg-discord-active opacity-100'
+          : 'bg-discord-surface border-discord-border opacity-70 hover:opacity-100 hover:border-discord-border-hover'
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
           <div
             className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
               isSelected
                 ? 'bg-discord-blurple text-white'
-                : 'bg-discord-surface border border-discord-border text-discord-muted'
+                : 'bg-discord-card border border-discord-border text-discord-muted'
             }`}
           >
             <MdIcon name={iconName} className="text-lg" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div
               className={`text-sm font-normal truncate leading-tight ${
                 isSelected ? 'text-discord-white' : 'text-discord-muted'
@@ -150,27 +149,19 @@ const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
             >
               {cleanTitle}
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
-              <Badge
-                size="md"
-                label={isSelected ? 'Selected' : mod.isCore ? 'Default' : 'Optional'}
-                tone={isSelected ? 'blurple' : 'neutral'}
-              />
-            </div>
+            <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+              {mod.description}
+            </p>
           </div>
         </div>
 
         <MdIcon
           name={isSelected ? 'check_circle' : 'radio_button_unchecked'}
-          className={`text-xl shrink-0 ${
+          className={`text-xl shrink-0 mt-0.5 ${
             isSelected ? 'text-discord-blurple' : 'text-discord-muted'
           }`}
         />
       </div>
-
-      <p className="text-xs text-discord-muted font-normal leading-relaxed">
-        {mod.description}
-      </p>
 
       <div className="pt-2.5 border-t border-discord-border flex items-center justify-between gap-2 text-xs text-discord-muted font-normal">
         <div className="flex items-center gap-2 min-w-0 truncate">
@@ -405,6 +396,7 @@ export const ArchitectPage: React.FC = () => {
   const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
   const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
   const [customCat, setCustomCat] = useState('');
   const [customText, setCustomText] = useState('');
   const [customVoice, setCustomVoice] = useState('');
@@ -844,10 +836,7 @@ export const ArchitectPage: React.FC = () => {
             {/* Built-in Core Modules Section */}
             <div className="flex flex-col gap-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-normal text-discord-white">Built-in Server Modules</h4>
-                  <Badge label="Default Included" tone="green" size="xs" />
-                </div>
+                <h4 className="text-xs font-normal text-discord-white">Built-in Server Modules</h4>
                 <p className="text-xs text-discord-muted font-normal mt-0.5 leading-relaxed">
                   Core categories and channels selected automatically by default for live server stats, onboarding, rules, and CAPTCHA verification. Unselect any module below if you do not want it created.
                 </p>
@@ -866,10 +855,8 @@ export const ArchitectPage: React.FC = () => {
               </div>
             </div>
 
-            <MdDivider />
-
             {/* Standard Feature Modules Section */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 pt-1">
               <div>
                 <h4 className="text-xs font-normal text-discord-white">Channel & Activity Modules</h4>
                 <p className="text-xs text-discord-muted font-normal mt-0.5 leading-relaxed">
@@ -900,28 +887,38 @@ export const ArchitectPage: React.FC = () => {
                   Live overview of the selected modules, categories, and channels that will be created on your server.
                 </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0 flex-wrap">
-                <Badge size="md" label={`${customLayoutPreview.activeLabels.length} Modules`} tone="blurple" />
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs text-discord-muted font-normal">
-                  {customLayoutPreview.categoryCount} categories • {customLayoutPreview.channelCount} channels
+                  {customLayoutPreview.activeLabels.length} modules • {customLayoutPreview.categoryCount} categories •{' '}
+                  {customLayoutPreview.channelCount} channels
                 </span>
+                {customLayoutPreview.spec && (
+                  <MdIconButton
+                    icon={previewExpanded ? 'unfold_less' : 'unfold_more'}
+                    title={previewExpanded ? 'Compact preview height' : 'Expand preview height'}
+                    className="text-discord-muted hover:text-discord-white -my-2 -mr-2 shrink-0"
+                    onClick={() => setPreviewExpanded((prev) => !prev)}
+                  />
+                )}
               </div>
             </div>
 
             {customLayoutPreview.activeLabels.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                {customLayoutPreview.activeLabels.map((item) => (
-                  <Badge
-                    key={item.id}
-                    label={item.label}
-                    tone={item.isCore ? 'green' : 'neutral'}
-                  />
-                ))}
+              <div className="text-xs text-discord-muted font-normal leading-relaxed">
+                Selected modules:{' '}
+                <span className="text-discord-text">
+                  {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
+                </span>
               </div>
             )}
 
             {customLayoutPreview.spec ? (
-              <ChannelTreePreview spec={customLayoutPreview.spec} maxHeightClass="max-h-72" />
+              <ChannelTreePreview
+                spec={customLayoutPreview.spec}
+                maxHeightClass={`resize-y min-h-[200px] max-h-[80vh] ${
+                  previewExpanded ? 'h-[540px]' : 'h-72'
+                }`}
+              />
             ) : (
               <EmptyState
                 icon="view_quilt"
