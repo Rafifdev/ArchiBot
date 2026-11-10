@@ -2359,7 +2359,7 @@ export const SwitchRow: React.FC<SwitchRowProps> = ({
 }) => (
   <div
     className={`flex items-center justify-between gap-4 ${
-      boxed ? 'p-3.5 rounded-xl bg-discord-surface' : 'py-1'
+      boxed ? `p-3.5 ${/\brounded-/.test(className) ? '' : 'rounded-lg'} bg-discord-surface` : 'py-1'
     } ${className}`.trim()}
   >
     <div>
