@@ -1431,8 +1431,8 @@ export const ArchitectPage: React.FC = () => {
           </SurfaceCard>
 
           {/* Selected Modules & Channels Live Preview Section */}
-          <SurfaceCard className="p-4 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-discord-border">
+          <SurfaceCard className="p-4 flex flex-col gap-4 h-[calc(100vh-7.5rem)] min-h-[560px]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-discord-border shrink-0">
               <div>
                 <h3 className="text-sm font-normal text-discord-white">Selected Layout Preview</h3>
                 <p className="text-xs text-discord-muted font-normal mt-0.5">
@@ -1460,7 +1460,7 @@ export const ArchitectPage: React.FC = () => {
             </div>
 
             {customLayoutPreview.activeLabels.length > 0 && (
-              <div className="text-xs text-discord-muted font-normal leading-relaxed">
+              <div className="text-xs text-discord-muted font-normal leading-relaxed shrink-0">
                 Selected modules:{' '}
                 <span className="text-discord-text">
                   {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
@@ -1475,18 +1475,18 @@ export const ArchitectPage: React.FC = () => {
                   setIsOrderCustomized(true);
                   setCustomPreviewGroups(next);
                 }}
-                maxHeightClass="resize-y min-h-[200px] h-80 max-h-[80vh]"
+                maxHeightClass="flex-1 min-h-0"
               />
             ) : (
               <EmptyState
                 icon="view_quilt"
                 title="No modules selected"
                 description="Select one or more built-in or activity modules above to preview your server layout."
-                className="py-6"
+                className="flex-1 py-6"
               />
             )}
 
-            <div className="pt-3.5 border-t border-discord-border flex justify-end">
+            <div className="pt-3.5 border-t border-discord-border flex justify-end shrink-0">
               <MdButton
                 variant="filled"
                 icon="construction"
