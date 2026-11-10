@@ -23,7 +23,6 @@ import {
   EmptyState,
   MdButton,
   MdIconButton,
-  MdTextField,
   ArchitectSkeleton,
   MdIcon,
   MdTabs,
@@ -237,21 +236,18 @@ function getTemplateBuildStages(replace: boolean, includeRoles: boolean, include
   return stages;
 }
 
-function getCustomBuildStages(replace: boolean, hasCustomCat: boolean, includeMusic: boolean): BuildStage[] {
+function getCustomBuildStages(replace: boolean, includeMusic: boolean): BuildStage[] {
   const stages: BuildStage[] = [
     { progress: 12, text: 'Compiling selected modular layout...' },
     replace
       ? { progress: 28, text: 'Removing old categories and channels...' }
       : { progress: 28, text: 'Inspecting existing server layout for merge...' },
-    { progress: 46, text: 'Creating custom roles and access rules...' },
-    { progress: 64, text: 'Constructing modular categories and channels...' },
+    { progress: 46, text: 'Creating server roles and access rules...' },
+    { progress: 68, text: 'Constructing modular categories and channels...' },
   ];
 
-  if (hasCustomCat) {
-    stages.push({ progress: 78, text: 'Adding custom text and voice channels...' });
-  }
   if (includeMusic) {
-    stages.push({ progress: 86, text: 'Deploying music request channel & controls...' });
+    stages.push({ progress: 84, text: 'Deploying music request channel & controls...' });
   }
   stages.push({ progress: 93, text: 'Finalizing server synchronization...' });
   return stages;
@@ -853,10 +849,6 @@ export const ArchitectPage: React.FC = () => {
   >(null);
   const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
   const [isOrderCustomized, setIsOrderCustomized] = useState(false);
-  const [customCat, setCustomCat] = useState('');
-  const [customText, setCustomText] = useState('');
-  const [customVoice, setCustomVoice] = useState('');
-  const [customRoles, setCustomRoles] = useState('Admin, Moderator, Member, VIP');
 
   // Reset Channels state
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -1102,26 +1094,6 @@ export const ArchitectPage: React.FC = () => {
       }
     }
 
-    if (customCat.trim()) {
-      let customBlock = `[${customCat.trim().toUpperCase()}]`;
-      const textItems = customText
-        .split(',')
-        .map((c) => c.trim())
-        .filter(Boolean);
-      const voiceItems = customVoice
-        .split(',')
-        .map((v) => v.trim())
-        .filter(Boolean);
-
-      for (const t of textItems) customBlock += `\n💬・${t}`;
-      for (const v of voiceItems) customBlock += `\nvoice: 🔊 ${v}`;
-      if (textItems.length === 0 && voiceItems.length === 0) {
-        customBlock += `\n💬・general`;
-      }
-      freshGroups.push(...parseTemplatePreview(customBlock, 'custom'));
-      activeLabels.push({ id: 'custom_category', label: `Custom: ${customCat.trim()}` });
-    }
-
     const totalChannels = freshGroups.reduce((acc, g) => acc + g.channels.length, 0);
 
     return {
@@ -1130,7 +1102,7 @@ export const ArchitectPage: React.FC = () => {
       categoryCount: freshGroups.length,
       channelCount: totalChannels,
     };
-  }, [selectedCoreMods, selectedMods, legoModules, customCat, customText, customVoice]);
+  }, [selectedCoreMods, selectedMods, legoModules]);
 
   useEffect(() => {
     setCustomPreviewGroups((prev) =>
@@ -1147,7 +1119,7 @@ export const ArchitectPage: React.FC = () => {
 
     await runTrackedBuild(
       'Building Custom Server Layout',
-      getCustomBuildStages(customReplaceChannels, Boolean(customCat.trim()), selectedMods.includes('music')),
+      getCustomBuildStages(customReplaceChannels, selectedMods.includes('music')),
       'Custom server layout built successfully!',
       async () => {
         const res = await fetch(`/api/guilds/${guildId}/architect/setup`, {
@@ -1158,7 +1130,6 @@ export const ArchitectPage: React.FC = () => {
             selectedModules: selectedMods,
             customSpec: orderedCustomSpec,
             orderedCategories,
-            customRoles,
             replace: customReplaceChannels,
             includeMusic: selectedMods.includes('music'),
             includeStats: selectedCoreMods.includes('server_stats'),
@@ -1356,7 +1327,7 @@ export const ArchitectPage: React.FC = () => {
           {/* Selected Modules & Channels Live Preview Section (Collapsible via Reusable SurfaceCard) */}
           <SurfaceCard
             collapsible
-            defaultOpen={false}
+            defaultOpen={true}
             title="Selected Layout Preview"
             subtitle="Live overview of the selected modules, categories, and channels that will be created on your server."
             headerAction={
@@ -1403,7 +1374,7 @@ export const ArchitectPage: React.FC = () => {
                 <EmptyState
                   icon="view_quilt"
                   title="No modules selected"
-                  description="Select one or more built-in or activity modules above, or add a custom category below to preview your server layout."
+                  description="Select one or more built-in or activity modules above to preview your server layout."
                   className="py-6"
                 />
               )}
@@ -1411,41 +1382,6 @@ export const ArchitectPage: React.FC = () => {
           </SurfaceCard>
 
           <SurfaceCard className="p-4 flex flex-col gap-4">
-            <div className="pb-3 border-b border-discord-border">
-              <h3 className="text-sm font-normal text-discord-white">Custom Category & Roles</h3>
-              <p className="text-xs text-discord-muted font-normal mt-0.5">
-                Optionally append a custom category and initial roles to your generated layout.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              <MdTextField
-                label="Custom Category Name"
-                value={customCat}
-                onChange={setCustomCat}
-                placeholder="e.g. VIP LOUNGE"
-              />
-              <MdTextField
-                label="Text Channels (comma-separated)"
-                value={customText}
-                onChange={setCustomText}
-                placeholder="vip-chat, announcements"
-              />
-              <MdTextField
-                label="Voice Rooms (comma-separated)"
-                value={customVoice}
-                onChange={setCustomVoice}
-                placeholder="VIP 1, VIP 2"
-              />
-            </div>
-
-            <MdTextField
-              label="Server Roles to Create (comma-separated)"
-              value={customRoles}
-              onChange={setCustomRoles}
-              placeholder="Admin, Moderator, Member, VIP"
-            />
-
             <SwitchRow
               boxed
               label={customReplaceChannels ? 'Replace Existing Channels' : 'Merge with Existing Channels'}
@@ -1464,7 +1400,7 @@ export const ArchitectPage: React.FC = () => {
                 variant="filled"
                 icon="construction"
                 onClick={handleBuildLego}
-                disabled={executing || (totalSelectedModulesCount === 0 && !customCat.trim())}
+                disabled={executing || totalSelectedModulesCount === 0}
               >
                 Build Custom Layout ({totalSelectedModulesCount} Modules)
               </MdButton>
