@@ -142,10 +142,10 @@ const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
   return (
     <div
       onClick={onToggle}
-      className={`rounded-xl border p-4 flex flex-col justify-between gap-3.5 cursor-pointer select-none transition-colors duration-150 ${
+      className={`rounded-xl border-0 p-4 flex flex-col justify-between gap-3.5 cursor-pointer select-none transition-colors duration-150 ${
         isSelected
-          ? 'bg-[color-mix(in_srgb,var(--color-discord-blurple)_18%,var(--color-discord-surface))] border-discord-blurple'
-          : 'bg-discord-surface border-discord-border hover:border-discord-border-hover hover:bg-discord-card-hover'
+          ? 'bg-[color-mix(in_srgb,var(--color-discord-blurple)_18%,var(--color-discord-surface))]'
+          : 'bg-discord-surface hover:bg-discord-card-hover'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -154,7 +154,7 @@ const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
             className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
               isSelected
                 ? 'bg-discord-blurple text-white'
-                : 'bg-discord-card border border-discord-border text-discord-muted'
+                : 'bg-discord-card text-discord-muted'
             }`}
           >
             <MdIcon name={iconName} className="text-lg" />
@@ -1155,12 +1155,7 @@ export const ArchitectPage: React.FC = () => {
 
             {/* Built-in Core Modules Section */}
             <div className="flex flex-col gap-3">
-              <div>
-                <h4 className="text-xs font-normal text-discord-white">Built-in Server Modules</h4>
-                <p className="text-xs text-discord-muted font-normal mt-0.5 leading-relaxed">
-                  Core categories and channels selected automatically by default for live server stats, onboarding, rules, and CAPTCHA verification. Unselect any module below if you do not want it created.
-                </p>
-              </div>
+              <h4 className="text-xs font-normal text-discord-white">Built-in Server Modules</h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {CORE_MODULES.map((mod) => (
@@ -1177,12 +1172,7 @@ export const ArchitectPage: React.FC = () => {
 
             {/* Standard Feature Modules Section */}
             <div className="flex flex-col gap-3 pt-1">
-              <div>
-                <h4 className="text-xs font-normal text-discord-white">Channel & Activity Modules</h4>
-                <p className="text-xs text-discord-muted font-normal mt-0.5 leading-relaxed">
-                  Optional modular category packs for announcements, chat lounges, games, media galleries, music, and temporary voice rooms.
-                </p>
-              </div>
+              <h4 className="text-xs font-normal text-discord-white">Channel & Activity Modules</h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {legoModules.map((mod) => (
