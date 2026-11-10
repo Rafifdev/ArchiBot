@@ -1769,7 +1769,6 @@ export const ArchitectPage: React.FC = () => {
                 <MdButton
                   variant="tonal"
                   size="xs"
-                  icon="create_new_folder"
                   onClick={openCreateCategoryModal}
                 >
                   Create Category
@@ -1777,7 +1776,6 @@ export const ArchitectPage: React.FC = () => {
                 <MdButton
                   variant="filled"
                   size="xs"
-                  icon="add"
                   disabled={customPreviewGroups.length === 0}
                   onClick={openCreateChannelModal}
                 >
@@ -1806,7 +1804,7 @@ export const ArchitectPage: React.FC = () => {
               />
             )}
 
-            <div className="pt-3.5 border-t border-discord-border flex justify-end shrink-0">
+            <div className="flex justify-end shrink-0">
               <MdButton
                 variant="filled"
                 icon="construction"
