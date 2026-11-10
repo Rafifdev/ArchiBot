@@ -129,9 +129,7 @@ export interface TopAppBarProps {
   user: UserProfile | null;
   guildId?: string;
   theme?: 'dark' | 'light';
-  themeMode?: ThemeMode;
   onToggleTheme: () => void;
-  onSelectThemeMode?: (mode: ThemeMode) => void;
   onOpenSearch: () => void;
   onLogout: () => void;
 }
@@ -140,15 +138,12 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   user,
   guildId,
   theme = 'dark',
-  themeMode = 'system',
   onToggleTheme,
-  onSelectThemeMode,
   onOpenSearch,
   onLogout,
 }) => {
   const navigate = useNavigate();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [botAvatar, setBotAvatar] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
   const [botAvatarError, setBotAvatarError] = useState(false);
@@ -178,15 +173,6 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
       })
       .catch(() => {});
   }, []);
-
-  const themeOptions: { id: ThemeMode; label: string; icon: string }[] = [
-    { id: 'light', label: 'Light', icon: 'light_mode' },
-    { id: 'dark', label: 'Dark', icon: 'dark_mode' },
-    { id: 'system', label: 'Auto (System)', icon: 'laptop' },
-  ];
-
-  const activeThemeIcon =
-    themeMode === 'system' ? 'laptop' : theme === 'light' ? 'light_mode' : 'dark_mode';
 
   return (
     <header className="h-16 shrink-0 bg-discord-sidebar border-b border-discord-border flex items-center justify-between px-5 z-40">
@@ -227,70 +213,12 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
 
       {/* Right: Material Icon Buttons & User Profile Dropdown */}
       <div className="flex items-center gap-2">
-        {/* Flexible Theme Selector: Light / Dark / Auto (System) */}
-        <div className="relative">
-          <MdIconButton
-            icon={activeThemeIcon}
-            title={`Theme: ${themeMode === 'system' ? `Auto (${theme})` : themeMode}`}
-            onClick={() => {
-              if (onSelectThemeMode) {
-                setThemeDropdownOpen((prev) => !prev);
-              } else {
-                onToggleTheme();
-              }
-            }}
-            className={
-              themeMode === 'system'
-                ? 'text-discord-text hover:text-discord-white'
-                : theme === 'light'
-                ? 'text-discord-yellow hover:opacity-90'
-                : 'text-discord-blurple'
-            }
-          />
-
-          {themeDropdownOpen && onSelectThemeMode && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setThemeDropdownOpen(false)}
-              />
-              <div className="absolute right-0 mt-2 w-44 bg-discord-card border border-discord-border rounded-xl shadow-xl p-1.5 z-50 flex flex-col gap-0.5 text-xs">
-                {themeOptions.map((opt) => {
-                  const isSelected = themeMode === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        onSelectThemeMode(opt.id);
-                        setThemeDropdownOpen(false);
-                      }}
-                      className={`flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-normal transition-colors cursor-pointer border-0 text-left ${
-                        isSelected
-                          ? 'bg-discord-blurple text-white'
-                          : 'bg-transparent text-discord-text hover:bg-discord-surface hover:text-discord-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <md-icon
-                          class={`text-base ${
-                            isSelected ? 'text-white' : 'text-discord-muted'
-                          }`}
-                        >
-                          {opt.icon}
-                        </md-icon>
-                        <span>{opt.label}</span>
-                      </div>
-                      {isSelected && (
-                        <md-icon class="text-sm text-white">check</md-icon>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+        <MdIconButton
+          icon={theme === 'dark' ? 'light_mode' : 'dark_mode'}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          onClick={onToggleTheme}
+          className={theme === 'dark' ? 'text-discord-yellow hover:opacity-90' : 'text-discord-blurple'}
+        />
 
         <MdIconButton
           icon="search"
@@ -1080,9 +1008,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
           user={user}
           guildId={guildId}
           theme={resolvedTheme}
-          themeMode={themeMode}
           onToggleTheme={toggleTheme}
-          onSelectThemeMode={setThemeMode}
           onOpenSearch={() => setSearchOpen(true)}
           onLogout={onLogout}
         />
