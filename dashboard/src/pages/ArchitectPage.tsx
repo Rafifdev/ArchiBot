@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Badge,
+  EmptyState,
   MdButton,
+  MdDivider,
+  MdIconButton,
   MdTextField,
   ArchitectSkeleton,
   MdIcon,
@@ -51,6 +54,8 @@ const TEMPLATE_META: Record<
 };
 
 const MODULE_ICONS: Record<string, string> = {
+  server_stats: 'analytics',
+  gateway: 'shield',
   news: 'campaign',
   events: 'celebration',
   chat: 'chat',
@@ -63,6 +68,133 @@ const MODULE_ICONS: Record<string, string> = {
   voice_comp: 'emoji_events',
   voice_hangout: 'weekend',
   voice_study: 'hearing_disabled',
+};
+
+interface BuilderModuleItem {
+  id: string;
+  shortLabel?: string;
+  label: string;
+  description: string;
+  category: string;
+  spec: string;
+  isCore?: boolean;
+}
+
+const CORE_MODULES: BuilderModuleItem[] = [
+  {
+    id: 'server_stats',
+    shortLabel: 'Server Stats',
+    label: 'Server Stats',
+    description: 'Live read-only voice counters displaying today’s date, online members, and total server members.',
+    category: 'SERVER STATS',
+    isCore: true,
+    spec: `voice: 📅 Date Counter\nvoice: 🟢 Online Members\nvoice: Users: Total Members`,
+  },
+  {
+    id: 'gateway',
+    shortLabel: 'Gateway',
+    label: 'Gateway',
+    description: 'Welcome greetings, rules embed, CAPTCHA verification, role picker, booster/invite logs, and goodbye.',
+    category: 'GATEWAY',
+    isCore: true,
+    spec: `readonly: 🛬・welcome\nreadonly: 📜・rules\nreadonly: ✅・verify\nreadonly: 📍・roles-pick\nreadonly: 🚀・booster-logs\nreadonly: 📥・invite-logs\nreadonly: 👋🏻・goodbye`,
+  },
+];
+
+interface ModuleOptionCardProps {
+  mod: BuilderModuleItem;
+  isSelected: boolean;
+  onToggle: () => void;
+  onPreview: () => void;
+}
+
+const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
+  mod,
+  isSelected,
+  onToggle,
+  onPreview,
+}) => {
+  const cleanTitle = mod.shortLabel || stripLeadingEmoji(mod.label);
+  const iconName = MODULE_ICONS[mod.id] || 'folder';
+  const channelCount = mod.spec
+    ? String(mod.spec)
+        .split(/\r?\n/)
+        .filter((l) => l.trim().length > 0).length
+    : 0;
+
+  return (
+    <SurfaceCard
+      onClick={onToggle}
+      className={`p-4 flex flex-col justify-between gap-3 cursor-pointer select-none transition-all duration-150 ${
+        isSelected
+          ? 'border-discord-blurple bg-discord-card opacity-100'
+          : 'bg-discord-surface/50 border-discord-border opacity-65 hover:opacity-95 hover:border-discord-border-hover'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+              isSelected
+                ? 'bg-discord-blurple text-white'
+                : 'bg-discord-surface border border-discord-border text-discord-muted'
+            }`}
+          >
+            <MdIcon name={iconName} className="text-lg" />
+          </div>
+          <div className="min-w-0">
+            <div
+              className={`text-sm font-normal truncate leading-tight ${
+                isSelected ? 'text-discord-white' : 'text-discord-muted'
+              }`}
+            >
+              {cleanTitle}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <Badge
+                size="md"
+                label={isSelected ? 'Selected' : mod.isCore ? 'Default' : 'Optional'}
+                tone={isSelected ? 'blurple' : 'neutral'}
+              />
+            </div>
+          </div>
+        </div>
+
+        <MdIcon
+          name={isSelected ? 'check_circle' : 'radio_button_unchecked'}
+          className={`text-xl shrink-0 ${
+            isSelected ? 'text-discord-blurple' : 'text-discord-muted'
+          }`}
+        />
+      </div>
+
+      <p className="text-xs text-discord-muted font-normal leading-relaxed">
+        {mod.description}
+      </p>
+
+      <div className="pt-2.5 border-t border-discord-border flex items-center justify-between gap-2 text-xs text-discord-muted font-normal">
+        <div className="flex items-center gap-2 min-w-0 truncate">
+          <span className="truncate">{mod.category || 'CATEGORY'}</span>
+          {channelCount > 0 && (
+            <>
+              <span>•</span>
+              <span className="shrink-0">{channelCount} channels</span>
+            </>
+          )}
+        </div>
+
+        <MdIconButton
+          icon="visibility"
+          title={`Preview ${cleanTitle}`}
+          className="text-discord-muted hover:text-discord-white -my-2 -mr-2 shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview();
+          }}
+        />
+      </div>
+    </SurfaceCard>
+  );
 };
 
 interface BuildStage {
@@ -256,6 +388,14 @@ export const ArchitectPage: React.FC = () => {
 
   // Preview & Apply Template Modal state
   const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
+  const [previewModule, setPreviewModule] = useState<{
+    id: string;
+    title: string;
+    category: string;
+    channelCount: number;
+    spec: string;
+    isCore?: boolean;
+  } | null>(null);
   const [applyModalTemplate, setApplyModalTemplate] = useState<any | null>(null);
   const [applyReplace, setApplyReplace] = useState(false);
   const [applyIncludeRoles, setApplyIncludeRoles] = useState(true);
@@ -263,6 +403,7 @@ export const ArchitectPage: React.FC = () => {
 
   // Modular Builder state
   const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
+  const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
   const [customCat, setCustomCat] = useState('');
   const [customText, setCustomText] = useState('');
@@ -434,6 +575,91 @@ export const ArchitectPage: React.FC = () => {
     );
   };
 
+  const openModulePreview = (mod: BuilderModuleItem) => {
+    const cleanTitle = mod.shortLabel || stripLeadingEmoji(mod.label);
+    const channelCount = mod.spec
+      ? String(mod.spec)
+          .split(/\r?\n/)
+          .filter((l) => l.trim().length > 0).length
+      : 0;
+    setPreviewModule({
+      id: mod.id,
+      title: cleanTitle,
+      category: mod.category,
+      channelCount,
+      spec: `[${mod.category}]\n${mod.spec}`,
+      isCore: mod.isCore,
+    });
+  };
+
+  const toggleCoreModule = (id: string) => {
+    setSelectedCoreMods((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleFeatureModule = (id: string) => {
+    setSelectedMods((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const totalSelectedModulesCount = selectedCoreMods.length + selectedMods.length;
+  const allModulesSelected =
+    selectedCoreMods.length === CORE_MODULES.length &&
+    legoModules.length > 0 &&
+    selectedMods.length === legoModules.length;
+
+  const customLayoutPreview = useMemo(() => {
+    const sections: string[] = [];
+    const activeLabels: { id: string; label: string; isCore?: boolean }[] = [];
+
+    for (const coreMod of CORE_MODULES) {
+      if (selectedCoreMods.includes(coreMod.id)) {
+        sections.push(`[${coreMod.category}]\n${coreMod.spec}`);
+        activeLabels.push({ id: coreMod.id, label: coreMod.shortLabel || coreMod.label, isCore: true });
+      }
+    }
+
+    for (const mod of legoModules) {
+      if (selectedMods.includes(mod.id)) {
+        sections.push(`[${mod.category}]\n${mod.spec}`);
+        activeLabels.push({ id: mod.id, label: mod.shortLabel || stripLeadingEmoji(mod.label) });
+      }
+    }
+
+    if (customCat.trim()) {
+      let customBlock = `[${customCat.trim().toUpperCase()}]`;
+      const textItems = customText
+        .split(',')
+        .map((c) => c.trim())
+        .filter(Boolean);
+      const voiceItems = customVoice
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean);
+
+      for (const t of textItems) customBlock += `\n💬・${t}`;
+      for (const v of voiceItems) customBlock += `\nvoice: 🔊 ${v}`;
+      if (textItems.length === 0 && voiceItems.length === 0) {
+        customBlock += `\n💬・general`;
+      }
+      sections.push(customBlock);
+      activeLabels.push({ id: 'custom_category', label: `Custom: ${customCat.trim()}` });
+    }
+
+    const spec = sections.join('\n\n');
+    const parsedGroups = parseTemplatePreview(spec);
+    const totalChannels = parsedGroups.reduce((acc, g) => acc + g.channels.length, 0);
+
+    return {
+      spec,
+      activeLabels,
+      categoryCount: parsedGroups.length,
+      channelCount: totalChannels,
+    };
+  }, [selectedCoreMods, selectedMods, legoModules, customCat, customText, customVoice]);
+
   const handleBuildLego = async () => {
     let customSpec = '';
     if (customCat.trim()) {
@@ -461,6 +687,8 @@ export const ArchitectPage: React.FC = () => {
             customRoles,
             replace: customReplaceChannels,
             includeMusic: selectedMods.includes('music'),
+            includeStats: selectedCoreMods.includes('server_stats'),
+            includeGateway: selectedCoreMods.includes('gateway'),
           }),
         });
         return res.json();
@@ -585,103 +813,123 @@ export const ArchitectPage: React.FC = () => {
 
       {tabIndex === 1 && (
         <div className="flex flex-col gap-6">
-          <SurfaceCard className="p-4 flex flex-col gap-4">
+          <SurfaceCard className="p-4 flex flex-col gap-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-discord-border">
               <div>
                 <h3 className="text-sm font-normal text-discord-white">Feature Modules</h3>
                 <p className="text-xs text-discord-muted font-normal mt-0.5">
-                  Select the channel groups to include in your custom server layout.
+                  Configure built-in server modules and optional channel packs for your custom server layout.
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Badge label={`${selectedMods.length} Selected`} tone="blurple" />
+                <Badge size="md" label={`${totalSelectedModulesCount} Selected`} tone="blurple" />
                 <MdButton
                   variant="text"
                   size="sm"
-                  onClick={() =>
-                    setSelectedMods(
-                      selectedMods.length === legoModules.length ? [] : legoModules.map((m) => m.id)
-                    )
-                  }
+                  onClick={() => {
+                    if (allModulesSelected) {
+                      setSelectedCoreMods([]);
+                      setSelectedMods([]);
+                    } else {
+                      setSelectedCoreMods(CORE_MODULES.map((m) => m.id));
+                      setSelectedMods(legoModules.map((m) => m.id));
+                    }
+                  }}
                 >
-                  {selectedMods.length === legoModules.length ? 'Clear All' : 'Select All'}
+                  {allModulesSelected ? 'Clear All' : 'Select All'}
                 </MdButton>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {legoModules.map((mod) => {
-                const isSelected = selectedMods.includes(mod.id);
-                const cleanTitle = mod.shortLabel || stripLeadingEmoji(mod.label);
-                const iconName = MODULE_ICONS[mod.id] || 'folder';
-                const channelLines = mod.spec
-                  ? String(mod.spec)
-                      .split(/\r?\n/)
-                      .filter((l: string) => l.trim().length > 0).length
-                  : 0;
+            {/* Built-in Core Modules Section */}
+            <div className="flex flex-col gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-normal text-discord-white">Built-in Server Modules</h4>
+                  <Badge label="Default Included" tone="green" size="xs" />
+                </div>
+                <p className="text-xs text-discord-muted font-normal mt-0.5 leading-relaxed">
+                  Core categories and channels selected automatically by default for live server stats, onboarding, rules, and CAPTCHA verification. Unselect any module below if you do not want it created.
+                </p>
+              </div>
 
-                return (
-                  <SurfaceCard
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {CORE_MODULES.map((mod) => (
+                  <ModuleOptionCard
                     key={mod.id}
-                    onClick={() => {
-                      if (isSelected) setSelectedMods((prev) => prev.filter((id) => id !== mod.id));
-                      else setSelectedMods((prev) => [...prev, mod.id]);
-                    }}
-                    className={`p-4 flex flex-col justify-between gap-3 cursor-pointer select-none transition-all duration-150 ${
-                      isSelected
-                        ? 'border-discord-blurple bg-discord-blurple/5'
-                        : 'hover:border-discord-border-hover'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                            isSelected
-                              ? 'bg-discord-blurple text-white'
-                              : 'bg-discord-surface border border-discord-border text-discord-muted'
-                          }`}
-                        >
-                          <MdIcon name={iconName} className="text-lg" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="text-sm font-normal text-discord-white truncate leading-tight">
-                            {cleanTitle}
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <Badge
-                              label={isSelected ? 'Selected' : 'Optional'}
-                              tone={isSelected ? 'blurple' : 'neutral'}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <MdIcon
-                        name={isSelected ? 'check_circle' : 'radio_button_unchecked'}
-                        className={`text-xl shrink-0 ${
-                          isSelected ? 'text-discord-blurple' : 'text-discord-muted'
-                        }`}
-                      />
-                    </div>
-
-                    <p className="text-xs text-discord-muted font-normal leading-relaxed">
-                      {mod.description}
-                    </p>
-
-                    <div className="pt-2.5 border-t border-discord-border flex items-center gap-2 text-xs text-discord-muted font-normal">
-                      <span>{mod.category || 'CATEGORY'}</span>
-                      {channelLines > 0 && (
-                        <>
-                          <span>•</span>
-                          <span>{channelLines} channels</span>
-                        </>
-                      )}
-                    </div>
-                  </SurfaceCard>
-                );
-              })}
+                    mod={mod}
+                    isSelected={selectedCoreMods.includes(mod.id)}
+                    onToggle={() => toggleCoreModule(mod.id)}
+                    onPreview={() => openModulePreview(mod)}
+                  />
+                ))}
+              </div>
             </div>
+
+            <MdDivider />
+
+            {/* Standard Feature Modules Section */}
+            <div className="flex flex-col gap-3">
+              <div>
+                <h4 className="text-xs font-normal text-discord-white">Channel & Activity Modules</h4>
+                <p className="text-xs text-discord-muted font-normal mt-0.5 leading-relaxed">
+                  Optional modular category packs for announcements, chat lounges, games, media galleries, music, and temporary voice rooms.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {legoModules.map((mod) => (
+                  <ModuleOptionCard
+                    key={mod.id}
+                    mod={mod}
+                    isSelected={selectedMods.includes(mod.id)}
+                    onToggle={() => toggleFeatureModule(mod.id)}
+                    onPreview={() => openModulePreview(mod)}
+                  />
+                ))}
+              </div>
+            </div>
+          </SurfaceCard>
+
+          {/* Selected Modules & Channels Live Preview Section */}
+          <SurfaceCard className="p-4 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-discord-border">
+              <div>
+                <h3 className="text-sm font-normal text-discord-white">Selected Layout Preview</h3>
+                <p className="text-xs text-discord-muted font-normal mt-0.5">
+                  Live overview of the selected modules, categories, and channels that will be created on your server.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <Badge size="md" label={`${customLayoutPreview.activeLabels.length} Modules`} tone="blurple" />
+                <span className="text-xs text-discord-muted font-normal">
+                  {customLayoutPreview.categoryCount} categories • {customLayoutPreview.channelCount} channels
+                </span>
+              </div>
+            </div>
+
+            {customLayoutPreview.activeLabels.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {customLayoutPreview.activeLabels.map((item) => (
+                  <Badge
+                    key={item.id}
+                    label={item.label}
+                    tone={item.isCore ? 'green' : 'neutral'}
+                  />
+                ))}
+              </div>
+            )}
+
+            {customLayoutPreview.spec ? (
+              <ChannelTreePreview spec={customLayoutPreview.spec} maxHeightClass="max-h-72" />
+            ) : (
+              <EmptyState
+                icon="view_quilt"
+                title="No modules selected"
+                description="Select one or more built-in or activity modules above, or add a custom category below to preview your server layout."
+                className="py-6"
+              />
+            )}
           </SurfaceCard>
 
           <SurfaceCard className="p-4 flex flex-col gap-4">
@@ -738,9 +986,9 @@ export const ArchitectPage: React.FC = () => {
                 variant="filled"
                 icon="construction"
                 onClick={handleBuildLego}
-                disabled={executing || (selectedMods.length === 0 && !customCat.trim())}
+                disabled={executing || (totalSelectedModulesCount === 0 && !customCat.trim())}
               >
-                Build Custom Layout ({selectedMods.length} Modules)
+                Build Custom Layout ({totalSelectedModulesCount} Modules)
               </MdButton>
             </div>
           </SurfaceCard>
@@ -954,6 +1202,49 @@ export const ArchitectPage: React.FC = () => {
                 onChange={setApplyIncludeMusic}
               />
             </div>
+          </div>
+        )}
+      </MdDialog>
+
+      {/* Module Channel Preview Modal */}
+      <MdDialog
+        open={Boolean(previewModule)}
+        onClose={() => setPreviewModule(null)}
+        headline={previewModule ? `${previewModule.title} Channels` : 'Module Channels'}
+        actions={
+          <>
+            <MdButton variant="text" onClick={() => setPreviewModule(null)}>
+              Close
+            </MdButton>
+            {previewModule && (
+              <MdButton
+                variant="filled"
+                onClick={() => {
+                  if (previewModule.isCore) toggleCoreModule(previewModule.id);
+                  else toggleFeatureModule(previewModule.id);
+                  setPreviewModule(null);
+                }}
+              >
+                {(
+                  previewModule.isCore
+                    ? selectedCoreMods.includes(previewModule.id)
+                    : selectedMods.includes(previewModule.id)
+                )
+                  ? 'Unselect Module'
+                  : 'Select Module'}
+              </MdButton>
+            )}
+          </>
+        }
+      >
+        {previewModule && (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 text-xs text-discord-muted font-normal">
+              <span>{previewModule.category}</span>
+              <span>•</span>
+              <span>{previewModule.channelCount} channels</span>
+            </div>
+            <ChannelTreePreview spec={previewModule.spec} maxHeightClass="min-h-[260px] max-h-[55vh]" />
           </div>
         )}
       </MdDialog>

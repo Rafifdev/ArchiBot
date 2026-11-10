@@ -52,12 +52,25 @@ router.get('/:guildId/architect', verifyGuildAccess, (req, res) => {
 
 router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => {
   const guild = req.guild;
-  const { templateKey, selectedModules, customSpec, customRoles, replace, includeMusic, includeRoles } = req.body;
+  const {
+    templateKey,
+    selectedModules,
+    customSpec,
+    customRoles,
+    replace,
+    includeMusic,
+    includeRoles,
+    includeStats,
+    includeGateway,
+  } = req.body;
 
   let groups = [];
   let roles = [];
   let label = 'Custom Layout';
   let isCustom = false;
+
+  const shouldIncludeStats = includeStats !== false;
+  const shouldIncludeGateway = includeGateway !== false;
 
   try {
     if (templateKey && TEMPLATES[templateKey]) {
@@ -80,11 +93,12 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
         combinedSpec += `\n${customSpec.trim()}\n`;
       }
 
-      if (!combinedSpec.trim()) {
-        return res.status(400).json({ error: 'Please choose at least one Lego module or enter custom channel specs.' });
+      const willIncludeMusic = Boolean(includeMusic || selectedModules?.includes('music'));
+      if (!combinedSpec.trim() && !shouldIncludeStats && !shouldIncludeGateway && !willIncludeMusic) {
+        return res.status(400).json({ error: 'Please select at least one module or enter custom channel specs.' });
       }
 
-      groups = parseTemplate(combinedSpec);
+      groups = combinedSpec.trim() ? parseTemplate(combinedSpec) : [];
 
       if (customRoles) {
         roles = String(customRoles)
@@ -109,14 +123,19 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
       replace: Boolean(replace),
       isCustom,
       includeMusic: templateKey ? includeMusic !== false : Boolean(includeMusic || selectedModules?.includes('music')),
+      includeStats: shouldIncludeStats,
+      includeGateway: shouldIncludeGateway,
     };
 
     // Execute server architect layout asynchronously or wait
     await executeSetup(guild, job, null);
 
+    const totalCategories =
+      groups.length + (job.includeStats ? 1 : 0) + (job.includeGateway ? 1 : 0) + (job.includeMusic ? 1 : 0);
+
     return res.json({
       success: true,
-      message: `Server layout "${label}" built successfully with ${groups.length} categories!`,
+      message: `Server layout "${label}" built successfully with ${totalCategories} categories!`,
     });
   } catch (err) {
     return res.status(500).json({ error: `Setup execution failed: ${err.message}` });

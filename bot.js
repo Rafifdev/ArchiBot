@@ -1746,7 +1746,8 @@ async function ensureChannel(
   return { channel: ch, reused };
 }
 
-async function createFixedSections(guild, verifiedRole, memberRole = null, roleDefs = [], ctx) {
+async function createFixedSections(guild, verifiedRole, memberRole = null, roleDefs = [], ctx, options = {}) {
+  const { includeStats = true, includeGateway = true } = options;
   const existing = state.guilds[guild.id] ?? {};
   const nextCfg = {
     ...existing,
@@ -1758,59 +1759,62 @@ async function createFixedSections(guild, verifiedRole, memberRole = null, roleD
     },
   };
 
-  const statsOverwrites = buildStatsOverwrites(guild);
-  const { dateName, presenceName, usersName } = computeStatsStrings(guild);
-  const statsCat = await ensureCategory(guild, 'SERVER STATS', statsOverwrites, ctx, existing.statsCategoryId);
+  if (includeStats) {
+    const statsOverwrites = buildStatsOverwrites(guild);
+    const { dateName, presenceName, usersName } = computeStatsStrings(guild);
+    const statsCat = await ensureCategory(guild, 'SERVER STATS', statsOverwrites, ctx, existing.statsCategoryId);
 
-  const { channel: dateCh } = await ensureChannel(
-    guild,
-    {
-      name: dateName,
-      kind: 'voice',
-      channelType: ChannelType.GuildVoice,
-      parentId: statsCat.id,
-      overwrites: statsOverwrites,
-      preferredId: existing.dateId,
-      customMatcher: (c) => /^📅\s/u.test(c.name),
-    },
-    ctx
-  );
-  const { channel: presenceCh } = await ensureChannel(
-    guild,
-    {
-      name: presenceName,
-      kind: 'voice',
-      channelType: ChannelType.GuildVoice,
-      parentId: statsCat.id,
-      overwrites: statsOverwrites,
-      preferredId: existing.presenceId,
-      customMatcher: (c) => /^🟢\s*\d+/u.test(c.name),
-    },
-    ctx
-  );
-  const { channel: usersCh } = await ensureChannel(
-    guild,
-    {
-      name: usersName,
-      kind: 'voice',
-      channelType: ChannelType.GuildVoice,
-      parentId: statsCat.id,
-      overwrites: statsOverwrites,
-      preferredId: existing.usersId,
-      customMatcher: (c) => /^users:\s*\d+/i.test(c.name),
-    },
-    ctx
-  );
+    const { channel: dateCh } = await ensureChannel(
+      guild,
+      {
+        name: dateName,
+        kind: 'voice',
+        channelType: ChannelType.GuildVoice,
+        parentId: statsCat.id,
+        overwrites: statsOverwrites,
+        preferredId: existing.dateId,
+        customMatcher: (c) => /^📅\s/u.test(c.name),
+      },
+      ctx
+    );
+    const { channel: presenceCh } = await ensureChannel(
+      guild,
+      {
+        name: presenceName,
+        kind: 'voice',
+        channelType: ChannelType.GuildVoice,
+        parentId: statsCat.id,
+        overwrites: statsOverwrites,
+        preferredId: existing.presenceId,
+        customMatcher: (c) => /^🟢\s*\d+/u.test(c.name),
+      },
+      ctx
+    );
+    const { channel: usersCh } = await ensureChannel(
+      guild,
+      {
+        name: usersName,
+        kind: 'voice',
+        channelType: ChannelType.GuildVoice,
+        parentId: statsCat.id,
+        overwrites: statsOverwrites,
+        preferredId: existing.usersId,
+        customMatcher: (c) => /^users:\s*\d+/i.test(c.name),
+      },
+      ctx
+    );
 
-  nextCfg.statsCategoryId = statsCat.id;
-  if (dateCh) nextCfg.dateId = dateCh.id;
-  if (presenceCh) nextCfg.presenceId = presenceCh.id;
-  if (usersCh) nextCfg.usersId = usersCh.id;
-  lastStatsSync.set(guild.id, Date.now());
+    nextCfg.statsCategoryId = statsCat.id;
+    if (dateCh) nextCfg.dateId = dateCh.id;
+    if (presenceCh) nextCfg.presenceId = presenceCh.id;
+    if (usersCh) nextCfg.usersId = usersCh.id;
+    lastStatsSync.set(guild.id, Date.now());
+  }
 
-  const publicRo = buildReadOnlyOverwrites(guild, null);
-  const verifiedRo = buildReadOnlyOverwrites(guild, verifiedRole?.id ?? null);
-  const gatewayCat = await ensureCategory(guild, 'GATEWAY', publicRo, ctx, existing.gatewayCategoryId);
+  if (includeGateway) {
+    const publicRo = buildReadOnlyOverwrites(guild, null);
+    const verifiedRo = buildReadOnlyOverwrites(guild, verifiedRole?.id ?? null);
+    const gatewayCat = await ensureCategory(guild, 'GATEWAY', publicRo, ctx, existing.gatewayCategoryId);
 
   const { channel: welcomeCh } = await ensureChannel(
     guild,
@@ -2008,14 +2012,15 @@ async function createFixedSections(guild, verifiedRole, memberRole = null, roleD
     }
   }
 
-  nextCfg.gatewayCategoryId = gatewayCat.id;
-  if (inviteLogsCh) nextCfg.inviteLogsId = inviteLogsCh.id;
-  if (welcomeCh) nextCfg.welcomeId = welcomeCh.id;
-  if (rulesCh) nextCfg.rulesId = rulesCh.id;
-  if (verifyCh) nextCfg.verifyId = verifyCh.id;
-  if (boosterLogsCh) nextCfg.boosterLogsId = boosterLogsCh.id;
-  if (rolesPickCh) nextCfg.rolesPickId = rolesPickCh.id;
-  if (goodbyeCh) nextCfg.goodbyeId = goodbyeCh.id;
+    nextCfg.gatewayCategoryId = gatewayCat.id;
+    if (inviteLogsCh) nextCfg.inviteLogsId = inviteLogsCh.id;
+    if (welcomeCh) nextCfg.welcomeId = welcomeCh.id;
+    if (rulesCh) nextCfg.rulesId = rulesCh.id;
+    if (verifyCh) nextCfg.verifyId = verifyCh.id;
+    if (boosterLogsCh) nextCfg.boosterLogsId = boosterLogsCh.id;
+    if (rolesPickCh) nextCfg.rolesPickId = rolesPickCh.id;
+    if (goodbyeCh) nextCfg.goodbyeId = goodbyeCh.id;
+  }
 
   state.guilds[guild.id] = nextCfg;
   saveState();
@@ -2162,7 +2167,11 @@ async function executeClearChannels(guild, originChannelId, keepFreshGeneral) {
   }
 }
 
-async function executeSetup(guild, { userId, label, groups, roles, replace, isCustom, includeMusic }, originChannelId) {
+async function executeSetup(
+  guild,
+  { userId, label, groups, roles, replace, isCustom, includeMusic, includeStats, includeGateway },
+  originChannelId
+) {
   if (replace) {
     await wipeGuildChannels(guild, originChannelId);
   } else {
@@ -2212,7 +2221,10 @@ async function executeSetup(guild, { userId, label, groups, roles, replace, isCu
 
   const memberRole = await ensureMemberRole(guild);
   const verifiedRole = await ensureVerifiedRole(guild);
-  await createFixedSections(guild, verifiedRole, memberRole, roleDefs, ctx);
+  await createFixedSections(guild, verifiedRole, memberRole, roleDefs, ctx, {
+    includeStats: includeStats !== false,
+    includeGateway: includeGateway !== false,
+  });
 
   const me = await guild.members.fetchMe();
   if (memberRole && memberRole.position < me.roles.highest.position) {
