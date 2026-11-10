@@ -132,6 +132,118 @@ function stripLeadingEmoji(text?: string): string {
   return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D]+\s*/u, '').trim() || text;
 }
 
+interface ParsedChannelItem {
+  name: string;
+  type: 'text' | 'voice' | 'jtc' | 'stage' | 'adminvoice';
+  readOnly: boolean;
+}
+
+interface ParsedCategoryGroup {
+  category: string | null;
+  channels: ParsedChannelItem[];
+}
+
+function parseTemplatePreview(spec?: string): ParsedCategoryGroup[] {
+  const groups: ParsedCategoryGroup[] = [];
+  let current: ParsedCategoryGroup | null = null;
+
+  for (const raw of String(spec ?? '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    const catMatch = line.match(/^\[(.+)]$/);
+    if (catMatch) {
+      current = { category: catMatch[1].trim(), channels: [] };
+      groups.push(current);
+      continue;
+    }
+
+    let ch: ParsedChannelItem | null = null;
+    if (/^(\+|autovoice:|auto:|jtc:)/i.test(line)) {
+      const name = line.replace(/^(\+|autovoice:|auto:|jtc:)\s*/i, '').trim();
+      if (name) ch = { name, type: 'jtc', readOnly: false };
+    } else if (/^stage:/i.test(line)) {
+      const name = line.replace(/^stage:\s*/i, '').trim();
+      if (name) ch = { name, type: 'stage', readOnly: false };
+    } else if (/^adminvoice:/i.test(line)) {
+      const name = line.replace(/^adminvoice:\s*/i, '').trim();
+      if (name) ch = { name, type: 'adminvoice', readOnly: false };
+    } else if (/^v(oice)?:/i.test(line)) {
+      const name = line.replace(/^v(oice)?:\s*/i, '').trim();
+      if (name) ch = { name, type: 'voice', readOnly: false };
+    } else if (/^(!|readonly:)/i.test(line)) {
+      const name = line.replace(/^(!|readonly:)\s*#?\s*/i, '').trim();
+      if (name) ch = { name, type: 'text', readOnly: true };
+    } else {
+      const name = line.replace(/^(text:\s*)?#*\s*/i, '').trim();
+      if (name) ch = { name, type: 'text', readOnly: false };
+    }
+
+    if (!ch) continue;
+    if (!current) {
+      current = { category: null, channels: [] };
+      groups.push(current);
+    }
+    current.channels.push(ch);
+  }
+
+  return groups;
+}
+
+const ChannelTreePreview: React.FC<{ spec?: string; maxHeightClass?: string }> = ({
+  spec,
+  maxHeightClass = 'max-h-44',
+}) => {
+  const groups = parseTemplatePreview(spec);
+  if (groups.length === 0) return null;
+
+  return (
+    <div
+      className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
+    >
+      {groups.map((group, gi) => (
+        <div key={`${group.category || 'root'}-${gi}`} className="flex flex-col gap-0.5">
+          {group.category && (
+            <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider">
+              <MdIcon name="expand_more" className="text-sm leading-none" />
+              <span className="truncate">{group.category}</span>
+            </div>
+          )}
+          <div className="flex flex-col gap-0.5">
+            {group.channels.map((ch, ci) => {
+              const iconName =
+                ch.type === 'jtc'
+                  ? 'add_circle_outline'
+                  : ch.type === 'stage'
+                  ? 'podcasts'
+                  : ch.type === 'voice' || ch.type === 'adminvoice'
+                  ? 'volume_up'
+                  : ch.readOnly
+                  ? 'lock'
+                  : 'tag';
+
+              return (
+                <div
+                  key={`${ch.name}-${ci}`}
+                  className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MdIcon name={iconName} className="text-sm text-discord-muted shrink-0" />
+                    <span className="truncate">{ch.name}</span>
+                  </div>
+                  {ch.readOnly && (
+                    <span className="text-[10px] text-discord-muted shrink-0">Read-only</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const ArchitectPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -623,7 +735,7 @@ export const ArchitectPage: React.FC = () => {
 
             <div className="pt-3.5 border-t border-discord-border flex justify-end">
               <MdButton
-                variant={customReplaceChannels ? 'danger' : 'filled'}
+                variant="filled"
                 icon="construction"
                 onClick={handleBuildLego}
                 disabled={executing || (selectedMods.length === 0 && !customCat.trim())}
@@ -699,12 +811,11 @@ export const ArchitectPage: React.FC = () => {
             </MdButton>
             {applyModalTemplate && (
               <MdButton
-                variant={applyReplace ? 'danger' : 'filled'}
-                icon={applyReplace ? 'delete_sweep' : 'bolt'}
+                variant="filled"
                 disabled={executing}
                 onClick={handleConfirmApplyTemplate}
               >
-                {applyReplace ? 'Replace & Apply Template' : 'Apply Template'}
+                Apply Template
               </MdButton>
             )}
           </>
@@ -726,6 +837,13 @@ export const ArchitectPage: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {applyModalTemplate.specPreview && (
+              <div className="flex flex-col gap-2">
+                <div className="text-xs font-normal text-discord-white">Channel Preview</div>
+                <ChannelTreePreview spec={applyModalTemplate.specPreview} maxHeightClass="max-h-44" />
+              </div>
+            )}
 
             <div className="flex flex-col gap-2">
               <div className="text-xs font-normal text-discord-white">Channel Deployment Mode</div>
@@ -871,9 +989,7 @@ export const ArchitectPage: React.FC = () => {
               <span>•</span>
               <span>{previewTemplate.rolesCount} roles</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border text-xs font-mono max-h-72 overflow-y-auto whitespace-pre-wrap text-discord-text leading-relaxed">
-              {previewTemplate.specPreview}
-            </div>
+            <ChannelTreePreview spec={previewTemplate.specPreview} maxHeightClass="max-h-72" />
           </div>
         )}
       </MdDialog>
