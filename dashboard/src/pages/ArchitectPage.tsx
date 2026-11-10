@@ -989,7 +989,7 @@ export const ArchitectPage: React.FC = () => {
               <span>•</span>
               <span>{previewTemplate.rolesCount} roles</span>
             </div>
-            <ChannelTreePreview spec={previewTemplate.specPreview} maxHeightClass="max-h-72" />
+            <ChannelTreePreview spec={previewTemplate.specPreview} maxHeightClass="min-h-[360px] max-h-[58vh]" />
           </div>
         )}
       </MdDialog>
