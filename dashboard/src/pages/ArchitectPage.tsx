@@ -1411,7 +1411,7 @@ export const ArchitectPage: React.FC = () => {
 
       {tabIndex === 2 && (
         <SurfaceCard className="p-4 flex flex-col gap-4">
-          <div className="flex items-start gap-3.5">
+          <div className="flex items-end gap-3.5">
             <div className="w-12 h-12 rounded-lg bg-discord-red/15 text-discord-red flex items-center justify-center shrink-0">
               <MdIcon name="delete_sweep" className="text-2xl" />
             </div>
