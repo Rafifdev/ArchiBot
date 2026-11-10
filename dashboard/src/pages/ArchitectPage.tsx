@@ -433,7 +433,8 @@ const PreviewChannelRowContent: React.FC<{ ch: ParsedChannelItem }> = ({ ch }) =
 const SortablePreviewChannelRow: React.FC<{
   ch: ParsedChannelItem;
   parentId: string;
-}> = ({ ch, parentId }) => {
+  dropPosition?: 'top' | 'bottom' | null;
+}> = ({ ch, parentId, dropPosition }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: ch.id,
     data: { type: 'channel', channel: ch, parentId },
@@ -450,10 +451,17 @@ const SortablePreviewChannelRow: React.FC<{
       style={style}
       {...attributes}
       {...listeners}
-      className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-move select-none ${
+      className={`relative flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-move select-none ${
         isDragging ? 'opacity-25' : ''
       }`}
     >
+      {dropPosition && (
+        <div
+          className={`absolute left-1.5 right-1.5 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10 ${
+            dropPosition === 'top' ? '-top-[1px]' : '-bottom-[1px]'
+          }`}
+        />
+      )}
       <PreviewChannelRowContent ch={ch} />
     </div>
   );
@@ -463,8 +471,9 @@ const SortablePreviewCategoryBlock: React.FC<{
   group: ParsedCategoryGroup;
   isCollapsed: boolean;
   onToggleCollapse: (id: string) => void;
+  dropPosition?: 'top' | 'bottom' | 'header' | null;
   children: React.ReactNode;
-}> = ({ group, isCollapsed, onToggleCollapse, children }) => {
+}> = ({ group, isCollapsed, onToggleCollapse, dropPosition, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: group.id,
     data: { type: 'category', group },
@@ -479,14 +488,17 @@ const SortablePreviewCategoryBlock: React.FC<{
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex flex-col gap-0.5 ${isDragging ? 'opacity-30' : ''}`}
+      className={`relative flex flex-col gap-0.5 ${isDragging ? 'opacity-30' : ''}`}
     >
+      {dropPosition === 'top' && (
+        <div className="absolute -top-1.5 left-1 right-1 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
+      )}
       {group.category && (
         <div
           {...attributes}
           {...listeners}
           onClick={() => onToggleCollapse(group.id)}
-          className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-move select-none"
+          className="relative flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-move select-none"
         >
           <MdIcon
             name="expand_more"
@@ -495,12 +507,18 @@ const SortablePreviewCategoryBlock: React.FC<{
             }`}
           />
           <span className="truncate">{group.category}</span>
+          {dropPosition === 'header' && (
+            <div className="absolute bottom-0 left-1.5 right-1.5 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
+          )}
         </div>
       )}
       {!isCollapsed && (
         <SortableContext items={group.channels.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-0.5 min-h-[4px]">{children}</div>
         </SortableContext>
+      )}
+      {dropPosition === 'bottom' && (
+        <div className="absolute -bottom-1.5 left-1 right-1 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
       )}
     </div>
   );
@@ -523,6 +541,11 @@ const ChannelTreePreview: React.FC<{
     | { type: 'channel'; channel: ParsedChannelItem }
     | null
   >(null);
+  const [dropIndicator, setDropIndicator] = useState<{
+    id: string;
+    type: 'category' | 'channel';
+    position: 'top' | 'bottom' | 'header';
+  } | null>(null);
 
   const toggleCollapse = (id: string) => {
     setCollapsedIds((prev) => {
@@ -593,6 +616,7 @@ const ChannelTreePreview: React.FC<{
 
   const handleDragStart = (event: DragStartEvent) => {
     const data = event.active.data.current;
+    setDropIndicator(null);
     if (data?.type === 'category') {
       setActiveItem({ type: 'category', group: data.group });
     } else if (data?.type === 'channel') {
@@ -602,14 +626,62 @@ const ChannelTreePreview: React.FC<{
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (!over) return;
-    if (active.data.current?.type !== 'channel') return;
+    if (!over) {
+      setDropIndicator(null);
+      return;
+    }
 
     const activeId = String(active.id);
     const overId = String(over.id);
+    if (activeId === overId) {
+      setDropIndicator(null);
+      return;
+    }
+
+    const activeType = active.data.current?.type;
+    if (activeType === 'category') {
+      const oldIdx = groups.findIndex((g) => g.id === activeId);
+      const targetCatId = findContainerById(overId);
+      const newIdx = targetCatId ? groups.findIndex((g) => g.id === targetCatId) : -1;
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx && targetCatId) {
+        setDropIndicator({
+          id: targetCatId,
+          type: 'category',
+          position: oldIdx < newIdx ? 'bottom' : 'top',
+        });
+      } else {
+        setDropIndicator(null);
+      }
+      return;
+    }
+
+    if (activeType !== 'channel') return;
+
     const activeContainer = findContainerById(activeId);
     const overContainer = findContainerById(overId);
-    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
+    if (!activeContainer || !overContainer) {
+      setDropIndicator(null);
+      return;
+    }
+
+    if (activeContainer === overContainer) {
+      const cat = groups.find((g) => g.id === activeContainer);
+      if (!cat) return;
+      if (overId === activeContainer) {
+        setDropIndicator({ id: overContainer, type: 'category', position: 'header' });
+        return;
+      }
+      const oldIdx = cat.channels.findIndex((c) => c.id === activeId);
+      const newIdx = cat.channels.findIndex((c) => c.id === overId);
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        setDropIndicator({
+          id: overId,
+          type: 'channel',
+          position: oldIdx < newIdx ? 'bottom' : 'top',
+        });
+      }
+      return;
+    }
 
     const sourceCatIdx = groups.findIndex((g) => g.id === activeContainer);
     const targetCatIdx = groups.findIndex((g) => g.id === overContainer);
@@ -625,6 +697,12 @@ const ChannelTreePreview: React.FC<{
     const insertIdx = overChIdx >= 0 ? overChIdx : targetChannels.length;
     targetChannels.splice(insertIdx, 0, movingItem);
 
+    if (overChIdx >= 0) {
+      setDropIndicator({ id: overId, type: 'channel', position: 'top' });
+    } else {
+      setDropIndicator({ id: overContainer, type: 'category', position: 'header' });
+    }
+
     const nextGroups = groups.map((g, idx) => {
       if (idx === sourceCatIdx) return { ...g, channels: sourceChannels };
       if (idx === targetCatIdx) return { ...g, channels: targetChannels };
@@ -636,6 +714,7 @@ const ChannelTreePreview: React.FC<{
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveItem(null);
+    setDropIndicator(null);
     if (!over || active.id === over.id) return;
 
     const activeId = String(active.id);
@@ -677,6 +756,10 @@ const ChannelTreePreview: React.FC<{
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
+      onDragCancel={() => {
+        setActiveItem(null);
+        setDropIndicator(null);
+      }}
       onDragEnd={handleDragEnd}
     >
       <div
@@ -689,9 +772,24 @@ const ChannelTreePreview: React.FC<{
               group={group}
               isCollapsed={collapsedIds.has(group.id)}
               onToggleCollapse={toggleCollapse}
+              dropPosition={
+                dropIndicator?.type === 'category' && dropIndicator.id === group.id
+                  ? dropIndicator.position
+                  : null
+              }
             >
               {group.channels.map((ch) => (
-                <SortablePreviewChannelRow key={ch.id} ch={ch} parentId={group.id} />
+                <SortablePreviewChannelRow
+                  key={ch.id}
+                  ch={ch}
+                  parentId={group.id}
+                  dropPosition={
+                    dropIndicator?.type === 'channel' && dropIndicator.id === ch.id &&
+                    (dropIndicator.position === 'top' || dropIndicator.position === 'bottom')
+                      ? dropIndicator.position
+                      : null
+                  }
+                />
               ))}
             </SortablePreviewCategoryBlock>
           ))}
