@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragOverEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Badge,
   EmptyState,
   MdButton,
@@ -256,19 +274,23 @@ function stripLeadingEmoji(text?: string): string {
 }
 
 interface ParsedChannelItem {
+  id: string;
   name: string;
   type: 'text' | 'voice' | 'jtc' | 'stage' | 'adminvoice';
   readOnly: boolean;
 }
 
 interface ParsedCategoryGroup {
+  id: string;
   category: string | null;
   channels: ParsedChannelItem[];
 }
 
-function parseTemplatePreview(spec?: string): ParsedCategoryGroup[] {
+function parseTemplatePreview(spec?: string, prefix = 'tpl'): ParsedCategoryGroup[] {
   const groups: ParsedCategoryGroup[] = [];
   let current: ParsedCategoryGroup | null = null;
+  let catSeq = 0;
+  let chSeq = 0;
 
   for (const raw of String(spec ?? '').split(/\r?\n/)) {
     const line = raw.trim();
@@ -276,12 +298,17 @@ function parseTemplatePreview(spec?: string): ParsedCategoryGroup[] {
 
     const catMatch = line.match(/^\[(.+)]$/);
     if (catMatch) {
-      current = { category: catMatch[1].trim(), channels: [] };
+      const catName = catMatch[1].trim();
+      current = {
+        id: `cat:${prefix}:${catSeq++}:${catName}`,
+        category: catName,
+        channels: [],
+      };
       groups.push(current);
       continue;
     }
 
-    let ch: ParsedChannelItem | null = null;
+    let ch: Omit<ParsedChannelItem, 'id'> | null = null;
     if (/^(\+|autovoice:|auto:|jtc:)/i.test(line)) {
       const name = line.replace(/^(\+|autovoice:|auto:|jtc:)\s*/i, '').trim();
       if (name) ch = { name, type: 'jtc', readOnly: false };
@@ -304,66 +331,347 @@ function parseTemplatePreview(spec?: string): ParsedCategoryGroup[] {
 
     if (!ch) continue;
     if (!current) {
-      current = { category: null, channels: [] };
+      current = { id: `cat:${prefix}:${catSeq++}:root`, category: null, channels: [] };
       groups.push(current);
     }
-    current.channels.push(ch);
+    current.channels.push({
+      id: `ch:${prefix}:${chSeq++}:${ch.name}`,
+      ...ch,
+    });
   }
 
   return groups;
 }
 
-const ChannelTreePreview: React.FC<{ spec?: string; maxHeightClass?: string }> = ({
-  spec,
-  maxHeightClass = 'max-h-44',
-}) => {
-  const groups = parseTemplatePreview(spec);
-  if (groups.length === 0) return null;
+function serializeGroupsToSpec(
+  groups: ParsedCategoryGroup[],
+  excludeCategoryNames?: Set<string>
+): string {
+  const blocks: string[] = [];
+  for (const g of groups) {
+    if (g.category && excludeCategoryNames?.has(g.category.trim().toUpperCase())) continue;
+    const lines: string[] = [];
+    if (g.category) lines.push(`[${g.category}]`);
+    for (const ch of g.channels) {
+      if (ch.type === 'jtc') lines.push(`autovoice: ${ch.name}`);
+      else if (ch.type === 'stage') lines.push(`stage: ${ch.name}`);
+      else if (ch.type === 'adminvoice') lines.push(`adminvoice: ${ch.name}`);
+      else if (ch.type === 'voice') lines.push(`voice: ${ch.name}`);
+      else if (ch.readOnly) lines.push(`readonly: ${ch.name}`);
+      else lines.push(ch.name);
+    }
+    if (lines.length > 0) blocks.push(lines.join('\n'));
+  }
+  return blocks.join('\n\n');
+}
+
+function mergeOrderedPreviewGroups(
+  prev: ParsedCategoryGroup[],
+  fresh: ParsedCategoryGroup[]
+): ParsedCategoryGroup[] {
+  const freshCatMap = new Map(fresh.map((g) => [g.id, g]));
+  const freshChMap = new Map<string, ParsedChannelItem>();
+  for (const g of fresh) {
+    for (const ch of g.channels) freshChMap.set(ch.id, ch);
+  }
+
+  const usedCatIds = new Set<string>();
+  const usedChIds = new Set<string>();
+  const merged: ParsedCategoryGroup[] = [];
+
+  for (const prevCat of prev) {
+    if (!freshCatMap.has(prevCat.id)) continue;
+    usedCatIds.add(prevCat.id);
+    const keptChannels: ParsedChannelItem[] = [];
+    for (const prevCh of prevCat.channels) {
+      const updated = freshChMap.get(prevCh.id);
+      if (updated && !usedChIds.has(prevCh.id)) {
+        keptChannels.push(updated);
+        usedChIds.add(prevCh.id);
+      }
+    }
+    merged.push({ ...freshCatMap.get(prevCat.id)!, channels: keptChannels });
+  }
+
+  const mergedCatMap = new Map(merged.map((g) => [g.id, g]));
+  for (const freshCat of fresh) {
+    if (!usedCatIds.has(freshCat.id)) {
+      const remainingChannels = freshCat.channels.filter((ch) => !usedChIds.has(ch.id));
+      for (const ch of remainingChannels) usedChIds.add(ch.id);
+      merged.push({ ...freshCat, channels: remainingChannels });
+    } else {
+      const targetCat = mergedCatMap.get(freshCat.id)!;
+      for (const ch of freshCat.channels) {
+        if (!usedChIds.has(ch.id)) {
+          targetCat.channels.push(ch);
+          usedChIds.add(ch.id);
+        }
+      }
+    }
+  }
+
+  return merged;
+}
+
+function getPreviewChannelIcon(ch: ParsedChannelItem): string {
+  if (ch.type === 'jtc') return 'add_circle_outline';
+  if (ch.type === 'stage') return 'podcasts';
+  if (ch.type === 'voice' || ch.type === 'adminvoice') return 'volume_up';
+  return ch.readOnly ? 'lock' : 'tag';
+}
+
+const PreviewChannelRowContent: React.FC<{ ch: ParsedChannelItem }> = ({ ch }) => (
+  <>
+    <div className="flex items-center gap-2 min-w-0">
+      <MdIcon name={getPreviewChannelIcon(ch)} className="text-sm text-discord-muted shrink-0" />
+      <span className="truncate">{ch.name}</span>
+    </div>
+    {ch.readOnly && <span className="text-[10px] text-discord-muted shrink-0">Read-only</span>}
+  </>
+);
+
+const SortablePreviewChannelRow: React.FC<{
+  ch: ParsedChannelItem;
+  parentId: string;
+}> = ({ ch, parentId }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: ch.id,
+    data: { type: 'channel', channel: ch, parentId },
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition: transition || 'transform 180ms cubic-bezier(0.2, 0, 0, 1)',
+  };
 
   return (
     <div
-      className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-grab active:cursor-grabbing select-none ${
+        isDragging ? 'opacity-25' : ''
+      }`}
     >
-      {groups.map((group, gi) => (
-        <div key={`${group.category || 'root'}-${gi}`} className="flex flex-col gap-0.5">
-          {group.category && (
-            <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider">
-              <MdIcon name="expand_more" className="text-sm leading-none" />
-              <span className="truncate">{group.category}</span>
-            </div>
-          )}
-          <div className="flex flex-col gap-0.5">
-            {group.channels.map((ch, ci) => {
-              const iconName =
-                ch.type === 'jtc'
-                  ? 'add_circle_outline'
-                  : ch.type === 'stage'
-                  ? 'podcasts'
-                  : ch.type === 'voice' || ch.type === 'adminvoice'
-                  ? 'volume_up'
-                  : ch.readOnly
-                  ? 'lock'
-                  : 'tag';
+      <PreviewChannelRowContent ch={ch} />
+    </div>
+  );
+};
 
-              return (
+const SortablePreviewCategoryBlock: React.FC<{
+  group: ParsedCategoryGroup;
+  children: React.ReactNode;
+}> = ({ group, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: group.id,
+    data: { type: 'category', group },
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition: transition || 'transform 180ms cubic-bezier(0.2, 0, 0, 1)',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex flex-col gap-0.5 ${isDragging ? 'opacity-30' : ''}`}
+    >
+      {group.category && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-grab active:cursor-grabbing select-none"
+        >
+          <MdIcon name="expand_more" className="text-sm leading-none" />
+          <span className="truncate">{group.category}</span>
+        </div>
+      )}
+      <SortableContext items={group.channels.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-0.5 min-h-[4px]">{children}</div>
+      </SortableContext>
+    </div>
+  );
+};
+
+const ChannelTreePreview: React.FC<{
+  spec?: string;
+  groups?: ParsedCategoryGroup[];
+  onGroupsChange?: (nextGroups: ParsedCategoryGroup[]) => void;
+  maxHeightClass?: string;
+}> = ({ spec, groups: controlledGroups, onGroupsChange, maxHeightClass = 'max-h-44' }) => {
+  const groups = useMemo(
+    () => controlledGroups ?? parseTemplatePreview(spec),
+    [controlledGroups, spec]
+  );
+
+  const [activeItem, setActiveItem] = useState<
+    | { type: 'category'; group: ParsedCategoryGroup }
+    | { type: 'channel'; channel: ParsedChannelItem }
+    | null
+  >(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
+  if (groups.length === 0) return null;
+
+  if (!onGroupsChange) {
+    return (
+      <div
+        className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
+      >
+        {groups.map((group) => (
+          <div key={group.id} className="flex flex-col gap-0.5">
+            {group.category && (
+              <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider">
+                <MdIcon name="expand_more" className="text-sm leading-none" />
+                <span className="truncate">{group.category}</span>
+              </div>
+            )}
+            <div className="flex flex-col gap-0.5">
+              {group.channels.map((ch) => (
                 <div
-                  key={`${ch.name}-${ci}`}
+                  key={ch.id}
                   className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <MdIcon name={iconName} className="text-sm text-discord-muted shrink-0" />
-                    <span className="truncate">{ch.name}</span>
-                  </div>
-                  {ch.readOnly && (
-                    <span className="text-[10px] text-discord-muted shrink-0">Read-only</span>
-                  )}
+                  <PreviewChannelRowContent ch={ch} />
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    );
+  }
+
+  const findContainerById = (id: string) => {
+    const directCat = groups.find((g) => g.id === id);
+    if (directCat) return directCat.id;
+    const ownerCat = groups.find((g) => g.channels.some((c) => c.id === id));
+    return ownerCat?.id ?? null;
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const data = event.active.data.current;
+    if (data?.type === 'category') {
+      setActiveItem({ type: 'category', group: data.group });
+    } else if (data?.type === 'channel') {
+      setActiveItem({ type: 'channel', channel: data.channel });
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+    if (active.data.current?.type !== 'channel') return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const activeContainer = findContainerById(activeId);
+    const overContainer = findContainerById(overId);
+    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
+
+    const sourceCatIdx = groups.findIndex((g) => g.id === activeContainer);
+    const targetCatIdx = groups.findIndex((g) => g.id === overContainer);
+    if (sourceCatIdx === -1 || targetCatIdx === -1) return;
+
+    const sourceChannels = [...groups[sourceCatIdx].channels];
+    const targetChannels = [...groups[targetCatIdx].channels];
+    const movingIdx = sourceChannels.findIndex((c) => c.id === activeId);
+    if (movingIdx === -1) return;
+
+    const [movingItem] = sourceChannels.splice(movingIdx, 1);
+    const overChIdx = targetChannels.findIndex((c) => c.id === overId);
+    const insertIdx = overChIdx >= 0 ? overChIdx : targetChannels.length;
+    targetChannels.splice(insertIdx, 0, movingItem);
+
+    const nextGroups = groups.map((g, idx) => {
+      if (idx === sourceCatIdx) return { ...g, channels: sourceChannels };
+      if (idx === targetCatIdx) return { ...g, channels: targetChannels };
+      return g;
+    });
+    onGroupsChange(nextGroups);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveItem(null);
+    if (!over || active.id === over.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const activeType = active.data.current?.type;
+
+    if (activeType === 'category') {
+      const oldIdx = groups.findIndex((g) => g.id === activeId);
+      const targetCatId = findContainerById(overId);
+      const newIdx = targetCatId ? groups.findIndex((g) => g.id === targetCatId) : -1;
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        onGroupsChange(arrayMove(groups, oldIdx, newIdx));
+      }
+      return;
+    }
+
+    if (activeType === 'channel') {
+      const catId = findContainerById(activeId);
+      const overCatId = findContainerById(overId);
+      if (!catId || catId !== overCatId) return;
+
+      const catIdx = groups.findIndex((g) => g.id === catId);
+      if (catIdx === -1) return;
+
+      const oldIdx = groups[catIdx].channels.findIndex((c) => c.id === activeId);
+      const newIdx = groups[catIdx].channels.findIndex((c) => c.id === overId);
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        const nextGroups = groups.map((g, idx) =>
+          idx === catIdx ? { ...g, channels: arrayMove(g.channels, oldIdx, newIdx) } : g
+        );
+        onGroupsChange(nextGroups);
+      }
+    }
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <div
+        className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
+      >
+        <SortableContext items={groups.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+          {groups.map((group) => (
+            <SortablePreviewCategoryBlock key={group.id} group={group}>
+              {group.channels.map((ch) => (
+                <SortablePreviewChannelRow key={ch.id} ch={ch} parentId={group.id} />
+              ))}
+            </SortablePreviewCategoryBlock>
+          ))}
+        </SortableContext>
+      </div>
+
+      <DragOverlay>
+        {activeItem?.type === 'category' && activeItem.group.category ? (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-discord-card/95 shadow-lg text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-grabbing select-none">
+            <MdIcon name="expand_more" className="text-sm leading-none" />
+            <span className="truncate">{activeItem.group.category}</span>
+          </div>
+        ) : activeItem?.type === 'channel' ? (
+          <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-md bg-discord-card/95 shadow-lg text-xs font-normal text-discord-text cursor-grabbing select-none">
+            <PreviewChannelRowContent ch={activeItem.channel} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 
@@ -388,6 +696,8 @@ export const ArchitectPage: React.FC = () => {
     isCore?: boolean;
   } | null>(null);
   const [applyModalTemplate, setApplyModalTemplate] = useState<any | null>(null);
+  const [applyPreviewGroups, setApplyPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
+  const [applyOrderCustomized, setApplyOrderCustomized] = useState(false);
   const [applyReplace, setApplyReplace] = useState(false);
   const [applyIncludeRoles, setApplyIncludeRoles] = useState(true);
   const [applyIncludeMusic, setApplyIncludeMusic] = useState(true);
@@ -397,6 +707,8 @@ export const ArchitectPage: React.FC = () => {
   const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
   const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
+  const [isOrderCustomized, setIsOrderCustomized] = useState(false);
   const [customCat, setCustomCat] = useState('');
   const [customText, setCustomText] = useState('');
   const [customVoice, setCustomVoice] = useState('');
@@ -461,6 +773,8 @@ export const ArchitectPage: React.FC = () => {
     setApplyReplace(false);
     setApplyIncludeRoles(true);
     setApplyIncludeMusic(true);
+    setApplyPreviewGroups(tpl.specPreview ? parseTemplatePreview(tpl.specPreview, `tpl-${tpl.key}`) : []);
+    setApplyOrderCustomized(false);
     setApplyModalTemplate(tpl);
   };
 
@@ -544,6 +858,10 @@ export const ArchitectPage: React.FC = () => {
   const handleConfirmApplyTemplate = async () => {
     if (!applyModalTemplate) return;
     const tpl = applyModalTemplate;
+    const reorderedSpec = applyOrderCustomized ? serializeGroupsToSpec(applyPreviewGroups) : undefined;
+    const reorderedCats = applyOrderCustomized
+      ? applyPreviewGroups.map((g) => g.category).filter(Boolean)
+      : undefined;
     setApplyModalTemplate(null);
 
     await runTrackedBuild(
@@ -560,6 +878,7 @@ export const ArchitectPage: React.FC = () => {
             replace: applyReplace,
             includeRoles: applyIncludeRoles,
             includeMusic: applyIncludeMusic,
+            ...(reorderedSpec ? { overrideSpec: reorderedSpec, orderedCategories: reorderedCats } : {}),
           }),
         });
         return res.json();
@@ -603,19 +922,21 @@ export const ArchitectPage: React.FC = () => {
     selectedMods.length === legoModules.length;
 
   const customLayoutPreview = useMemo(() => {
-    const sections: string[] = [];
+    const freshGroups: ParsedCategoryGroup[] = [];
     const activeLabels: { id: string; label: string; isCore?: boolean }[] = [];
 
     for (const coreMod of CORE_MODULES) {
       if (selectedCoreMods.includes(coreMod.id)) {
-        sections.push(`[${coreMod.category}]\n${coreMod.spec}`);
+        const parsed = parseTemplatePreview(`[${coreMod.category}]\n${coreMod.spec}`, coreMod.id);
+        freshGroups.push(...parsed);
         activeLabels.push({ id: coreMod.id, label: coreMod.shortLabel || coreMod.label, isCore: true });
       }
     }
 
     for (const mod of legoModules) {
       if (selectedMods.includes(mod.id)) {
-        sections.push(`[${mod.category}]\n${mod.spec}`);
+        const parsed = parseTemplatePreview(`[${mod.category}]\n${mod.spec}`, mod.id);
+        freshGroups.push(...parsed);
         activeLabels.push({ id: mod.id, label: mod.shortLabel || stripLeadingEmoji(mod.label) });
       }
     }
@@ -636,33 +957,32 @@ export const ArchitectPage: React.FC = () => {
       if (textItems.length === 0 && voiceItems.length === 0) {
         customBlock += `\n💬・general`;
       }
-      sections.push(customBlock);
+      freshGroups.push(...parseTemplatePreview(customBlock, 'custom'));
       activeLabels.push({ id: 'custom_category', label: `Custom: ${customCat.trim()}` });
     }
 
-    const spec = sections.join('\n\n');
-    const parsedGroups = parseTemplatePreview(spec);
-    const totalChannels = parsedGroups.reduce((acc, g) => acc + g.channels.length, 0);
+    const totalChannels = freshGroups.reduce((acc, g) => acc + g.channels.length, 0);
 
     return {
-      spec,
+      freshGroups,
       activeLabels,
-      categoryCount: parsedGroups.length,
+      categoryCount: freshGroups.length,
       channelCount: totalChannels,
     };
   }, [selectedCoreMods, selectedMods, legoModules, customCat, customText, customVoice]);
 
+  useEffect(() => {
+    setCustomPreviewGroups((prev) =>
+      isOrderCustomized ? mergeOrderedPreviewGroups(prev, customLayoutPreview.freshGroups) : customLayoutPreview.freshGroups
+    );
+  }, [customLayoutPreview.freshGroups, isOrderCustomized]);
+
   const handleBuildLego = async () => {
-    let customSpec = '';
-    if (customCat.trim()) {
-      customSpec = `[${customCat.trim()}]\n`;
-      if (customText.trim()) {
-        customText.split(',').forEach((c) => (customSpec += `💬・${c.trim()}\n`));
-      }
-      if (customVoice.trim()) {
-        customVoice.split(',').forEach((v) => (customSpec += `voice: 🔊 ${v.trim()}\n`));
-      }
-    }
+    const fixedCategorySet = new Set(['SERVER STATS', 'GATEWAY', 'MUSIC AREA']);
+    const orderedCustomSpec = serializeGroupsToSpec(customPreviewGroups, fixedCategorySet);
+    const orderedCategories = customPreviewGroups
+      .map((g) => g.category)
+      .filter((c): c is string => Boolean(c));
 
     await runTrackedBuild(
       'Building Custom Server Layout',
@@ -675,7 +995,8 @@ export const ArchitectPage: React.FC = () => {
           credentials: 'include',
           body: JSON.stringify({
             selectedModules: selectedMods,
-            customSpec,
+            customSpec: orderedCustomSpec,
+            orderedCategories,
             customRoles,
             replace: customReplaceChannels,
             includeMusic: selectedMods.includes('music'),
@@ -889,10 +1210,22 @@ export const ArchitectPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs text-discord-muted font-normal">
-                  {customLayoutPreview.activeLabels.length} modules • {customLayoutPreview.categoryCount} categories •{' '}
+                  {customLayoutPreview.activeLabels.length} modules • {customPreviewGroups.length} categories •{' '}
                   {customLayoutPreview.channelCount} channels
                 </span>
-                {customLayoutPreview.spec && (
+                {isOrderCustomized && (
+                  <MdButton
+                    variant="text"
+                    size="sm"
+                    onClick={() => {
+                      setIsOrderCustomized(false);
+                      setCustomPreviewGroups(customLayoutPreview.freshGroups);
+                    }}
+                  >
+                    Reset Order
+                  </MdButton>
+                )}
+                {customPreviewGroups.length > 0 && (
                   <MdIconButton
                     icon={previewExpanded ? 'unfold_less' : 'unfold_more'}
                     title={previewExpanded ? 'Compact preview height' : 'Expand preview height'}
@@ -912,9 +1245,13 @@ export const ArchitectPage: React.FC = () => {
               </div>
             )}
 
-            {customLayoutPreview.spec ? (
+            {customPreviewGroups.length > 0 ? (
               <ChannelTreePreview
-                spec={customLayoutPreview.spec}
+                groups={customPreviewGroups}
+                onGroupsChange={(next) => {
+                  setIsOrderCustomized(true);
+                  setCustomPreviewGroups(next);
+                }}
                 maxHeightClass={`resize-y min-h-[200px] max-h-[80vh] ${
                   previewExpanded ? 'h-[540px]' : 'h-72'
                 }`}
@@ -1083,10 +1420,33 @@ export const ArchitectPage: React.FC = () => {
               </div>
             </div>
 
-            {applyModalTemplate.specPreview && (
+            {applyPreviewGroups.length > 0 && (
               <div className="flex flex-col gap-2">
-                <div className="text-xs font-normal text-discord-white">Channel Preview</div>
-                <ChannelTreePreview spec={applyModalTemplate.specPreview} maxHeightClass="max-h-60" />
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs font-normal text-discord-white">Channel Preview</div>
+                  {applyOrderCustomized && (
+                    <MdButton
+                      variant="text"
+                      size="xs"
+                      onClick={() => {
+                        setApplyOrderCustomized(false);
+                        setApplyPreviewGroups(
+                          parseTemplatePreview(applyModalTemplate.specPreview, `tpl-${applyModalTemplate.key}`)
+                        );
+                      }}
+                    >
+                      Reset Order
+                    </MdButton>
+                  )}
+                </div>
+                <ChannelTreePreview
+                  groups={applyPreviewGroups}
+                  onGroupsChange={(next) => {
+                    setApplyOrderCustomized(true);
+                    setApplyPreviewGroups(next);
+                  }}
+                  maxHeightClass="max-h-60"
+                />
               </div>
             )}
 

@@ -1682,6 +1682,8 @@ async function ensureCategory(guild, rawName, overwrites, ctx, preferredId = nul
 
   ctx.usedIds.add(cat.id);
   ctx.categoryOrder.push({ channel: cat.id, position: pos });
+  ctx.categoryMeta ??= new Map();
+  ctx.categoryMeta.set(cat.id, normalizeCategoryKey(rawName));
   return cat;
 }
 
@@ -2169,7 +2171,7 @@ async function executeClearChannels(guild, originChannelId, keepFreshGeneral) {
 
 async function executeSetup(
   guild,
-  { userId, label, groups, roles, replace, isCustom, includeMusic, includeStats, includeGateway },
+  { userId, label, groups, roles, replace, isCustom, includeMusic, includeStats, includeGateway, orderedCategories },
   originChannelId
 ) {
   if (replace) {
@@ -2402,6 +2404,16 @@ async function executeSetup(
   }
 
   if (ctx.categoryOrder.length) {
+    if (Array.isArray(orderedCategories) && orderedCategories.length > 0) {
+      const orderMap = new Map(orderedCategories.map((name, idx) => [normalizeCategoryKey(name), idx]));
+      ctx.categoryOrder = [...ctx.categoryOrder]
+        .sort((a, b) => {
+          const ia = orderMap.get(ctx.categoryMeta?.get(a.channel)) ?? 10000 + a.position;
+          const ib = orderMap.get(ctx.categoryMeta?.get(b.channel)) ?? 10000 + b.position;
+          return ia - ib;
+        })
+        .map((item, idx) => ({ ...item, position: idx }));
+    }
     await guild.channels.setPositions(ctx.categoryOrder).catch(() => {});
   }
   if (ctx.channelOrder.length) {

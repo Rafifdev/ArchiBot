@@ -56,6 +56,8 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
     templateKey,
     selectedModules,
     customSpec,
+    overrideSpec,
+    orderedCategories,
     customRoles,
     replace,
     includeMusic,
@@ -76,7 +78,7 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
     if (templateKey && TEMPLATES[templateKey]) {
       const tpl = TEMPLATES[templateKey];
       label = tpl.name || tpl.label;
-      groups = parseTemplate(tpl.spec);
+      groups = overrideSpec?.trim() ? parseTemplate(overrideSpec) : parseTemplate(tpl.spec);
       roles = includeRoles === false ? [] : (tpl.roles || []);
     } else {
       isCustom = true;
@@ -125,6 +127,7 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
       includeMusic: templateKey ? includeMusic !== false : Boolean(includeMusic || selectedModules?.includes('music')),
       includeStats: shouldIncludeStats,
       includeGateway: shouldIncludeGateway,
+      orderedCategories: Array.isArray(orderedCategories) ? orderedCategories : null,
     };
 
     // Execute server architect layout asynchronously or wait
