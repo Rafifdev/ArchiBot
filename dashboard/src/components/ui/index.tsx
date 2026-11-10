@@ -108,12 +108,12 @@ export const MdButton: React.FC<MdButtonProps> = ({
   };
 
   const variantStyles: Record<string, string> = {
-    filled: 'bg-discord-blurple text-discord-white hover:bg-discord-blurple-hover shadow-sm hover:shadow-md',
+    filled: 'bg-discord-blurple text-white hover:bg-discord-blurple-hover shadow-sm hover:shadow-md',
     tonal: 'bg-discord-surface text-discord-white border border-discord-border hover:bg-discord-card-hover hover:border-discord-border-hover',
     outlined: 'bg-transparent border border-discord-border text-discord-white hover:bg-discord-surface hover:border-discord-blurple',
     text: 'bg-transparent text-discord-white hover:bg-discord-surface/60',
     elevated: 'bg-discord-card text-discord-white border border-discord-border shadow-md hover:shadow-lg hover:bg-discord-card-hover',
-    danger: 'bg-discord-red text-discord-white hover:bg-[#c93b3e] shadow-sm',
+    danger: 'bg-discord-red text-white hover:bg-[#c93b3e] shadow-sm',
   };
 
   return (
@@ -603,7 +603,7 @@ export const MdSelect: React.FC<MdSelectProps> = ({
               <img
                 src={selectedItem.iconUrl}
                 alt=""
-                className="w-5 h-3.5 object-cover rounded-[2px] border border-white/10 shadow-xs"
+                className="w-5 h-3.5 object-cover rounded-[2px] border border-discord-border/60 shadow-xs"
               />
             </span>
           )}
@@ -623,7 +623,7 @@ export const MdSelect: React.FC<MdSelectProps> = ({
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute left-0 right-0 z-50 bg-[#16181f] border border-discord-border rounded-xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col transition-all duration-150 ${
+          className={`absolute left-0 right-0 z-50 bg-discord-card border border-discord-border rounded-xl shadow-2xl overflow-hidden flex flex-col transition-all duration-150 ${
             openUpwards
               ? 'bottom-[calc(100%+6px)] origin-bottom'
               : 'top-[calc(100%+6px)] origin-top'
@@ -663,7 +663,7 @@ export const MdSelect: React.FC<MdSelectProps> = ({
                         <img
                           src={opt.iconUrl}
                           alt=""
-                          className="w-5 h-3.5 object-cover rounded-[2px] shrink-0 border border-white/10 shadow-xs"
+                          className="w-5 h-3.5 object-cover rounded-[2px] shrink-0 border border-discord-border/60 shadow-xs"
                         />
                       )}
                       <span className="truncate">{opt.label}</span>
@@ -1166,15 +1166,15 @@ export const Badge: React.FC<BadgeProps> = ({
 
   // Solid tones (vibrant background, high contrast text, NO BORDER)
   const solidTones: Record<BadgeTone, string> = {
-    blurple: 'bg-discord-blurple text-discord-white font-medium',
-    green: 'bg-discord-green text-[#0e1015] font-semibold',
-    yellow: 'bg-discord-yellow text-[#0e1015] font-semibold',
-    red: 'bg-discord-red text-discord-white font-medium',
-    premium: 'bg-discord-fuchsia text-discord-white font-medium',
-    fuchsia: 'bg-discord-fuchsia text-discord-white font-medium',
-    neutral: 'bg-[#2B2D31] text-discord-text font-normal',
+    blurple: 'bg-discord-blurple text-white font-medium',
+    green: 'bg-discord-green text-discord-canvas font-semibold',
+    yellow: 'bg-discord-yellow text-discord-canvas font-semibold',
+    red: 'bg-discord-red text-white font-medium',
+    premium: 'bg-discord-fuchsia text-white font-medium',
+    fuchsia: 'bg-discord-fuchsia text-white font-medium',
+    neutral: 'bg-discord-surface text-discord-text font-normal',
     surface: 'bg-discord-surface text-discord-text font-normal',
-    dark: 'bg-[#111214] text-discord-white font-medium',
+    dark: 'bg-[#111214] text-white font-medium',
     white: 'bg-white text-[#111214] font-semibold',
   };
 
@@ -1188,8 +1188,8 @@ export const Badge: React.FC<BadgeProps> = ({
     fuchsia: 'bg-discord-fuchsia/20 text-discord-fuchsia font-normal',
     neutral: 'bg-discord-surface text-discord-muted font-normal',
     surface: 'bg-discord-surface text-discord-text font-normal',
-    dark: 'bg-black/35 text-discord-muted font-normal',
-    white: 'bg-white/15 text-white font-normal',
+    dark: 'bg-discord-surface text-discord-muted font-normal',
+    white: 'bg-discord-surface text-discord-white font-normal',
   };
 
   const toneClassMap = (variant === 'soft' ? softTones : solidTones) || solidTones;
@@ -1226,7 +1226,7 @@ export const Badge: React.FC<BadgeProps> = ({
           className={`rounded-full shrink-0 ${dotSizes[size]} ${
             variant === 'solid'
               ? tone === 'green' || tone === 'yellow'
-                ? 'bg-[#0e1015]'
+                ? 'bg-discord-canvas'
                 : 'bg-white'
               : tone === 'green'
               ? 'bg-discord-green'
@@ -2366,7 +2366,7 @@ export const UnsavedChangesBar: React.FC<UnsavedChangesBarProps> = ({
       role="region"
       aria-live="polite"
       aria-label="Unsaved changes warning"
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between gap-6 sm:gap-10 px-5 py-3 rounded-xl bg-[#111319] border border-discord-border shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-md transition-all duration-300 ease-out transform w-[calc(100%-2rem)] max-w-lg sm:w-auto ${
+      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between gap-6 sm:gap-10 px-5 py-3 rounded-xl bg-discord-card border border-discord-border shadow-2xl backdrop-blur-md transition-all duration-300 ease-out transform w-[calc(100%-2rem)] max-w-lg sm:w-auto ${
         show
           ? 'translate-y-0 opacity-100 pointer-events-auto scale-100'
           : 'translate-y-10 opacity-0 pointer-events-none scale-95'
@@ -2530,7 +2530,7 @@ export const EmojiPickerField: React.FC<EmojiPickerFieldProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+6px)] left-0 z-50 p-3 rounded-2xl bg-[#16181f] border border-discord-border shadow-[0_12px_36px_rgba(0,0,0,0.7)] flex flex-col gap-2.5 w-72">
+        <div className="absolute top-[calc(100%+6px)] left-0 z-50 p-3 rounded-2xl bg-discord-card border border-discord-border shadow-2xl flex flex-col gap-2.5 w-72">
           <div className="relative">
             <input
               type="text"
@@ -2684,7 +2684,7 @@ export const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
         className={`relative ${sizeClasses} rounded-xl border ${
           value
             ? 'border-[var(--md-sys-color-outline)] hover:border-[var(--md-sys-color-on-surface)]'
-            : 'border-dashed border-[#343A4D] hover:border-discord-blurple'
+            : 'border-dashed border-discord-border-hover hover:border-discord-blurple'
         } bg-discord-surface/30 hover:bg-discord-surface/60 transition-colors flex flex-col items-center justify-center cursor-pointer overflow-hidden select-none shrink-0`}
         title={value ? 'Click to change image' : 'Click to upload image'}
       >
@@ -2709,7 +2709,7 @@ export const ImageUploadBox: React.FC<ImageUploadBoxProps> = ({
                   e.stopPropagation();
                   onChange('');
                 }}
-                className="w-7 h-7 rounded-lg bg-discord-surface hover:bg-discord-red text-discord-white flex items-center justify-center transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-lg bg-discord-surface hover:bg-discord-red text-discord-white hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                 title="Remove image"
               >
                 <MdIcon name="close" className="text-sm" />

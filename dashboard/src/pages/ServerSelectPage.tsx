@@ -49,7 +49,7 @@ const GuildAvatar: React.FC<{
 
   return (
     <div
-      className={`${sizeClass} ${roundedClass} ${ringClass} bg-discord-blurple text-discord-white flex items-center justify-center shrink-0 shadow-sm`}
+      className={`${sizeClass} ${roundedClass} ${ringClass} bg-discord-blurple text-white flex items-center justify-center shrink-0 shadow-sm`}
     >
       <DiscordMark className="w-1/2 h-1/2" />
     </div>
@@ -63,14 +63,14 @@ const ServerSelectSkeleton: React.FC<{ viewMode: ViewMode }> = ({ viewMode }) =>
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="relative rounded-2xl overflow-hidden bg-[#13151f] border border-[#272b3b] flex flex-col justify-between select-none animate-pulse"
+            className="relative rounded-2xl overflow-hidden bg-discord-card border border-discord-border flex flex-col justify-between select-none animate-pulse"
           >
             {/* Top Banner Skeleton */}
-            <div className="relative h-36 bg-gradient-to-b from-[#1c2442]/60 via-[#161a2e]/60 to-[#13151f] flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-discord-surface/80 ring-4 ring-[#13151f]/80" />
+            <div className="relative h-36 bg-gradient-to-b from-discord-blurple/20 via-discord-blurple/8 to-discord-card flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-discord-surface/80 ring-4 ring-discord-card/80" />
             </div>
             {/* Bottom Info Row Skeleton */}
-            <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-[#13151f] min-h-[56px]">
+            <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-discord-card min-h-[56px]">
               <div className="h-4 w-28 bg-discord-surface/90 rounded-md" />
               <div className="h-9 w-20 bg-discord-surface/90 rounded-lg shrink-0" />
             </div>
@@ -249,7 +249,7 @@ export const ServerSelectPage: React.FC = () => {
                       }}
                       className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border-0 whitespace-nowrap text-left ${
                         viewMode === opt.id
-                          ? 'bg-discord-blurple text-discord-white shadow-sm font-semibold'
+                          ? 'bg-discord-blurple text-white shadow-sm font-semibold'
                           : 'bg-transparent text-discord-text hover:text-discord-white hover:bg-discord-surface'
                       }`}
                     >
@@ -257,13 +257,13 @@ export const ServerSelectPage: React.FC = () => {
                         <MdIcon
                           name={opt.icon}
                           className={`text-base shrink-0 ${
-                            viewMode === opt.id ? 'text-discord-white' : 'text-discord-muted'
+                            viewMode === opt.id ? 'text-white' : 'text-discord-muted'
                           }`}
                         />
                         <span>{opt.label}</span>
                       </div>
                       {viewMode === opt.id && (
-                        <MdIcon name="check" className="text-sm text-discord-white shrink-0 ml-1.5" />
+                        <MdIcon name="check" className="text-sm text-white shrink-0 ml-1.5" />
                       )}
                     </button>
                   ))}
@@ -301,10 +301,10 @@ export const ServerSelectPage: React.FC = () => {
                       window.open(g.inviteUrl, '_blank');
                     }
                   }}
-                  className="relative rounded-2xl overflow-hidden bg-[#13151f] border border-[#272b3b] transition-all duration-200 ease-out flex flex-col justify-between group select-none hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
+                  className="relative rounded-2xl overflow-hidden bg-discord-card border border-discord-border transition-all duration-200 ease-out flex flex-col justify-between group select-none hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer"
                 >
                   {/* Top Banner Area with subtle controller aura & centered circular avatar */}
-                  <div className="relative h-36 bg-gradient-to-b from-[#1c2442] via-[#161a2e] to-[#13151f] flex items-center justify-center overflow-hidden">
+                  <div className="relative h-36 bg-gradient-to-b from-discord-blurple/20 via-discord-blurple/8 to-discord-card flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none scale-125 text-discord-blurple">
                       <DiscordMark className="w-28 h-28" />
                     </div>
@@ -314,12 +314,12 @@ export const ServerSelectPage: React.FC = () => {
                       name={g.name}
                       sizeClass="w-14 h-14"
                       roundedClass="rounded-full"
-                      ringClass="ring-4 ring-[#13151f]/80 shadow-2xl relative z-10 transition-transform duration-200 group-hover:scale-105"
+                      ringClass="ring-4 ring-discord-card/80 shadow-2xl relative z-10 transition-transform duration-200 group-hover:scale-105"
                     />
                   </div>
 
                   {/* Bottom Info Row: Server Name on left & Manage / Invite Button on right (No horizontal line) */}
-                  <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-[#13151f] min-h-[56px]">
+                  <div className="p-3.5 px-4 flex items-center justify-between gap-3 bg-discord-card min-h-[56px]">
                     <span
                       className="font-semibold text-xs sm:text-sm text-discord-white truncate min-w-0 flex-1 leading-normal"
                       title={g.name}

@@ -129,7 +129,9 @@ export interface TopAppBarProps {
   user: UserProfile | null;
   guildId?: string;
   theme?: 'dark' | 'light';
+  themeMode?: ThemeMode;
   onToggleTheme: () => void;
+  onSelectThemeMode?: (mode: ThemeMode) => void;
   onOpenSearch: () => void;
   onLogout: () => void;
 }
@@ -138,12 +140,15 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
   user,
   guildId,
   theme = 'dark',
+  themeMode = 'system',
   onToggleTheme,
+  onSelectThemeMode,
   onOpenSearch,
   onLogout,
 }) => {
   const navigate = useNavigate();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const [botAvatar, setBotAvatar] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
   const [botAvatarError, setBotAvatarError] = useState(false);
@@ -174,6 +179,15 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
       .catch(() => {});
   }, []);
 
+  const themeOptions: { id: ThemeMode; label: string; icon: string }[] = [
+    { id: 'light', label: 'Light', icon: 'light_mode' },
+    { id: 'dark', label: 'Dark', icon: 'dark_mode' },
+    { id: 'system', label: 'Auto (System)', icon: 'laptop' },
+  ];
+
+  const activeThemeIcon =
+    themeMode === 'system' ? 'laptop' : theme === 'light' ? 'light_mode' : 'dark_mode';
+
   return (
     <header className="h-16 shrink-0 bg-discord-sidebar border-b border-discord-border flex items-center justify-between px-5 z-40">
       {/* Left: Brand Logo */}
@@ -186,7 +200,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
             className="w-9 h-9 rounded-lg object-cover border border-discord-border shrink-0"
           />
         ) : (
-          <div className="w-9 h-9 rounded-lg bg-discord-blurple flex items-center justify-center text-discord-white shrink-0 shadow-sm">
+          <div className="w-9 h-9 rounded-lg bg-discord-blurple flex items-center justify-center text-white shrink-0 shadow-sm">
             <DiscordMark className="w-5 h-5" />
           </div>
         )}
@@ -213,12 +227,70 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
 
       {/* Right: Material Icon Buttons & User Profile Dropdown */}
       <div className="flex items-center gap-2">
-        <MdIconButton
-          icon={theme === 'dark' ? 'light_mode' : 'dark_mode'}
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          onClick={onToggleTheme}
-          className={theme === 'dark' ? 'text-discord-yellow hover:opacity-90' : 'text-discord-blurple'}
-        />
+        {/* Flexible Theme Selector: Light / Dark / Auto (System) */}
+        <div className="relative">
+          <MdIconButton
+            icon={activeThemeIcon}
+            title={`Theme: ${themeMode === 'system' ? `Auto (${theme})` : themeMode}`}
+            onClick={() => {
+              if (onSelectThemeMode) {
+                setThemeDropdownOpen((prev) => !prev);
+              } else {
+                onToggleTheme();
+              }
+            }}
+            className={
+              themeMode === 'system'
+                ? 'text-discord-text hover:text-discord-white'
+                : theme === 'light'
+                ? 'text-discord-yellow hover:opacity-90'
+                : 'text-discord-blurple'
+            }
+          />
+
+          {themeDropdownOpen && onSelectThemeMode && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setThemeDropdownOpen(false)}
+              />
+              <div className="absolute right-0 mt-2 w-44 bg-discord-card border border-discord-border rounded-xl shadow-xl p-1.5 z-50 flex flex-col gap-0.5 text-xs">
+                {themeOptions.map((opt) => {
+                  const isSelected = themeMode === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        onSelectThemeMode(opt.id);
+                        setThemeDropdownOpen(false);
+                      }}
+                      className={`flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-normal transition-colors cursor-pointer border-0 text-left ${
+                        isSelected
+                          ? 'bg-discord-blurple text-white'
+                          : 'bg-transparent text-discord-text hover:bg-discord-surface hover:text-discord-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <md-icon
+                          class={`text-base ${
+                            isSelected ? 'text-white' : 'text-discord-muted'
+                          }`}
+                        >
+                          {opt.icon}
+                        </md-icon>
+                        <span>{opt.label}</span>
+                      </div>
+                      {isSelected && (
+                        <md-icon class="text-sm text-white">check</md-icon>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
 
         <MdIconButton
           icon="search"
@@ -241,7 +313,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                 className="w-8 h-8 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-discord-white text-xs shrink-0 font-medium">
+              <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center text-white text-xs shrink-0 font-medium">
                 {(displayName || user?.username || 'U')[0].toUpperCase()}
               </div>
             )}
@@ -271,7 +343,7 @@ export const TopAppBar: React.FC<TopAppBarProps> = ({
                       className="w-10 h-10 rounded-full object-cover shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-discord-blurple flex items-center justify-center text-discord-white text-sm shrink-0 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-discord-blurple flex items-center justify-center text-white text-sm shrink-0 font-medium">
                       {(displayName || user?.username || 'U')[0].toUpperCase()}
                     </div>
                   )}
@@ -380,7 +452,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                   className="w-7 h-7 rounded-lg object-cover shrink-0"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center text-discord-white shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center text-white shrink-0">
                   <DiscordMark className="w-3.5 h-3.5" />
                 </div>
               )}
@@ -431,7 +503,7 @@ export const NavigationDrawer: React.FC<NavigationDrawerProps> = ({
                         ) : (
                           <div
                             slot="start"
-                            className="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center text-discord-white shrink-0"
+                            className="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center text-white shrink-0"
                           >
                             <DiscordMark className="w-3.5 h-3.5" />
                           </div>
@@ -721,7 +793,7 @@ export const CommandSearchModal: React.FC<CommandSearchModalProps> = ({
                         ) : (
                           <div
                             slot="start"
-                            className="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center text-discord-white shrink-0"
+                            className="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center text-white shrink-0"
                           >
                             <DiscordMark className="w-3.5 h-3.5" />
                           </div>
@@ -818,10 +890,14 @@ export interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout }) => {
   const { guildId } = useParams<{ guildId?: string }>();
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    const savedChoice = localStorage.getItem('archibot_theme_mode_user_choice');
+    if (savedChoice === 'auto' || savedChoice === 'system') return 'system';
+    if (savedChoice === 'light' || savedChoice === 'dark') return savedChoice;
     const savedMode = localStorage.getItem('archibot_theme_mode') as ThemeMode | null;
     if (savedMode === 'system' || savedMode === 'light' || savedMode === 'dark') return savedMode;
     const legacy = localStorage.getItem('archibot_theme') as 'dark' | 'light' | null;
-    return legacy === 'light' ? 'light' : 'dark';
+    if (legacy === 'light' || legacy === 'dark') return legacy;
+    return 'system';
   });
   const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -879,10 +955,30 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
     } else {
       document.documentElement.classList.remove('dark');
     }
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta) {
+      meta.setAttribute('content', themeMode === 'system' ? 'light dark' : resolvedTheme);
+    }
     localStorage.setItem('archibot_theme_mode', themeMode);
+    localStorage.setItem(
+      'archibot_theme_mode_user_choice',
+      themeMode === 'system' ? 'auto' : themeMode
+    );
     localStorage.setItem('archibot_theme', resolvedTheme);
     applyAccentColorToDocument(accentColor, resolvedTheme);
   }, [themeMode, resolvedTheme, accentColor]);
+
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'archibot_theme_mode' || e.key === 'archibot_theme_mode_user_choice') {
+        const val = e.newValue;
+        if (val === 'auto' || val === 'system') setThemeMode('system');
+        else if (val === 'light' || val === 'dark') setThemeMode(val);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -984,7 +1080,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ user, onLogout
           user={user}
           guildId={guildId}
           theme={resolvedTheme}
+          themeMode={themeMode}
           onToggleTheme={toggleTheme}
+          onSelectThemeMode={setThemeMode}
           onOpenSearch={() => setSearchOpen(true)}
           onLogout={onLogout}
         />

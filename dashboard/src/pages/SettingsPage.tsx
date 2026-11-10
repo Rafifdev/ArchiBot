@@ -488,7 +488,7 @@ export const SettingsPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(
               [
-                { id: 'system' as ThemeMode, label: 'System preference' },
+                { id: 'system' as ThemeMode, label: 'Auto (System)' },
                 { id: 'light' as ThemeMode, label: 'Light' },
                 { id: 'dark' as ThemeMode, label: 'Dark' },
               ] as const
@@ -668,7 +668,7 @@ export const SettingsPage: React.FC = () => {
                     <span
                       className={`w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
                         selected
-                          ? 'bg-discord-blurple text-discord-white'
+                          ? 'bg-discord-blurple text-white'
                           : 'border border-discord-border-hover bg-discord-surface/40'
                       }`}
                     >

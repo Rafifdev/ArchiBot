@@ -663,7 +663,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
           className="w-full h-full object-cover"
         />
       ) : (
-        <DiscordMark className="w-1/2 h-1/2 text-discord-white" />
+        <DiscordMark className="w-1/2 h-1/2 text-white" />
       )}
     </div>
   );
@@ -699,13 +699,13 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
         <div className={`relative z-10 flex items-center w-full max-w-md ${compact ? 'gap-4 px-5' : 'gap-6 px-8'}`}>
           {renderAvatar(compact ? 'w-12 h-12 sm:w-14 sm:h-14' : 'w-16 h-16 sm:w-20 sm:h-20', cardAccent)}
           <div className="min-w-0 flex flex-col">
-            <span className="text-[11px] font-normal uppercase tracking-widest text-discord-text/80">
+            <span className="text-[11px] font-normal uppercase tracking-widest text-white/80">
               {cardTitle || 'WELCOME'}
             </span>
-            <span className={`${compact ? 'text-sm sm:text-base' : 'text-base sm:text-xl'} font-normal text-discord-white truncate mt-0.5`}>
+            <span className={`${compact ? 'text-sm sm:text-base' : 'text-base sm:text-xl'} font-normal text-white truncate mt-0.5`}>
               {previewUser}
             </span>
-            <span className="text-xs font-normal text-discord-text/80 mt-0.5">
+            <span className="text-xs font-normal text-white/80 mt-0.5">
               Member #{memberCount}
             </span>
           </div>
@@ -721,10 +721,10 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
               {cardTitle}
             </span>
           )}
-          <span className={`${compact ? 'text-sm sm:text-base mt-1.5' : 'text-base sm:text-xl mt-2'} font-normal text-discord-white truncate max-w-xs`}>
+          <span className={`${compact ? 'text-sm sm:text-base mt-1.5' : 'text-base sm:text-xl mt-2'} font-normal text-white truncate max-w-xs`}>
             {previewUser}
           </span>
-          <span className="text-xs font-normal text-discord-text/80 mt-0.5">
+          <span className="text-xs font-normal text-white/80 mt-0.5">
             Member #{memberCount}
           </span>
         </div>
@@ -885,10 +885,10 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
                 style={BG_PRESETS[1].style}
               >
                 {renderAvatar('w-10 h-10', '#5865F2')}
-                <span className="text-xs font-normal text-discord-white leading-tight mt-0.5 truncate max-w-[140px]">
+                <span className="text-xs font-normal text-white leading-tight mt-0.5 truncate max-w-[140px]">
                   {previewUser}
                 </span>
-                <span className="text-[10px] font-normal text-discord-muted leading-none">
+                <span className="text-[10px] font-normal text-white/75 leading-none">
                   Member #{memberCount}
                 </span>
               </div>
@@ -916,13 +916,13 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
               >
                 {renderAvatar('w-11 h-11', '#5865F2')}
                 <div className="min-w-0 flex flex-col">
-                  <span className="text-[9px] font-normal uppercase tracking-wider text-discord-muted">
+                  <span className="text-[9px] font-normal uppercase tracking-wider text-white/75">
                     WELCOME
                   </span>
-                  <span className="text-xs font-normal text-discord-white truncate max-w-[110px]">
+                  <span className="text-xs font-normal text-white truncate max-w-[110px]">
                     {previewUser}
                   </span>
-                  <span className="text-[10px] font-normal text-discord-muted">
+                  <span className="text-[10px] font-normal text-white/75">
                     Member #{memberCount}
                   </span>
                 </div>
@@ -999,7 +999,7 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({ user }) => {
                   }`}
                   style={preset.style}
                 >
-                  <span className="px-2.5 py-1 rounded-md bg-black/55 text-xs font-normal text-discord-white backdrop-blur-xs">
+                  <span className="px-2.5 py-1 rounded-md bg-black/55 text-xs font-normal text-white backdrop-blur-xs">
                     {preset.label}
                   </span>
                 </button>

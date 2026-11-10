@@ -154,7 +154,7 @@ export const OverviewPage: React.FC = () => {
               className="w-16 h-16 rounded-xl object-cover shadow-md shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-xl bg-discord-blurple flex items-center justify-center text-discord-white shadow-md shrink-0">
+            <div className="w-16 h-16 rounded-xl bg-discord-blurple flex items-center justify-center text-white shadow-md shrink-0">
               <DiscordMark className="w-9 h-9" />
             </div>
           )}

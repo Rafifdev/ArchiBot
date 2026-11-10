@@ -170,11 +170,11 @@ function getButtonColorClasses(style: GiveawayConfig['buttonStyle']): string {
     case 'success':
       return 'bg-discord-green text-discord-canvas';
     case 'danger':
-      return 'bg-discord-red text-discord-white';
+      return 'bg-discord-red text-white';
     case 'secondary':
       return 'bg-discord-surface border border-discord-border text-discord-white';
     default:
-      return 'bg-discord-blurple text-discord-white';
+      return 'bg-discord-blurple text-white';
   }
 }
 

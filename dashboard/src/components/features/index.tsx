@@ -75,7 +75,7 @@ export const DiscordEmbedPreview: React.FC<DiscordEmbedPreviewProps> = ({
         {botAvatar ? (
           <img src={botAvatar} alt={botName} className="w-8 h-8 rounded-full object-cover shrink-0" />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center font-normal text-discord-white text-xs shrink-0">
+          <div className="w-8 h-8 rounded-full bg-discord-blurple flex items-center justify-center font-normal text-white text-xs shrink-0">
             <DiscordMark className="w-4 h-4" />
           </div>
         )}

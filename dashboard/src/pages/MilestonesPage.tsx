@@ -645,7 +645,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
             className="flex flex-col gap-4"
           >
             {/* Simulated Discord Message Container */}
-            <div className="rounded-xl bg-[#313338] border border-[#232428] p-4 text-[#DBDEE1] font-sans">
+            <div className="rounded-xl bg-discord-sidebar border border-discord-border p-4 text-discord-text font-sans">
               <div className="flex items-start gap-3">
                 {/* Bot Avatar */}
                 {serverInfo.botAvatar ? (
@@ -663,40 +663,40 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                 <div className="flex-1 min-w-0">
                   {/* Bot Username + APP Badge + Timestamp */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-normal text-white">
+                    <span className="text-xs font-normal text-discord-white">
                       {serverInfo.botName}
                     </span>
-                    <span className="px-1 py-0.2 rounded bg-[#5865F2] text-[10px] font-normal text-white leading-tight">
+                    <span className="px-1 py-0.2 rounded bg-discord-blurple text-[10px] font-normal text-white leading-tight">
                       APP
                     </span>
-                    <span className="text-[11px] font-normal text-[#949BA4]">
+                    <span className="text-[11px] font-normal text-discord-muted">
                       Today at 12:00 PM
                     </span>
                   </div>
 
                   {/* Message Content */}
-                  <div className="text-xs font-normal text-[#DBDEE1] mt-1">
+                  <div className="text-xs font-normal text-discord-text mt-1">
                     🎉{' '}
-                    <span className="px-1 py-0.5 rounded bg-[#5865F2]/30 text-[#C9CDFB]">
+                    <span className="px-1 py-0.5 rounded bg-discord-blurple/15 text-discord-blurple">
                       @{previewUsername}
                     </span>
                   </div>
 
                   {/* Discord Rich Embed (Gold Milestone Theme #F1C40F) */}
-                  <div className="mt-2 rounded bg-[#2B2D31] border-l-4 border-l-[#F1C40F] p-3.5 flex flex-col gap-2.5">
+                  <div className="mt-2 rounded bg-discord-surface/45 border-l-4 border-l-[#F1C40F] p-3.5 flex flex-col gap-2.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex flex-col gap-1.5 min-w-0">
-                        <div className="text-xs font-normal text-white">
+                        <div className="text-xs font-normal text-discord-white">
                           🏆 Community Milestone Reached!
                         </div>
-                        <div className="text-xs font-normal text-[#DBDEE1] leading-relaxed flex flex-col gap-1">
+                        <div className="text-xs font-normal text-discord-text/90 leading-relaxed flex flex-col gap-1">
                           <div>
                             Congratulations{' '}
-                            <span className="px-1 py-0.5 rounded bg-[#5865F2]/30 text-[#C9CDFB]">
+                            <span className="px-1 py-0.5 rounded bg-discord-blurple/15 text-discord-blurple">
                               @{previewUsername}
                             </span>
                             ! You brought our community to{' '}
-                            <span className="text-white">
+                            <span className="text-discord-white">
                               {progressStats.sampleCount.toLocaleString()}
                             </span>{' '}
                             members!
@@ -711,11 +711,11 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                                   backgroundColor:
                                     selectedRole.color && selectedRole.color !== '#000000'
                                       ? `${selectedRole.color}26`
-                                      : 'rgba(88,101,242,0.25)',
+                                      : 'rgba(88,101,242,0.18)',
                                   color:
                                     selectedRole.color && selectedRole.color !== '#000000'
                                       ? selectedRole.color
-                                      : '#C9CDFB',
+                                      : 'var(--color-discord-blurple)',
                                 }}
                               >
                                 @{selectedRole.name}
@@ -726,11 +726,11 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                           {progressStats.afterNext !== null && (
                             <div>
                               🎯 Next milestone:{' '}
-                              <span className="text-white">
+                              <span className="text-discord-white">
                                 {progressStats.afterNext.toLocaleString()}
                               </span>{' '}
                               members -{' '}
-                              <span className="text-white">
+                              <span className="text-discord-white">
                                 {progressStats.afterRemaining?.toLocaleString()}
                               </span>{' '}
                               to go.
@@ -747,7 +747,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                           className="w-11 h-11 rounded-lg object-cover shrink-0"
                         />
                       ) : (
-                        <div className="w-11 h-11 rounded-lg bg-[#1E1F22] flex items-center justify-center text-[#F1C40F] shrink-0">
+                        <div className="w-11 h-11 rounded-lg bg-discord-surface flex items-center justify-center text-[#F1C40F] shrink-0">
                           <MdIcon name="emoji_events" className="text-xl" />
                         </div>
                       )}
