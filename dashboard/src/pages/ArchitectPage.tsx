@@ -858,13 +858,25 @@ export const ArchitectPage: React.FC = () => {
                   role="radio"
                   aria-checked={!applyReplace}
                   onClick={() => setApplyReplace(false)}
-                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center gap-3.5 select-none ${
+                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
                     !applyReplace
                       ? 'bg-discord-active'
                       : 'bg-discord-surface hover:bg-discord-card-hover'
                   }`}
                 >
                   <md-ripple />
+                  <div className="relative z-10 min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-normal text-discord-white leading-tight truncate">
+                        Merge with Existing Channels
+                      </span>
+                      <Badge label="Recommended" tone="green" className="shrink-0" />
+                    </div>
+                    <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+                      Adds the template&apos;s categories and channels while keeping your existing server channels intact.
+                    </p>
+                  </div>
+
                   <span
                     className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
                       !applyReplace ? 'bg-discord-blurple' : 'bg-discord-canvas/80'
@@ -878,18 +890,6 @@ export const ArchitectPage: React.FC = () => {
                       }`}
                     />
                   </span>
-
-                  <div className="relative z-10 min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-xs font-normal text-discord-white leading-tight truncate">
-                        Merge with Existing Channels
-                      </span>
-                      <Badge label="Recommended" tone="green" className="shrink-0" />
-                    </div>
-                    <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
-                      Adds the template&apos;s categories and channels while keeping your existing server channels intact.
-                    </p>
-                  </div>
                 </button>
 
                 <button
@@ -897,27 +897,13 @@ export const ArchitectPage: React.FC = () => {
                   role="radio"
                   aria-checked={applyReplace}
                   onClick={() => setApplyReplace(true)}
-                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center gap-3.5 select-none ${
+                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center justify-between gap-3.5 select-none ${
                     applyReplace
                       ? 'bg-discord-red/12'
                       : 'bg-discord-surface hover:bg-discord-card-hover'
                   }`}
                 >
                   <md-ripple />
-                  <span
-                    className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
-                      applyReplace ? 'bg-discord-red' : 'bg-discord-canvas/80'
-                    }`}
-                  >
-                    <span
-                      className={`rounded-full transition-all duration-150 ${
-                        applyReplace
-                          ? 'w-2 h-2 bg-white scale-100'
-                          : 'w-2 h-2 bg-discord-muted/40 scale-75'
-                      }`}
-                    />
-                  </span>
-
                   <div className="relative z-10 min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
                       <span
@@ -933,6 +919,20 @@ export const ArchitectPage: React.FC = () => {
                       Permanently deletes all current categories and channels first, then generates this layout from scratch.
                     </p>
                   </div>
+
+                  <span
+                    className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
+                      applyReplace ? 'bg-discord-red' : 'bg-discord-canvas/80'
+                    }`}
+                  >
+                    <span
+                      className={`rounded-full transition-all duration-150 ${
+                        applyReplace
+                          ? 'w-2 h-2 bg-white scale-100'
+                          : 'w-2 h-2 bg-discord-muted/40 scale-75'
+                      }`}
+                    />
+                  </span>
                 </button>
               </div>
             </div>
