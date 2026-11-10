@@ -466,9 +466,9 @@ const PreviewChannelRowContent: React.FC<{
             e.stopPropagation();
             onEdit();
           }}
-          className="w-5 h-5 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0"
+          className="w-6 h-6 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0"
         >
-          <MdIcon name="edit" className="!text-[12px] leading-none" />
+          <MdIcon name="edit" className="!text-[16px] leading-none" />
         </button>
       )}
     </div>
@@ -565,9 +565,9 @@ const SortablePreviewCategoryBlock: React.FC<{
                 e.stopPropagation();
                 onEditCategory();
               }}
-              className="w-5 h-5 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0 shrink-0"
+              className="w-6 h-6 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0 shrink-0"
             >
-              <MdIcon name="edit" className="!text-[12px] leading-none" />
+              <MdIcon name="edit" className="!text-[16px] leading-none" />
             </button>
           )}
           {dropPosition === 'header' && (
