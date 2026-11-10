@@ -140,12 +140,12 @@ const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
     : 0;
 
   return (
-    <SurfaceCard
+    <div
       onClick={onToggle}
-      className={`p-4 flex flex-col justify-between gap-3.5 cursor-pointer select-none transition-all duration-150 ${
+      className={`rounded-xl border p-4 flex flex-col justify-between gap-3.5 cursor-pointer select-none transition-colors duration-150 ${
         isSelected
-          ? 'border-discord-blurple bg-discord-active opacity-100'
-          : 'bg-discord-surface border-discord-border opacity-70 hover:opacity-100 hover:border-discord-border-hover'
+          ? 'bg-[color-mix(in_srgb,var(--color-discord-blurple)_18%,var(--color-discord-surface))] border-discord-blurple'
+          : 'bg-discord-surface border-discord-border hover:border-discord-border-hover hover:bg-discord-card-hover'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -202,7 +202,7 @@ const ModuleOptionCard: React.FC<ModuleOptionCardProps> = ({
           }}
         />
       </div>
-    </SurfaceCard>
+    </div>
   );
 };
 
