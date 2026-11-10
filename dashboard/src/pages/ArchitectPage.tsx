@@ -23,6 +23,8 @@ import {
   EmptyState,
   MdButton,
   MdIconButton,
+  MdSelect,
+  MdTextField,
   ArchitectSkeleton,
   MdIcon,
   MdTabs,
@@ -274,12 +276,14 @@ interface ParsedChannelItem {
   name: string;
   type: 'text' | 'voice' | 'jtc' | 'stage' | 'adminvoice';
   readOnly: boolean;
+  edited?: boolean;
 }
 
 interface ParsedCategoryGroup {
   id: string;
   category: string | null;
   channels: ParsedChannelItem[];
+  edited?: boolean;
 }
 
 function parseTemplatePreview(spec?: string, prefix = 'tpl'): ParsedCategoryGroup[] {
@@ -363,11 +367,19 @@ function serializeGroupsToSpec(
 
 function mergeOrderedPreviewGroups(
   prev: ParsedCategoryGroup[],
-  fresh: ParsedCategoryGroup[]
+  fresh: ParsedCategoryGroup[],
+  deletedIds: Set<string> = new Set()
 ): ParsedCategoryGroup[] {
-  const freshCatMap = new Map(fresh.map((g) => [g.id, g]));
+  const filteredFresh = fresh
+    .filter((g) => !deletedIds.has(g.id))
+    .map((g) => ({
+      ...g,
+      channels: g.channels.filter((ch) => !deletedIds.has(ch.id)),
+    }));
+
+  const freshCatMap = new Map(filteredFresh.map((g) => [g.id, g]));
   const freshChMap = new Map<string, ParsedChannelItem>();
-  for (const g of fresh) {
+  for (const g of filteredFresh) {
     for (const ch of g.channels) freshChMap.set(ch.id, ch);
   }
 
@@ -376,21 +388,39 @@ function mergeOrderedPreviewGroups(
   const merged: ParsedCategoryGroup[] = [];
 
   for (const prevCat of prev) {
-    if (!freshCatMap.has(prevCat.id)) continue;
+    if (deletedIds.has(prevCat.id)) continue;
+    const isUserCat = prevCat.id.startsWith('cat:user:');
+    const freshCat = freshCatMap.get(prevCat.id);
+    if (!isUserCat && !freshCat) continue;
+
     usedCatIds.add(prevCat.id);
     const keptChannels: ParsedChannelItem[] = [];
     for (const prevCh of prevCat.channels) {
+      if (deletedIds.has(prevCh.id)) continue;
+      if (prevCh.id.startsWith('ch:user:')) {
+        if (!usedChIds.has(prevCh.id)) {
+          keptChannels.push(prevCh);
+          usedChIds.add(prevCh.id);
+        }
+        continue;
+      }
       const updated = freshChMap.get(prevCh.id);
       if (updated && !usedChIds.has(prevCh.id)) {
-        keptChannels.push(updated);
+        keptChannels.push(prevCh.edited ? prevCh : updated);
         usedChIds.add(prevCh.id);
       }
     }
-    merged.push({ ...freshCatMap.get(prevCat.id)!, channels: keptChannels });
+
+    merged.push({
+      ...(freshCat ?? prevCat),
+      category: prevCat.edited || isUserCat ? prevCat.category : freshCat!.category,
+      edited: prevCat.edited,
+      channels: keptChannels,
+    });
   }
 
   const mergedCatMap = new Map(merged.map((g) => [g.id, g]));
-  for (const freshCat of fresh) {
+  for (const freshCat of filteredFresh) {
     if (!usedCatIds.has(freshCat.id)) {
       const remainingChannels = freshCat.channels.filter((ch) => !usedChIds.has(ch.id));
       for (const ch of remainingChannels) usedChIds.add(ch.id);
@@ -416,13 +446,32 @@ function getPreviewChannelIcon(ch: ParsedChannelItem): string {
   return ch.readOnly ? 'lock' : 'tag';
 }
 
-const PreviewChannelRowContent: React.FC<{ ch: ParsedChannelItem }> = ({ ch }) => (
+const PreviewChannelRowContent: React.FC<{
+  ch: ParsedChannelItem;
+  onEdit?: () => void;
+}> = ({ ch, onEdit }) => (
   <>
-    <div className="flex items-center gap-2 min-w-0">
+    <div className="flex items-center gap-2 min-w-0 flex-1">
       <MdIcon name={getPreviewChannelIcon(ch)} className="text-sm text-discord-muted shrink-0" />
       <span className="truncate">{ch.name}</span>
     </div>
-    {ch.readOnly && <span className="text-[10px] text-discord-muted shrink-0">Read-only</span>}
+    <div className="flex items-center gap-2 shrink-0">
+      {ch.readOnly && <span className="text-[10px] text-discord-muted shrink-0">Read-only</span>}
+      {onEdit && (
+        <button
+          type="button"
+          title={`Edit ${ch.name}`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="w-6 h-6 rounded-md flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0"
+        >
+          <MdIcon name="edit" className="text-sm leading-none" />
+        </button>
+      )}
+    </div>
   </>
 );
 
@@ -430,7 +479,8 @@ const SortablePreviewChannelRow: React.FC<{
   ch: ParsedChannelItem;
   parentId: string;
   dropPosition?: 'top' | 'bottom' | null;
-}> = ({ ch, parentId, dropPosition }) => {
+  onEdit?: () => void;
+}> = ({ ch, parentId, dropPosition, onEdit }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: ch.id,
     data: { type: 'channel', channel: ch, parentId },
@@ -458,7 +508,7 @@ const SortablePreviewChannelRow: React.FC<{
           }`}
         />
       )}
-      <PreviewChannelRowContent ch={ch} />
+      <PreviewChannelRowContent ch={ch} onEdit={onEdit} />
     </div>
   );
 };
@@ -467,9 +517,10 @@ const SortablePreviewCategoryBlock: React.FC<{
   group: ParsedCategoryGroup;
   isCollapsed: boolean;
   onToggleCollapse: (id: string) => void;
+  onEditCategory?: () => void;
   dropPosition?: 'top' | 'bottom' | 'header' | null;
   children: React.ReactNode;
-}> = ({ group, isCollapsed, onToggleCollapse, dropPosition, children }) => {
+}> = ({ group, isCollapsed, onToggleCollapse, onEditCategory, dropPosition, children }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: group.id,
     data: { type: 'category', group },
@@ -494,15 +545,31 @@ const SortablePreviewCategoryBlock: React.FC<{
           {...attributes}
           {...listeners}
           onClick={() => onToggleCollapse(group.id)}
-          className="relative flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-pointer select-none"
+          className="relative flex items-center justify-between gap-2 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-pointer select-none"
         >
-          <MdIcon
-            name="expand_more"
-            className={`text-sm leading-none transition-transform duration-150 ${
-              isCollapsed ? '-rotate-90' : ''
-            }`}
-          />
-          <span className="truncate">{group.category}</span>
+          <div className="flex items-center gap-1 min-w-0">
+            <MdIcon
+              name="expand_more"
+              className={`text-sm leading-none transition-transform duration-150 ${
+                isCollapsed ? '-rotate-90' : ''
+              }`}
+            />
+            <span className="truncate">{group.category}</span>
+          </div>
+          {onEditCategory && (
+            <button
+              type="button"
+              title={`Edit ${group.category}`}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditCategory();
+              }}
+              className="w-6 h-6 rounded-md flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0 shrink-0"
+            >
+              <MdIcon name="edit" className="text-sm leading-none" />
+            </button>
+          )}
           {dropPosition === 'header' && (
             <div className="absolute bottom-0 left-1.5 right-1.5 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
           )}
@@ -524,8 +591,17 @@ const ChannelTreePreview: React.FC<{
   spec?: string;
   groups?: ParsedCategoryGroup[];
   onGroupsChange?: (nextGroups: ParsedCategoryGroup[]) => void;
+  onEditCategory?: (group: ParsedCategoryGroup) => void;
+  onEditChannel?: (ch: ParsedChannelItem, parentGroup: ParsedCategoryGroup) => void;
   maxHeightClass?: string;
-}> = ({ spec, groups: controlledGroups, onGroupsChange, maxHeightClass = 'max-h-44' }) => {
+}> = ({
+  spec,
+  groups: controlledGroups,
+  onGroupsChange,
+  onEditCategory,
+  onEditChannel,
+  maxHeightClass = 'max-h-44',
+}) => {
   const groups = useMemo(
     () => controlledGroups ?? parseTemplatePreview(spec),
     [controlledGroups, spec]
@@ -768,6 +844,7 @@ const ChannelTreePreview: React.FC<{
               group={group}
               isCollapsed={collapsedIds.has(group.id)}
               onToggleCollapse={toggleCollapse}
+              onEditCategory={onEditCategory ? () => onEditCategory(group) : undefined}
               dropPosition={
                 dropIndicator?.type === 'category' && dropIndicator.id === group.id
                   ? dropIndicator.position
@@ -779,6 +856,7 @@ const ChannelTreePreview: React.FC<{
                   key={ch.id}
                   ch={ch}
                   parentId={group.id}
+                  onEdit={onEditChannel ? () => onEditChannel(ch, group) : undefined}
                   dropPosition={
                     dropIndicator?.type === 'channel' && dropIndicator.id === ch.id &&
                     (dropIndicator.position === 'top' || dropIndicator.position === 'bottom')
@@ -954,6 +1032,17 @@ export const ArchitectPage: React.FC = () => {
   >(null);
   const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
   const [isOrderCustomized, setIsOrderCustomized] = useState(false);
+  const [deletedPreviewIds, setDeletedPreviewIds] = useState<Set<string>>(() => new Set());
+
+  // Preview Create/Edit Category & Channel Modal state
+  const [catEditor, setCatEditor] = useState<{ mode: 'create' } | { mode: 'edit'; groupId: string } | null>(null);
+  const [catEditorName, setCatEditorName] = useState('');
+  const [chEditor, setChEditor] = useState<
+    { mode: 'create' } | { mode: 'edit'; chId: string; fromGroupId: string } | null
+  >(null);
+  const [chEditorName, setChEditorName] = useState('');
+  const [chEditorKind, setChEditorKind] = useState<'text' | 'readonly' | 'voice' | 'jtc' | 'stage'>('text');
+  const [chEditorParentId, setChEditorParentId] = useState('');
 
   // Reset Channels state
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
@@ -1211,9 +1300,152 @@ export const ArchitectPage: React.FC = () => {
 
   useEffect(() => {
     setCustomPreviewGroups((prev) =>
-      isOrderCustomized ? mergeOrderedPreviewGroups(prev, customLayoutPreview.freshGroups) : customLayoutPreview.freshGroups
+      isOrderCustomized
+        ? mergeOrderedPreviewGroups(prev, customLayoutPreview.freshGroups, deletedPreviewIds)
+        : customLayoutPreview.freshGroups
     );
-  }, [customLayoutPreview.freshGroups, isOrderCustomized]);
+  }, [customLayoutPreview.freshGroups, isOrderCustomized, deletedPreviewIds]);
+
+  const totalPreviewChannelsCount = useMemo(
+    () => customPreviewGroups.reduce((acc, g) => acc + g.channels.length, 0),
+    [customPreviewGroups]
+  );
+
+  const openCreateCategoryModal = () => {
+    setCatEditorName('');
+    setCatEditor({ mode: 'create' });
+  };
+
+  const openEditCategoryModal = (group: ParsedCategoryGroup) => {
+    setCatEditorName(group.category || '');
+    setCatEditor({ mode: 'edit', groupId: group.id });
+  };
+
+  const handleSaveCategoryModal = () => {
+    const cleanName = catEditorName.trim().toUpperCase();
+    if (!cleanName || !catEditor) return;
+
+    setIsOrderCustomized(true);
+    if (catEditor.mode === 'create') {
+      const newGroup: ParsedCategoryGroup = {
+        id: `cat:user:${Date.now()}:${Math.random().toString(36).slice(2, 6)}`,
+        category: cleanName,
+        channels: [],
+        edited: true,
+      };
+      setCustomPreviewGroups((prev) => [...prev, newGroup]);
+    } else {
+      setCustomPreviewGroups((prev) =>
+        prev.map((g) => (g.id === catEditor.groupId ? { ...g, category: cleanName, edited: true } : g))
+      );
+    }
+    setCatEditor(null);
+  };
+
+  const handleDeleteCategoryFromPreview = () => {
+    if (!catEditor || catEditor.mode !== 'edit') return;
+    const targetId = catEditor.groupId;
+    setIsOrderCustomized(true);
+    setDeletedPreviewIds((prev) => new Set([...prev, targetId]));
+    setCustomPreviewGroups((prev) => prev.filter((g) => g.id !== targetId));
+    setCatEditor(null);
+  };
+
+  const openCreateChannelModal = () => {
+    setChEditorName('');
+    setChEditorKind('text');
+    const firstCat = customPreviewGroups.find((g) => g.category);
+    setChEditorParentId(firstCat?.id || '');
+    setChEditor({ mode: 'create' });
+  };
+
+  const openEditChannelModal = (ch: ParsedChannelItem, parentGroup: ParsedCategoryGroup) => {
+    setChEditorName(ch.name);
+    setChEditorKind(
+      ch.type === 'jtc'
+        ? 'jtc'
+        : ch.type === 'stage'
+        ? 'stage'
+        : ch.type === 'voice' || ch.type === 'adminvoice'
+        ? 'voice'
+        : ch.readOnly
+        ? 'readonly'
+        : 'text'
+    );
+    setChEditorParentId(parentGroup.id);
+    setChEditor({ mode: 'edit', chId: ch.id, fromGroupId: parentGroup.id });
+  };
+
+  const handleSaveChannelModal = () => {
+    const cleanName = chEditorName.trim();
+    if (!cleanName || !chEditor) return;
+
+    const mappedType: ParsedChannelItem['type'] =
+      chEditorKind === 'readonly' ? 'text' : chEditorKind;
+    const mappedReadOnly = chEditorKind === 'readonly';
+    const targetParentId = chEditorParentId || customPreviewGroups[0]?.id;
+    if (!targetParentId) {
+      toast.error('Please create a category first.');
+      return;
+    }
+
+    setIsOrderCustomized(true);
+    if (chEditor.mode === 'create') {
+      const newChannel: ParsedChannelItem = {
+        id: `ch:user:${Date.now()}:${Math.random().toString(36).slice(2, 6)}`,
+        name: cleanName,
+        type: mappedType,
+        readOnly: mappedReadOnly,
+        edited: true,
+      };
+      setCustomPreviewGroups((prev) =>
+        prev.map((g) =>
+          g.id === targetParentId ? { ...g, channels: [...g.channels, newChannel] } : g
+        )
+      );
+    } else {
+      const updatedItem: ParsedChannelItem = {
+        id: chEditor.chId,
+        name: cleanName,
+        type: mappedType,
+        readOnly: mappedReadOnly,
+        edited: true,
+      };
+      if (chEditor.fromGroupId === targetParentId) {
+        setCustomPreviewGroups((prev) =>
+          prev.map((g) =>
+            g.id === targetParentId
+              ? { ...g, channels: g.channels.map((c) => (c.id === chEditor.chId ? updatedItem : c)) }
+              : g
+          )
+        );
+      } else {
+        setCustomPreviewGroups((prev) =>
+          prev.map((g) => {
+            if (g.id === chEditor.fromGroupId) {
+              return { ...g, channels: g.channels.filter((c) => c.id !== chEditor.chId) };
+            }
+            if (g.id === targetParentId) {
+              return { ...g, channels: [...g.channels, updatedItem] };
+            }
+            return g;
+          })
+        );
+      }
+    }
+    setChEditor(null);
+  };
+
+  const handleDeleteChannelFromPreview = () => {
+    if (!chEditor || chEditor.mode !== 'edit') return;
+    const targetChId = chEditor.chId;
+    setIsOrderCustomized(true);
+    setDeletedPreviewIds((prev) => new Set([...prev, targetChId]));
+    setCustomPreviewGroups((prev) =>
+      prev.map((g) => ({ ...g, channels: g.channels.filter((c) => c.id !== targetChId) }))
+    );
+    setChEditor(null);
+  };
 
   const handleBuildLego = async () => {
     setCustomDeployModalOpen(false);
@@ -1238,8 +1470,12 @@ export const ArchitectPage: React.FC = () => {
             orderedCategories,
             replace: customReplaceChannels,
             includeMusic: selectedMods.includes('music'),
-            includeStats: selectedCoreMods.includes('server_stats'),
-            includeGateway: selectedCoreMods.includes('gateway'),
+            includeStats:
+              selectedCoreMods.includes('server_stats') &&
+              customPreviewGroups.some((g) => g.id.startsWith('cat:server_stats:')),
+            includeGateway:
+              selectedCoreMods.includes('gateway') &&
+              customPreviewGroups.some((g) => g.id.startsWith('cat:gateway:')),
           }),
         });
         return res.json();
@@ -1442,7 +1678,7 @@ export const ArchitectPage: React.FC = () => {
               <div className="flex items-center gap-2.5 shrink-0">
                 <span className="text-xs text-discord-muted font-normal">
                   {customLayoutPreview.activeLabels.length} modules • {customPreviewGroups.length} categories •{' '}
-                  {customLayoutPreview.channelCount} channels
+                  {totalPreviewChannelsCount} channels
                 </span>
                 {isOrderCustomized && (
                   <MdButton
@@ -1450,6 +1686,7 @@ export const ArchitectPage: React.FC = () => {
                     size="xs"
                     onClick={() => {
                       setIsOrderCustomized(false);
+                      setDeletedPreviewIds(new Set());
                       setCustomPreviewGroups(customLayoutPreview.freshGroups);
                     }}
                   >
@@ -1459,14 +1696,40 @@ export const ArchitectPage: React.FC = () => {
               </div>
             </div>
 
-            {customLayoutPreview.activeLabels.length > 0 && (
-              <div className="text-xs text-discord-muted font-normal leading-relaxed shrink-0">
-                Selected modules:{' '}
-                <span className="text-discord-text">
-                  {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
-                </span>
+            <div className="flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+              <div className="text-xs text-discord-muted font-normal leading-relaxed min-w-0 flex-1">
+                {customLayoutPreview.activeLabels.length > 0 ? (
+                  <>
+                    Selected modules:{' '}
+                    <span className="text-discord-text">
+                      {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
+                    </span>
+                  </>
+                ) : (
+                  'No modules selected'
+                )}
               </div>
-            )}
+
+              <div className="flex items-center gap-2 shrink-0">
+                <MdButton
+                  variant="tonal"
+                  size="xs"
+                  icon="create_new_folder"
+                  onClick={openCreateCategoryModal}
+                >
+                  Create Category
+                </MdButton>
+                <MdButton
+                  variant="filled"
+                  size="xs"
+                  icon="add"
+                  disabled={customPreviewGroups.length === 0}
+                  onClick={openCreateChannelModal}
+                >
+                  Create Channel
+                </MdButton>
+              </div>
+            </div>
 
             {customPreviewGroups.length > 0 ? (
               <ChannelTreePreview
@@ -1475,13 +1738,15 @@ export const ArchitectPage: React.FC = () => {
                   setIsOrderCustomized(true);
                   setCustomPreviewGroups(next);
                 }}
+                onEditCategory={openEditCategoryModal}
+                onEditChannel={openEditChannelModal}
                 maxHeightClass="flex-1 min-h-0"
               />
             ) : (
               <EmptyState
                 icon="view_quilt"
                 title="No modules selected"
-                description="Select one or more built-in or activity modules above to preview your server layout."
+                description="Select one or more built-in or activity modules above, or create a category here to preview your server layout."
                 className="flex-1 py-6"
               />
             )}
@@ -1494,7 +1759,7 @@ export const ArchitectPage: React.FC = () => {
                   setCustomReplaceChannels(false);
                   setCustomDeployModalOpen(true);
                 }}
-                disabled={executing || totalSelectedModulesCount === 0}
+                disabled={executing || customPreviewGroups.length === 0}
               >
                 Build Custom Layout
               </MdButton>
@@ -1659,7 +1924,7 @@ export const ArchitectPage: React.FC = () => {
             </MdButton>
             <MdButton
               variant="filled"
-              disabled={executing || totalSelectedModulesCount === 0}
+              disabled={executing || customPreviewGroups.length === 0}
               onClick={handleBuildLego}
             >
               Build Custom Layout
@@ -1678,7 +1943,7 @@ export const ArchitectPage: React.FC = () => {
               </div>
               <div className="text-xs text-discord-muted font-normal mt-1">
                 {customLayoutPreview.activeLabels.length} modules • {customPreviewGroups.length} categories •{' '}
-                {customLayoutPreview.channelCount} channels
+                {totalPreviewChannelsCount} channels
               </div>
             </div>
           </div>
@@ -1688,6 +1953,96 @@ export const ArchitectPage: React.FC = () => {
             onChange={setCustomReplaceChannels}
           />
         </div>
+      </MdDialog>
+
+      {/* Preview Category Create/Edit Modal */}
+      <MdDialog
+        open={Boolean(catEditor)}
+        onClose={() => setCatEditor(null)}
+        headline={catEditor?.mode === 'edit' ? 'Edit Category' : 'Create Category'}
+        actions={
+          <div className="flex items-center justify-between w-full gap-2">
+            <div>
+              {catEditor?.mode === 'edit' && (
+                <MdButton variant="danger" onClick={handleDeleteCategoryFromPreview}>
+                  Delete
+                </MdButton>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <MdButton variant="text" onClick={() => setCatEditor(null)}>
+                Cancel
+              </MdButton>
+              <MdButton variant="filled" disabled={!catEditorName.trim()} onClick={handleSaveCategoryModal}>
+                {catEditor?.mode === 'edit' ? 'Save Changes' : 'Create Category'}
+              </MdButton>
+            </div>
+          </div>
+        }
+      >
+        <MdTextField
+          label="Category Name"
+          value={catEditorName}
+          onChange={setCatEditorName}
+          placeholder="e.g. VIP LOUNGE"
+          required
+        />
+      </MdDialog>
+
+      {/* Preview Channel Create/Edit Modal */}
+      <MdDialog
+        open={Boolean(chEditor)}
+        onClose={() => setChEditor(null)}
+        headline={chEditor?.mode === 'edit' ? 'Edit Channel' : 'Create Channel'}
+        actions={
+          <div className="flex items-center justify-between w-full gap-2">
+            <div>
+              {chEditor?.mode === 'edit' && (
+                <MdButton variant="danger" onClick={handleDeleteChannelFromPreview}>
+                  Delete
+                </MdButton>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <MdButton variant="text" onClick={() => setChEditor(null)}>
+                Cancel
+              </MdButton>
+              <MdButton variant="filled" disabled={!chEditorName.trim()} onClick={handleSaveChannelModal}>
+                {chEditor?.mode === 'edit' ? 'Save Changes' : 'Create Channel'}
+              </MdButton>
+            </div>
+          </div>
+        }
+      >
+        <MdSelect
+          label="Channel Type"
+          value={chEditorKind}
+          onChange={(v) => setChEditorKind(v as typeof chEditorKind)}
+          options={[
+            { value: 'text', label: 'Text Channel', icon: 'tag' },
+            { value: 'readonly', label: 'Read-only Text Channel', icon: 'lock' },
+            { value: 'voice', label: 'Voice Channel', icon: 'volume_up' },
+            { value: 'jtc', label: 'Auto-Voice Hub (Join to Create)', icon: 'add_circle_outline' },
+            { value: 'stage', label: 'Stage Channel', icon: 'podcasts' },
+          ]}
+        />
+        <MdTextField
+          label="Channel Name"
+          value={chEditorName}
+          onChange={setChEditorName}
+          placeholder="e.g. general-chat"
+          required
+        />
+        <MdSelect
+          label="Category"
+          value={chEditorParentId}
+          onChange={setChEditorParentId}
+          options={customPreviewGroups.map((g) => ({
+            value: g.id,
+            label: g.category || 'Uncategorized',
+            icon: 'folder',
+          }))}
+        />
       </MdDialog>
 
       {/* Built-in Module Unselect Warning Modal */}
