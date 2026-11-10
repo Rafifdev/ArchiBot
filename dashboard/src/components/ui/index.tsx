@@ -156,15 +156,6 @@ export const MdIconButton: React.FC<MdIconButtonProps> = ({
   title,
   className = '',
 }) => {
-  const ref = useRef<any>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !onClick) return;
-    el.addEventListener('click', onClick);
-    return () => el.removeEventListener('click', onClick);
-  }, [onClick]);
-
   const Tag =
     variant === 'filled'
       ? 'md-filled-icon-button'
@@ -175,7 +166,6 @@ export const MdIconButton: React.FC<MdIconButtonProps> = ({
   return React.createElement(
     Tag,
     {
-      ref,
       disabled: disabled || undefined,
       title,
       class: className,
