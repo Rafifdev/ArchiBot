@@ -848,6 +848,9 @@ export const ArchitectPage: React.FC = () => {
   const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
   const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
+  const [pendingCoreConfirm, setPendingCoreConfirm] = useState<
+    { type: 'single'; mod: BuilderModuleItem } | { type: 'all' } | null
+  >(null);
   const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
   const [isOrderCustomized, setIsOrderCustomized] = useState(false);
   const [customCat, setCustomCat] = useState('');
@@ -1045,9 +1048,26 @@ export const ArchitectPage: React.FC = () => {
   };
 
   const toggleCoreModule = (id: string) => {
-    setSelectedCoreMods((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    if (selectedCoreMods.includes(id)) {
+      const mod = CORE_MODULES.find((m) => m.id === id);
+      if (mod) {
+        setPendingCoreConfirm({ type: 'single', mod });
+        return;
+      }
+    }
+    setSelectedCoreMods((prev) => [...prev, id]);
+  };
+
+  const handleConfirmCoreUnselect = () => {
+    if (!pendingCoreConfirm) return;
+    if (pendingCoreConfirm.type === 'all') {
+      setSelectedCoreMods([]);
+      setSelectedMods([]);
+    } else {
+      const targetId = pendingCoreConfirm.mod.id;
+      setSelectedCoreMods((prev) => prev.filter((item) => item !== targetId));
+    }
+    setPendingCoreConfirm(null);
   };
 
   const toggleFeatureModule = (id: string) => {
@@ -1282,8 +1302,11 @@ export const ArchitectPage: React.FC = () => {
                   size="sm"
                   onClick={() => {
                     if (allModulesSelected) {
-                      setSelectedCoreMods([]);
-                      setSelectedMods([]);
+                      if (selectedCoreMods.length > 0) {
+                        setPendingCoreConfirm({ type: 'all' });
+                      } else {
+                        setSelectedMods([]);
+                      }
                     } else {
                       setSelectedCoreMods(CORE_MODULES.map((m) => m.id));
                       setSelectedMods(legoModules.map((m) => m.id));
@@ -1683,6 +1706,29 @@ export const ArchitectPage: React.FC = () => {
           </div>
         )}
       </MdDialog>
+
+      {/* Built-in Module Unselect Warning Modal */}
+      <ConfirmDialog
+        open={Boolean(pendingCoreConfirm)}
+        title={
+          pendingCoreConfirm?.type === 'all'
+            ? 'Unselect Built-in Server Modules?'
+            : pendingCoreConfirm
+            ? `Unselect "${pendingCoreConfirm.mod.shortLabel || pendingCoreConfirm.mod.label}"?`
+            : 'Unselect Built-in Module?'
+        }
+        message={
+          pendingCoreConfirm?.type === 'all'
+            ? 'Clearing all modules will also remove Built-in Server Modules (Server Stats and Gateway), which manage live member counters, rules, welcome greetings, and CAPTCHA verification.'
+            : pendingCoreConfirm?.mod.id === 'server_stats'
+            ? 'Server Stats provides live voice counters for date, online members, and total members. Without it, those automatic stat channels will not be created in this layout.'
+            : 'Gateway provides essential onboarding channels including welcome greetings, rules, CAPTCHA verification, and self-role picking. Without it, new members will not see verification or onboarding channels in this layout.'
+        }
+        confirmLabel="Unselect Module"
+        danger
+        onConfirm={handleConfirmCoreUnselect}
+        onClose={() => setPendingCoreConfirm(null)}
+      />
 
       {/* Module Channel Preview Modal */}
       <MdDialog
