@@ -52,7 +52,7 @@ router.get('/:guildId/architect', verifyGuildAccess, (req, res) => {
 
 router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => {
   const guild = req.guild;
-  const { templateKey, selectedModules, customSpec, customRoles, replace, includeMusic } = req.body;
+  const { templateKey, selectedModules, customSpec, customRoles, replace, includeMusic, includeRoles } = req.body;
 
   let groups = [];
   let roles = [];
@@ -64,7 +64,7 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
       const tpl = TEMPLATES[templateKey];
       label = tpl.name || tpl.label;
       groups = parseTemplate(tpl.spec);
-      roles = tpl.roles || [];
+      roles = includeRoles === false ? [] : (tpl.roles || []);
     } else {
       isCustom = true;
       let combinedSpec = '';
@@ -108,7 +108,7 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
       roles,
       replace: Boolean(replace),
       isCustom,
-      includeMusic: Boolean(includeMusic || selectedModules?.includes('music')),
+      includeMusic: templateKey ? includeMusic !== false : Boolean(includeMusic || selectedModules?.includes('music')),
     };
 
     // Execute server architect layout asynchronously or wait

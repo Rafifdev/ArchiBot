@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
+  Badge,
   MdButton,
   MdTextField,
   ArchitectSkeleton,
@@ -11,7 +12,6 @@ import {
   PageHeader,
   SurfaceCard,
   SwitchRow,
-  StatusBadge,
   toast,
 } from '../components/ui';
 import { useServerSwitch } from '../components/layout';
@@ -35,7 +35,7 @@ const TEMPLATE_META: Record<
     icon: 'public',
   },
   games: {
-    name: 'Gaming & Esports',
+    name: 'Gaming',
     description: 'Gaming community with tournament news, 10 popular game hubs, casual & ranked voice rooms.',
     badge: 'Esports',
     tone: 'fuchsia',
@@ -65,6 +65,68 @@ const MODULE_ICONS: Record<string, string> = {
   voice_study: 'hearing_disabled',
 };
 
+interface BuildStage {
+  progress: number;
+  text: string;
+}
+
+function getTemplateBuildStages(replace: boolean, includeRoles: boolean, includeMusic: boolean): BuildStage[] {
+  const stages: BuildStage[] = [
+    { progress: 10, text: 'Initializing server architecture blueprint...' },
+    replace
+      ? { progress: 24, text: 'Clearing old categories and channels...' }
+      : { progress: 24, text: 'Scanning existing categories for safe merge...' },
+  ];
+
+  if (includeRoles) {
+    stages.push({ progress: 40, text: 'Creating server roles and permission presets...' });
+  } else {
+    stages.push({ progress: 40, text: 'Verifying member & verified role permissions...' });
+  }
+
+  stages.push(
+    { progress: 56, text: 'Provisioning information and welcome sections...' },
+    { progress: 72, text: 'Building category hierarchy and text channels...' },
+    includeMusic
+      ? { progress: 84, text: 'Setting up voice lounges and music controls...' }
+      : { progress: 84, text: 'Configuring voice rooms and channel access...' },
+    { progress: 92, text: 'Syncing channel order and finalizing server state...' }
+  );
+
+  return stages;
+}
+
+function getCustomBuildStages(replace: boolean, hasCustomCat: boolean, includeMusic: boolean): BuildStage[] {
+  const stages: BuildStage[] = [
+    { progress: 12, text: 'Compiling selected modular layout...' },
+    replace
+      ? { progress: 28, text: 'Removing old categories and channels...' }
+      : { progress: 28, text: 'Inspecting existing server layout for merge...' },
+    { progress: 46, text: 'Creating custom roles and access rules...' },
+    { progress: 64, text: 'Constructing modular categories and channels...' },
+  ];
+
+  if (hasCustomCat) {
+    stages.push({ progress: 78, text: 'Adding custom text and voice channels...' });
+  }
+  if (includeMusic) {
+    stages.push({ progress: 86, text: 'Deploying music request channel & controls...' });
+  }
+  stages.push({ progress: 93, text: 'Finalizing server synchronization...' });
+  return stages;
+}
+
+function getClearStages(keepGeneral: boolean): BuildStage[] {
+  return [
+    { progress: 15, text: 'Preparing server channel cleanup...' },
+    { progress: 42, text: 'Deleting existing categories and text channels...' },
+    { progress: 68, text: 'Removing voice rooms and leftover hubs...' },
+    keepGeneral
+      ? { progress: 88, text: 'Creating fresh #general fallback channel...' }
+      : { progress: 88, text: 'Finishing empty server reset...' },
+  ];
+}
+
 function stripLeadingEmoji(text?: string): string {
   if (!text) return '';
   return text.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D]+\s*/u, '').trim() || text;
@@ -80,17 +142,46 @@ export const ArchitectPage: React.FC = () => {
   const { registerServerFetch } = useServerSwitch();
   const [executing, setExecuting] = useState(false);
 
-  const [replaceChannels, setReplaceChannels] = useState(false);
+  // Preview & Apply Template Modal state
   const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
+  const [applyModalTemplate, setApplyModalTemplate] = useState<any | null>(null);
+  const [applyReplace, setApplyReplace] = useState(false);
+  const [applyIncludeRoles, setApplyIncludeRoles] = useState(true);
+  const [applyIncludeMusic, setApplyIncludeMusic] = useState(true);
 
+  // Modular Builder state
+  const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
   const [customCat, setCustomCat] = useState('');
   const [customText, setCustomText] = useState('');
   const [customVoice, setCustomVoice] = useState('');
   const [customRoles, setCustomRoles] = useState('Admin, Moderator, Member, VIP');
 
+  // Reset Channels state
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [keepGeneral, setKeepGeneral] = useState(true);
+
+  // Game-style Fullscreen Blur Building Overlay state
+  const [buildOverlay, setBuildOverlay] = useState<{
+    active: boolean;
+    title: string;
+    progress: number;
+    statusText: string;
+  }>({
+    active: false,
+    title: '',
+    progress: 0,
+    statusText: '',
+  });
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -120,89 +211,167 @@ export const ArchitectPage: React.FC = () => {
     registerServerFetch(p);
   }, [guildId]);
 
-  const handleBuildTemplate = async (templateKey: string) => {
+  const openApplyModal = (tpl: any) => {
+    setPreviewTemplate(null);
+    setApplyReplace(false);
+    setApplyIncludeRoles(true);
+    setApplyIncludeMusic(true);
+    setApplyModalTemplate(tpl);
+  };
+
+  const runTrackedBuild = async (
+    title: string,
+    stages: BuildStage[],
+    completionText: string,
+    requestFn: () => Promise<{ success?: boolean; message?: string; error?: string }>
+  ) => {
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
+
+    let stageIdx = 0;
+    let currentProgress = stages[0]?.progress ?? 10;
+
     setExecuting(true);
-    try {
-      const res = await fetch(`/api/guilds/${guildId}/architect/setup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          templateKey,
-          replace: replaceChannels,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(data.message);
-        setPreviewTemplate(null);
+    setBuildOverlay({
+      active: true,
+      title,
+      progress: currentProgress,
+      statusText: stages[0]?.text ?? 'Initializing...',
+    });
+
+    progressTimerRef.current = setInterval(() => {
+      if (stageIdx < stages.length - 1) {
+        stageIdx += 1;
+        currentProgress = stages[stageIdx].progress;
+        setBuildOverlay((prev) => ({
+          ...prev,
+          progress: currentProgress,
+          statusText: stages[stageIdx].text,
+        }));
       } else {
-        toast.error(data.error || 'Failed to build template');
+        currentProgress = Math.min(96, currentProgress + 0.6);
+        setBuildOverlay((prev) => ({
+          ...prev,
+          progress: currentProgress,
+        }));
+      }
+    }, 650);
+
+    try {
+      const data = await requestFn();
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+
+      if (data.success) {
+        setBuildOverlay({
+          active: true,
+          title,
+          progress: 100,
+          statusText: completionText,
+        });
+
+        await new Promise<void>((resolve) => {
+          finishTimeoutRef.current = setTimeout(() => {
+            setBuildOverlay((prev) => ({ ...prev, active: false }));
+            resolve();
+          }, 450);
+        });
+
+        toast.success(data.message || completionText);
+      } else {
+        setBuildOverlay((prev) => ({ ...prev, active: false }));
+        toast.error(data.error || 'Operation failed');
       }
     } catch (err: any) {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
+      setBuildOverlay((prev) => ({ ...prev, active: false }));
       toast.error(`Error: ${err.message}`);
     } finally {
       setExecuting(false);
     }
+  };
+
+  const handleConfirmApplyTemplate = async () => {
+    if (!applyModalTemplate) return;
+    const tpl = applyModalTemplate;
+    setApplyModalTemplate(null);
+
+    await runTrackedBuild(
+      `Building "${tpl.displayName}"`,
+      getTemplateBuildStages(applyReplace, applyIncludeRoles, applyIncludeMusic),
+      `Template "${tpl.displayName}" applied cleanly!`,
+      async () => {
+        const res = await fetch(`/api/guilds/${guildId}/architect/setup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            templateKey: tpl.key,
+            replace: applyReplace,
+            includeRoles: applyIncludeRoles,
+            includeMusic: applyIncludeMusic,
+          }),
+        });
+        return res.json();
+      }
+    );
   };
 
   const handleBuildLego = async () => {
-    setExecuting(true);
-    try {
-      let customSpec = '';
-      if (customCat.trim()) {
-        customSpec = `[${customCat.trim()}]\n`;
-        if (customText.trim()) {
-          customText.split(',').forEach((c) => (customSpec += `💬・${c.trim()}\n`));
-        }
-        if (customVoice.trim()) {
-          customVoice.split(',').forEach((v) => (customSpec += `voice: 🔊 ${v.trim()}\n`));
-        }
+    let customSpec = '';
+    if (customCat.trim()) {
+      customSpec = `[${customCat.trim()}]\n`;
+      if (customText.trim()) {
+        customText.split(',').forEach((c) => (customSpec += `💬・${c.trim()}\n`));
       }
-
-      const res = await fetch(`/api/guilds/${guildId}/architect/setup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          selectedModules: selectedMods,
-          customSpec,
-          customRoles,
-          replace: replaceChannels,
-          includeMusic: selectedMods.includes('music'),
-        }),
-      });
-      const data = await res.json();
-      if (data.success) toast.success(data.message);
-      else toast.error(data.error || 'Failed to build custom layout');
-    } catch (err: any) {
-      toast.error(`Error: ${err.message}`);
-    } finally {
-      setExecuting(false);
+      if (customVoice.trim()) {
+        customVoice.split(',').forEach((v) => (customSpec += `voice: 🔊 ${v.trim()}\n`));
+      }
     }
+
+    await runTrackedBuild(
+      'Building Custom Server Layout',
+      getCustomBuildStages(customReplaceChannels, Boolean(customCat.trim()), selectedMods.includes('music')),
+      'Custom server layout built successfully!',
+      async () => {
+        const res = await fetch(`/api/guilds/${guildId}/architect/setup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            selectedModules: selectedMods,
+            customSpec,
+            customRoles,
+            replace: customReplaceChannels,
+            includeMusic: selectedMods.includes('music'),
+          }),
+        });
+        return res.json();
+      }
+    );
   };
 
   const handleClearServer = async () => {
-    setExecuting(true);
-    try {
-      const res = await fetch(`/api/guilds/${guildId}/architect/clear`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ keepFreshGeneral: keepGeneral }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('All old channels cleared successfully.');
-        setClearDialogOpen(false);
-      } else {
-        toast.error(data.error || 'Failed to clear channels');
+    setClearDialogOpen(false);
+    await runTrackedBuild(
+      'Resetting Server Channels',
+      getClearStages(keepGeneral),
+      'All old channels cleared successfully.',
+      async () => {
+        const res = await fetch(`/api/guilds/${guildId}/architect/clear`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ keepFreshGeneral: keepGeneral }),
+        });
+        return res.json();
       }
-    } catch (err: any) {
-      toast.error(`Error: ${err.message}`);
-    } finally {
-      setExecuting(false);
-    }
+    );
   };
 
   if (loading && templates.length === 0 && legoModules.length === 0) return <ArchitectSkeleton />;
@@ -225,22 +394,6 @@ export const ArchitectPage: React.FC = () => {
         ]}
       />
 
-      {(tabIndex === 0 || tabIndex === 1) && (
-        <SurfaceCard className="p-4">
-          <SwitchRow
-            label={replaceChannels ? 'Replace Existing Channels' : 'Merge with Existing Channels'}
-            description={
-              replaceChannels
-                ? 'Deletes all existing categories and channels before deploying the new layout.'
-                : 'Adds new categories and channels while keeping your existing server structure intact.'
-            }
-            checked={replaceChannels}
-            onChange={setReplaceChannels}
-            danger={replaceChannels}
-          />
-        </SurfaceCard>
-      )}
-
       {tabIndex === 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {templates.map((tpl) => {
@@ -253,6 +406,7 @@ export const ArchitectPage: React.FC = () => {
             };
             const displayName = tpl.name || meta.name;
             const displayDesc = tpl.description || meta.description;
+            const enrichedTpl = { ...tpl, displayName, displayDesc, meta };
 
             return (
               <SurfaceCard
@@ -270,8 +424,8 @@ export const ArchitectPage: React.FC = () => {
                         {displayName}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                        <StatusBadge label="Preset" tone="green" variant="soft" />
-                        <StatusBadge label={meta.badge} tone={meta.tone} variant="soft" />
+                        <Badge label="Preset" tone="green" />
+                        <Badge label={meta.badge} tone={meta.tone} />
                       </div>
                     </div>
                   </div>
@@ -295,16 +449,17 @@ export const ArchitectPage: React.FC = () => {
                     size="md"
                     className="flex-1"
                     disabled={executing}
-                    onClick={() => handleBuildTemplate(tpl.key)}
+                    onClick={() => openApplyModal(enrichedTpl)}
                   >
-                    {executing ? 'Building...' : 'Apply Template'}
+                    Apply Template
                   </MdButton>
                   {tpl.specPreview && (
                     <MdButton
                       variant="tonal"
                       size="md"
                       icon="visibility"
-                      onClick={() => setPreviewTemplate({ ...tpl, displayName })}
+                      disabled={executing}
+                      onClick={() => setPreviewTemplate(enrichedTpl)}
                     >
                       Preview
                     </MdButton>
@@ -327,7 +482,7 @@ export const ArchitectPage: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <StatusBadge label={`${selectedMods.length} Selected`} tone="blurple" variant="soft" />
+                <Badge label={`${selectedMods.length} Selected`} tone="blurple" />
                 <MdButton
                   variant="text"
                   size="sm"
@@ -382,10 +537,9 @@ export const ArchitectPage: React.FC = () => {
                             {cleanTitle}
                           </div>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <StatusBadge
+                            <Badge
                               label={isSelected ? 'Selected' : 'Optional'}
                               tone={isSelected ? 'blurple' : 'neutral'}
-                              variant="soft"
                             />
                           </div>
                         </div>
@@ -454,14 +608,27 @@ export const ArchitectPage: React.FC = () => {
               placeholder="Admin, Moderator, Member, VIP"
             />
 
+            <SwitchRow
+              boxed
+              label={customReplaceChannels ? 'Replace Existing Channels' : 'Merge with Existing Channels'}
+              description={
+                customReplaceChannels
+                  ? 'Deletes all existing categories and channels before building this layout.'
+                  : 'Adds new categories and channels while keeping your existing server structure intact.'
+              }
+              checked={customReplaceChannels}
+              onChange={setCustomReplaceChannels}
+              danger={customReplaceChannels}
+            />
+
             <div className="pt-3.5 border-t border-discord-border flex justify-end">
               <MdButton
-                variant="filled"
+                variant={customReplaceChannels ? 'danger' : 'filled'}
                 icon="construction"
                 onClick={handleBuildLego}
                 disabled={executing || (selectedMods.length === 0 && !customCat.trim())}
               >
-                {executing ? 'Building Layout...' : `Build Custom Layout (${selectedMods.length} Modules)`}
+                Build Custom Layout ({selectedMods.length} Modules)
               </MdButton>
             </div>
           </SurfaceCard>
@@ -479,7 +646,7 @@ export const ArchitectPage: React.FC = () => {
                 Reset All Server Channels
               </div>
               <div className="flex items-center gap-1.5 mt-1.5">
-                <StatusBadge label="Destructive Action" tone="red" variant="soft" />
+                <Badge label="Destructive Action" tone="red" />
               </div>
             </div>
           </div>
@@ -520,6 +687,127 @@ export const ArchitectPage: React.FC = () => {
         </SurfaceCard>
       )}
 
+      {/* Apply Template Options Modal */}
+      <MdDialog
+        open={Boolean(applyModalTemplate)}
+        onClose={() => setApplyModalTemplate(null)}
+        headline={applyModalTemplate ? `Apply "${applyModalTemplate.displayName}"` : 'Apply Template'}
+        actions={
+          <>
+            <MdButton variant="text" onClick={() => setApplyModalTemplate(null)}>
+              Cancel
+            </MdButton>
+            {applyModalTemplate && (
+              <MdButton
+                variant={applyReplace ? 'danger' : 'filled'}
+                icon={applyReplace ? 'delete_sweep' : 'bolt'}
+                disabled={executing}
+                onClick={handleConfirmApplyTemplate}
+              >
+                {applyReplace ? 'Replace & Apply Template' : 'Apply Template'}
+              </MdButton>
+            )}
+          </>
+        }
+      >
+        {applyModalTemplate && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-discord-surface border border-discord-border">
+              <div className="w-10 h-10 rounded-lg bg-discord-blurple text-white flex items-center justify-center shrink-0">
+                <MdIcon name={applyModalTemplate.meta?.icon || 'forum'} className="text-xl" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-normal text-discord-white truncate">
+                  {applyModalTemplate.displayName}
+                </div>
+                <div className="text-xs text-discord-muted font-normal mt-0.5">
+                  {applyModalTemplate.categoryCount} categories • {applyModalTemplate.channelCount} channels •{' '}
+                  {applyModalTemplate.rolesCount} roles
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-normal text-discord-white">Channel Deployment Mode</div>
+
+              <button
+                type="button"
+                onClick={() => setApplyReplace(false)}
+                className={`w-full text-left p-3.5 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${
+                  !applyReplace
+                    ? 'border-discord-blurple bg-discord-blurple/8'
+                    : 'border-discord-border bg-discord-surface hover:border-discord-border-hover'
+                }`}
+              >
+                <MdIcon
+                  name={!applyReplace ? 'radio_button_checked' : 'radio_button_unchecked'}
+                  className={`text-lg mt-0.5 shrink-0 ${
+                    !applyReplace ? 'text-discord-blurple' : 'text-discord-muted'
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-xs font-normal text-discord-white">
+                      Merge with Existing Channels
+                    </span>
+                    <Badge label="Recommended" tone="green" />
+                  </div>
+                  <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+                    Adds the template&apos;s categories and channels while keeping your existing server channels intact.
+                  </p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setApplyReplace(true)}
+                className={`w-full text-left p-3.5 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${
+                  applyReplace
+                    ? 'border-discord-red bg-discord-red/8'
+                    : 'border-discord-border bg-discord-surface hover:border-discord-border-hover'
+                }`}
+              >
+                <MdIcon
+                  name={applyReplace ? 'radio_button_checked' : 'radio_button_unchecked'}
+                  className={`text-lg mt-0.5 shrink-0 ${
+                    applyReplace ? 'text-discord-red' : 'text-discord-muted'
+                  }`}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-xs font-normal text-discord-white">
+                      Replace Existing Channels
+                    </span>
+                    <Badge label="Destructive" tone="red" />
+                  </div>
+                  <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+                    Permanently deletes all current categories and channels first, then generates this layout from scratch.
+                  </p>
+                </div>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="text-xs font-normal text-discord-white">Additional Setup Options</div>
+              <SwitchRow
+                boxed
+                label="Create Template Roles"
+                description="Automatically create and configure preset roles included in this template."
+                checked={applyIncludeRoles}
+                onChange={setApplyIncludeRoles}
+              />
+              <SwitchRow
+                boxed
+                label="Include Music Channel & Controls"
+                description="Add a dedicated music request channel with interactive player buttons."
+                checked={applyIncludeMusic}
+                onChange={setApplyIncludeMusic}
+              />
+            </div>
+          </div>
+        )}
+      </MdDialog>
+
       {/* Template Structure Preview Modal */}
       <MdDialog
         open={Boolean(previewTemplate)}
@@ -534,9 +822,9 @@ export const ArchitectPage: React.FC = () => {
               <MdButton
                 variant="filled"
                 disabled={executing}
-                onClick={() => handleBuildTemplate(previewTemplate.key)}
+                onClick={() => openApplyModal(previewTemplate)}
               >
-                {executing ? 'Building...' : 'Apply Template'}
+                Apply Template
               </MdButton>
             )}
           </>
@@ -557,6 +845,38 @@ export const ArchitectPage: React.FC = () => {
           </div>
         )}
       </MdDialog>
+
+      {/* Fullscreen Blur & Game-Style Progression Loading Overlay (Template Builder Only) */}
+      <div
+        aria-hidden={!buildOverlay.active}
+        className={`fixed inset-0 z-[100] w-screen h-screen flex items-center justify-center p-6 transition-all duration-300 ease-out ${
+          buildOverlay.active
+            ? 'opacity-100 backdrop-blur-md bg-discord-canvas/60 pointer-events-auto'
+            : 'opacity-0 backdrop-blur-none bg-transparent pointer-events-none'
+        }`}
+      >
+        <div className="w-full max-w-md flex flex-col items-center text-center gap-5 select-none">
+          <md-circular-progress indeterminate class="scale-125" />
+
+          <div className="w-full flex flex-col gap-2.5">
+            <div className="text-sm font-normal text-discord-white">
+              {buildOverlay.title}
+            </div>
+
+            <md-linear-progress
+              value={Math.min(1, Math.max(0, buildOverlay.progress / 100))}
+              class="w-full rounded-full overflow-hidden"
+            />
+
+            <div className="flex items-center justify-between gap-3 text-xs font-normal text-discord-muted">
+              <span className="truncate">{buildOverlay.statusText}</span>
+              <span className="shrink-0 tabular-nums text-discord-white">
+                {Math.round(buildOverlay.progress)}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

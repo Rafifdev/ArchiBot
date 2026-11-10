@@ -2235,7 +2235,7 @@ async function executeSetup(guild, { userId, label, groups, roles, replace, isCu
   let fallbackText = null;
   const createdJtcNames = [];
   const gatedOverwrites = buildGatedCategoryOverwrites(guild, verifiedRole?.id);
-  const shouldCreateMusic = !isCustom || Boolean(includeMusic);
+  const shouldCreateMusic = isCustom ? Boolean(includeMusic) : includeMusic !== false;
 
   let musicInsertIdx = groups.length;
   while (

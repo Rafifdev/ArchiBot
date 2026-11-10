@@ -16,6 +16,7 @@ import '@material/web/select/select-option.js';
 import '@material/web/switch/switch.js';
 import '@material/web/slider/slider.js';
 import '@material/web/progress/circular-progress.js';
+import '@material/web/progress/linear-progress.js';
 import '@material/web/divider/divider.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
