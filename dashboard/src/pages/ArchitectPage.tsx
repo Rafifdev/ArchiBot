@@ -706,7 +706,6 @@ export const ArchitectPage: React.FC = () => {
   const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
   const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
-  const [previewExpanded, setPreviewExpanded] = useState(false);
   const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
   const [isOrderCustomized, setIsOrderCustomized] = useState(false);
   const [customCat, setCustomCat] = useState('');
@@ -1199,24 +1198,22 @@ export const ArchitectPage: React.FC = () => {
             </div>
           </SurfaceCard>
 
-          {/* Selected Modules & Channels Live Preview Section */}
-          <SurfaceCard className="p-4 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-discord-border">
-              <div>
-                <h3 className="text-sm font-normal text-discord-white">Selected Layout Preview</h3>
-                <p className="text-xs text-discord-muted font-normal mt-0.5">
-                  Live overview of the selected modules, categories, and channels that will be created on your server.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs text-discord-muted font-normal">
+          {/* Selected Modules & Channels Live Preview Section (Collapsible via Reusable SurfaceCard) */}
+          <SurfaceCard
+            collapsible
+            defaultOpen={false}
+            title="Selected Layout Preview"
+            subtitle="Live overview of the selected modules, categories, and channels that will be created on your server."
+            headerAction={
+              <div className="flex items-center gap-2.5">
+                <span className="hidden sm:inline text-xs text-discord-muted font-normal">
                   {customLayoutPreview.activeLabels.length} modules • {customPreviewGroups.length} categories •{' '}
                   {customLayoutPreview.channelCount} channels
                 </span>
                 {isOrderCustomized && (
                   <MdButton
                     variant="text"
-                    size="sm"
+                    size="xs"
                     onClick={() => {
                       setIsOrderCustomized(false);
                       setCustomPreviewGroups(customLayoutPreview.freshGroups);
@@ -1225,45 +1222,37 @@ export const ArchitectPage: React.FC = () => {
                     Reset Order
                   </MdButton>
                 )}
-                {customPreviewGroups.length > 0 && (
-                  <MdIconButton
-                    icon={previewExpanded ? 'unfold_less' : 'unfold_more'}
-                    title={previewExpanded ? 'Compact preview height' : 'Expand preview height'}
-                    className="text-discord-muted hover:text-discord-white -my-2 -mr-2 shrink-0"
-                    onClick={() => setPreviewExpanded((prev) => !prev)}
-                  />
-                )}
               </div>
+            }
+          >
+            <div className="flex flex-col gap-3.5">
+              {customLayoutPreview.activeLabels.length > 0 && (
+                <div className="text-xs text-discord-muted font-normal leading-relaxed">
+                  Selected modules:{' '}
+                  <span className="text-discord-text">
+                    {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
+                  </span>
+                </div>
+              )}
+
+              {customPreviewGroups.length > 0 ? (
+                <ChannelTreePreview
+                  groups={customPreviewGroups}
+                  onGroupsChange={(next) => {
+                    setIsOrderCustomized(true);
+                    setCustomPreviewGroups(next);
+                  }}
+                  maxHeightClass="resize-y min-h-[200px] h-80 max-h-[80vh]"
+                />
+              ) : (
+                <EmptyState
+                  icon="view_quilt"
+                  title="No modules selected"
+                  description="Select one or more built-in or activity modules above, or add a custom category below to preview your server layout."
+                  className="py-6"
+                />
+              )}
             </div>
-
-            {customLayoutPreview.activeLabels.length > 0 && (
-              <div className="text-xs text-discord-muted font-normal leading-relaxed">
-                Selected modules:{' '}
-                <span className="text-discord-text">
-                  {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
-                </span>
-              </div>
-            )}
-
-            {customPreviewGroups.length > 0 ? (
-              <ChannelTreePreview
-                groups={customPreviewGroups}
-                onGroupsChange={(next) => {
-                  setIsOrderCustomized(true);
-                  setCustomPreviewGroups(next);
-                }}
-                maxHeightClass={`resize-y min-h-[200px] max-h-[80vh] ${
-                  previewExpanded ? 'h-[540px]' : 'h-72'
-                }`}
-              />
-            ) : (
-              <EmptyState
-                icon="view_quilt"
-                title="No modules selected"
-                description="Select one or more built-in or activity modules above, or add a custom category below to preview your server layout."
-                className="py-6"
-              />
-            )}
           </SurfaceCard>
 
           <SurfaceCard className="p-4 flex flex-col gap-4">
