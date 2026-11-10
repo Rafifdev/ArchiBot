@@ -466,9 +466,9 @@ const PreviewChannelRowContent: React.FC<{
             e.stopPropagation();
             onEdit();
           }}
-          className="w-6 h-6 rounded-md flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0"
+          className="w-5 h-5 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0"
         >
-          <MdIcon name="edit" className="text-sm leading-none" />
+          <MdIcon name="edit" className="!text-[12px] leading-none" />
         </button>
       )}
     </div>
@@ -497,7 +497,7 @@ const SortablePreviewChannelRow: React.FC<{
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-move select-none ${
+      className={`relative flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text hover:bg-discord-card-hover/60 transition-colors duration-150 cursor-move select-none ${
         isDragging ? 'opacity-25' : ''
       }`}
     >
@@ -545,7 +545,7 @@ const SortablePreviewCategoryBlock: React.FC<{
           {...attributes}
           {...listeners}
           onClick={() => onToggleCollapse(group.id)}
-          className="relative flex items-center justify-between gap-2 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-pointer select-none"
+          className="relative flex items-center justify-between gap-2 px-1.5 py-1 rounded-md text-[11px] font-normal text-discord-muted hover:text-discord-text hover:bg-discord-card-hover/50 transition-colors duration-150 uppercase tracking-wider cursor-pointer select-none"
         >
           <div className="flex items-center gap-1 min-w-0">
             <MdIcon
@@ -565,9 +565,9 @@ const SortablePreviewCategoryBlock: React.FC<{
                 e.stopPropagation();
                 onEditCategory();
               }}
-              className="w-6 h-6 rounded-md flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0 shrink-0"
+              className="w-5 h-5 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0 shrink-0"
             >
-              <MdIcon name="edit" className="text-sm leading-none" />
+              <MdIcon name="edit" className="!text-[12px] leading-none" />
             </button>
           )}
           {dropPosition === 'header' && (
