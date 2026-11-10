@@ -498,7 +498,7 @@ const SortablePreviewCategoryBlock: React.FC<{
           {...attributes}
           {...listeners}
           onClick={() => onToggleCollapse(group.id)}
-          className="relative flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-move select-none"
+          className="relative flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-pointer select-none"
         >
           <MdIcon
             name="expand_more"
@@ -798,7 +798,7 @@ const ChannelTreePreview: React.FC<{
 
       <DragOverlay>
         {activeItem?.type === 'category' && activeItem.group.category ? (
-          <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-move select-none">
+          <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-pointer select-none">
             <MdIcon
               name="expand_more"
               className={`text-sm leading-none ${
@@ -1344,7 +1344,7 @@ export const ArchitectPage: React.FC = () => {
                 </span>
                 {isOrderCustomized && (
                   <MdButton
-                    variant="text"
+                    variant="tonal"
                     size="xs"
                     onClick={() => {
                       setIsOrderCustomized(false);
@@ -1547,7 +1547,7 @@ export const ArchitectPage: React.FC = () => {
                   <div className="text-xs font-normal text-discord-white">Channel Preview</div>
                   {applyOrderCustomized && (
                     <MdButton
-                      variant="text"
+                      variant="tonal"
                       size="xs"
                       onClick={() => {
                         setApplyOrderCustomized(false);
