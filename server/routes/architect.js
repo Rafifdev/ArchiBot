@@ -25,7 +25,7 @@ router.get('/:guildId/architect', verifyGuildAccess, (req, res) => {
     const channelCount = groups.reduce((acc, g) => acc + g.channels.length, 0);
     return {
       key,
-      name: tpl.name,
+      name: tpl.name || tpl.label,
       description: tpl.description,
       channelCount,
       categoryCount: groups.length,
@@ -62,7 +62,7 @@ router.post('/:guildId/architect/setup', verifyGuildAccess, async (req, res) => 
   try {
     if (templateKey && TEMPLATES[templateKey]) {
       const tpl = TEMPLATES[templateKey];
-      label = tpl.name;
+      label = tpl.name || tpl.label;
       groups = parseTemplate(tpl.spec);
       roles = tpl.roles || [];
     } else {

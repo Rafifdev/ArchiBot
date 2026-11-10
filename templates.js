@@ -147,6 +147,7 @@ export const LEGO_MODULES = [
 export const TEMPLATES = {
   general: {
     label: 'General Hangout',
+    description: 'Casual lounge with general chat, media galleries, minigames, and auto voice rooms.',
     roles: [
       { name: 'Admin', color: 0xe74c3c, admin: true },
       { name: 'Moderator', color: 0x3498db, mod: true },
@@ -187,6 +188,7 @@ voice: 💤 AFK`,
   },
   community: {
     label: 'Community Hub',
+    description: 'Creator & community hub with introductions, showcases, stage events, and hangout lounges.',
     roles: [
       { name: 'Admin', color: 0xe74c3c, admin: true },
       { name: 'Moderator', color: 0xe67e22, mod: true },
@@ -227,6 +229,7 @@ voice: 💤 AFK`,
   },
   games: {
     label: 'Gaming',
+    description: 'Gaming community with tournament news, 10 popular game hubs, casual & ranked voice rooms.',
     roles: [
       { name: 'Admin', color: 0xe74c3c, admin: true },
       { name: 'Moderator', color: 0xe67e22, mod: true },
@@ -288,6 +291,7 @@ voice: 💤 AFK`,
   },
   study: {
     label: 'Study & Projects',
+    description: 'Focused workspace with study resources, homework help, tech channels, and silent study rooms.',
     roles: [
       { name: 'Admin', color: 0xe74c3c, admin: true },
       { name: 'Mentor', color: 0x1abc9c, mod: true },
