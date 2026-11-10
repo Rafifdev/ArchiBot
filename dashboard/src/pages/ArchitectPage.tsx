@@ -813,6 +813,110 @@ const ChannelTreePreview: React.FC<{
   );
 };
 
+const ChannelDeploymentModeSelector: React.FC<{
+  replace: boolean;
+  onChange: (replace: boolean) => void;
+  mergeDescription?: string;
+  replaceDescription?: string;
+}> = ({
+  replace,
+  onChange,
+  mergeDescription = "Adds this layout's categories and channels while keeping your existing server channels intact.",
+  replaceDescription = 'Permanently deletes all current categories and channels first, then generates this layout from scratch.',
+}) => (
+  <div className="flex flex-col gap-2">
+    <div className="text-xs font-normal text-discord-white">Channel Deployment Mode</div>
+
+    <div
+      role="radiogroup"
+      aria-label="Channel Deployment Mode"
+      className="flex flex-col gap-2"
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={!replace}
+        onClick={() => onChange(false)}
+        className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center gap-3.5 select-none ${
+          !replace
+            ? 'bg-discord-active'
+            : 'bg-discord-surface hover:bg-discord-card-hover'
+        }`}
+      >
+        <md-ripple />
+        <span
+          className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
+            !replace ? 'bg-discord-blurple' : 'bg-discord-canvas/80'
+          }`}
+        >
+          <span
+            className={`rounded-full transition-all duration-150 ${
+              !replace
+                ? 'w-2 h-2 bg-white scale-100'
+                : 'w-2 h-2 bg-discord-muted/40 scale-75'
+            }`}
+          />
+        </span>
+
+        <div className="relative z-10 min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-normal text-discord-white leading-tight truncate">
+              Merge with Existing Channels
+            </span>
+            <Badge label="Recommended" tone="green" className="shrink-0" />
+          </div>
+          <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+            {mergeDescription}
+          </p>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        role="radio"
+        aria-checked={replace}
+        onClick={() => onChange(true)}
+        className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center gap-3.5 select-none ${
+          replace
+            ? 'bg-discord-red/12'
+            : 'bg-discord-surface hover:bg-discord-card-hover'
+        }`}
+      >
+        <md-ripple />
+        <span
+          className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
+            replace ? 'bg-discord-red' : 'bg-discord-canvas/80'
+          }`}
+        >
+          <span
+            className={`rounded-full transition-all duration-150 ${
+              replace
+                ? 'w-2 h-2 bg-white scale-100'
+                : 'w-2 h-2 bg-discord-muted/40 scale-75'
+            }`}
+          />
+        </span>
+
+        <div className="relative z-10 min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <span
+              className={`text-xs font-normal leading-tight truncate ${
+                replace ? 'text-discord-red' : 'text-discord-white'
+              }`}
+            >
+              Replace Existing Channels
+            </span>
+            <Badge label="Destructive" tone="red" className="shrink-0" />
+          </div>
+          <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+            {replaceDescription}
+          </p>
+        </div>
+      </button>
+    </div>
+  </div>
+);
+
 export const ArchitectPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -841,6 +945,7 @@ export const ArchitectPage: React.FC = () => {
   const [applyIncludeMusic, setApplyIncludeMusic] = useState(true);
 
   // Modular Builder state
+  const [customDeployModalOpen, setCustomDeployModalOpen] = useState(false);
   const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
   const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
   const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
@@ -1111,6 +1216,7 @@ export const ArchitectPage: React.FC = () => {
   }, [customLayoutPreview.freshGroups, isOrderCustomized]);
 
   const handleBuildLego = async () => {
+    setCustomDeployModalOpen(false);
     const fixedCategorySet = new Set(['SERVER STATS', 'GATEWAY', 'MUSIC AREA']);
     const orderedCustomSpec = serializeGroupsToSpec(customPreviewGroups, fixedCategorySet);
     const orderedCategories = customPreviewGroups
@@ -1324,15 +1430,17 @@ export const ArchitectPage: React.FC = () => {
             </div>
           </SurfaceCard>
 
-          {/* Selected Modules & Channels Live Preview Section (Collapsible via Reusable SurfaceCard) */}
-          <SurfaceCard
-            collapsible
-            defaultOpen={true}
-            title="Selected Layout Preview"
-            subtitle="Live overview of the selected modules, categories, and channels that will be created on your server."
-            headerAction={
-              <div className="flex items-center gap-2.5">
-                <span className="hidden sm:inline text-xs text-discord-muted font-normal">
+          {/* Selected Modules & Channels Live Preview Section */}
+          <SurfaceCard className="p-4 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-discord-border">
+              <div>
+                <h3 className="text-sm font-normal text-discord-white">Selected Layout Preview</h3>
+                <p className="text-xs text-discord-muted font-normal mt-0.5">
+                  Live overview of the selected modules, categories, and channels that will be created on your server.
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <span className="text-xs text-discord-muted font-normal">
                   {customLayoutPreview.activeLabels.length} modules • {customPreviewGroups.length} categories •{' '}
                   {customLayoutPreview.channelCount} channels
                 </span>
@@ -1349,60 +1457,46 @@ export const ArchitectPage: React.FC = () => {
                   </MdButton>
                 )}
               </div>
-            }
-          >
-            <div className="flex flex-col gap-3.5">
-              {customLayoutPreview.activeLabels.length > 0 && (
-                <div className="text-xs text-discord-muted font-normal leading-relaxed">
-                  Selected modules:{' '}
-                  <span className="text-discord-text">
-                    {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
-                  </span>
-                </div>
-              )}
-
-              {customPreviewGroups.length > 0 ? (
-                <ChannelTreePreview
-                  groups={customPreviewGroups}
-                  onGroupsChange={(next) => {
-                    setIsOrderCustomized(true);
-                    setCustomPreviewGroups(next);
-                  }}
-                  maxHeightClass="resize-y min-h-[200px] h-80 max-h-[80vh]"
-                />
-              ) : (
-                <EmptyState
-                  icon="view_quilt"
-                  title="No modules selected"
-                  description="Select one or more built-in or activity modules above to preview your server layout."
-                  className="py-6"
-                />
-              )}
             </div>
-          </SurfaceCard>
 
-          <SurfaceCard className="p-4 flex flex-col gap-4">
-            <SwitchRow
-              boxed
-              label={customReplaceChannels ? 'Replace Existing Channels' : 'Merge with Existing Channels'}
-              description={
-                customReplaceChannels
-                  ? 'Deletes all existing categories and channels before building this layout.'
-                  : 'Adds new categories and channels while keeping your existing server structure intact.'
-              }
-              checked={customReplaceChannels}
-              onChange={setCustomReplaceChannels}
-              danger={customReplaceChannels}
-            />
+            {customLayoutPreview.activeLabels.length > 0 && (
+              <div className="text-xs text-discord-muted font-normal leading-relaxed">
+                Selected modules:{' '}
+                <span className="text-discord-text">
+                  {customLayoutPreview.activeLabels.map((item) => item.label).join(', ')}
+                </span>
+              </div>
+            )}
+
+            {customPreviewGroups.length > 0 ? (
+              <ChannelTreePreview
+                groups={customPreviewGroups}
+                onGroupsChange={(next) => {
+                  setIsOrderCustomized(true);
+                  setCustomPreviewGroups(next);
+                }}
+                maxHeightClass="resize-y min-h-[200px] h-80 max-h-[80vh]"
+              />
+            ) : (
+              <EmptyState
+                icon="view_quilt"
+                title="No modules selected"
+                description="Select one or more built-in or activity modules above to preview your server layout."
+                className="py-6"
+              />
+            )}
 
             <div className="pt-3.5 border-t border-discord-border flex justify-end">
               <MdButton
                 variant="filled"
                 icon="construction"
-                onClick={handleBuildLego}
+                onClick={() => {
+                  setCustomReplaceChannels(false);
+                  setCustomDeployModalOpen(true);
+                }}
                 disabled={executing || totalSelectedModulesCount === 0}
               >
-                Build Custom Layout ({totalSelectedModulesCount} Modules)
+                Build Custom Layout
               </MdButton>
             </div>
           </SurfaceCard>
@@ -1526,97 +1620,11 @@ export const ArchitectPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex flex-col gap-2">
-              <div className="text-xs font-normal text-discord-white">Channel Deployment Mode</div>
-
-              <div
-                role="radiogroup"
-                aria-label="Channel Deployment Mode"
-                className="flex flex-col gap-2"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={!applyReplace}
-                  onClick={() => setApplyReplace(false)}
-                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center gap-3.5 select-none ${
-                    !applyReplace
-                      ? 'bg-discord-active'
-                      : 'bg-discord-surface hover:bg-discord-card-hover'
-                  }`}
-                >
-                  <md-ripple />
-                  <span
-                    className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
-                      !applyReplace ? 'bg-discord-blurple' : 'bg-discord-canvas/80'
-                    }`}
-                  >
-                    <span
-                      className={`rounded-full transition-all duration-150 ${
-                        !applyReplace
-                          ? 'w-2 h-2 bg-white scale-100'
-                          : 'w-2 h-2 bg-discord-muted/40 scale-75'
-                      }`}
-                    />
-                  </span>
-
-                  <div className="relative z-10 min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-xs font-normal text-discord-white leading-tight truncate">
-                        Merge with Existing Channels
-                      </span>
-                      <Badge label="Recommended" tone="green" className="shrink-0" />
-                    </div>
-                    <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
-                      Adds the template&apos;s categories and channels while keeping your existing server channels intact.
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={applyReplace}
-                  onClick={() => setApplyReplace(true)}
-                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center gap-3.5 select-none ${
-                    applyReplace
-                      ? 'bg-discord-red/12'
-                      : 'bg-discord-surface hover:bg-discord-card-hover'
-                  }`}
-                >
-                  <md-ripple />
-                  <span
-                    className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
-                      applyReplace ? 'bg-discord-red' : 'bg-discord-canvas/80'
-                    }`}
-                  >
-                    <span
-                      className={`rounded-full transition-all duration-150 ${
-                        applyReplace
-                          ? 'w-2 h-2 bg-white scale-100'
-                          : 'w-2 h-2 bg-discord-muted/40 scale-75'
-                      }`}
-                    />
-                  </span>
-
-                  <div className="relative z-10 min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <span
-                        className={`text-xs font-normal leading-tight truncate ${
-                          applyReplace ? 'text-discord-red' : 'text-discord-white'
-                        }`}
-                      >
-                        Replace Existing Channels
-                      </span>
-                      <Badge label="Destructive" tone="red" className="shrink-0" />
-                    </div>
-                    <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
-                      Permanently deletes all current categories and channels first, then generates this layout from scratch.
-                    </p>
-                  </div>
-                </button>
-              </div>
-            </div>
+            <ChannelDeploymentModeSelector
+              replace={applyReplace}
+              onChange={setApplyReplace}
+              mergeDescription="Adds the template's categories and channels while keeping your existing server channels intact."
+            />
 
             <div className="flex flex-col gap-2">
               <div className="text-xs font-normal text-discord-white">Additional Setup Options</div>
@@ -1637,6 +1645,49 @@ export const ArchitectPage: React.FC = () => {
             </div>
           </div>
         )}
+      </MdDialog>
+
+      {/* Modular Builder Deployment Validation Modal (No Preview) */}
+      <MdDialog
+        open={customDeployModalOpen}
+        onClose={() => setCustomDeployModalOpen(false)}
+        headline="Build Custom Layout"
+        actions={
+          <>
+            <MdButton variant="text" onClick={() => setCustomDeployModalOpen(false)}>
+              Cancel
+            </MdButton>
+            <MdButton
+              variant="filled"
+              disabled={executing || totalSelectedModulesCount === 0}
+              onClick={handleBuildLego}
+            >
+              Build Custom Layout
+            </MdButton>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-discord-surface">
+            <div className="w-10 h-10 rounded-lg bg-discord-blurple text-white flex items-center justify-center shrink-0">
+              <MdIcon name="view_quilt" className="text-xl" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-normal text-discord-white truncate leading-tight">
+                Custom Modular Layout
+              </div>
+              <div className="text-xs text-discord-muted font-normal mt-1">
+                {customLayoutPreview.activeLabels.length} modules • {customPreviewGroups.length} categories •{' '}
+                {customLayoutPreview.channelCount} channels
+              </div>
+            </div>
+          </div>
+
+          <ChannelDeploymentModeSelector
+            replace={customReplaceChannels}
+            onChange={setCustomReplaceChannels}
+          />
+        </div>
       </MdDialog>
 
       {/* Built-in Module Unselect Warning Modal */}
