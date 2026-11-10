@@ -995,6 +995,18 @@ const ChannelDeploymentModeSelector: React.FC<{
   </div>
 );
 
+interface ModularBuilderDraft {
+  selectedCoreMods: string[];
+  selectedMods: string[];
+  customPreviewGroups: ParsedCategoryGroup[];
+  isOrderCustomized: boolean;
+  deletedPreviewIds: string[];
+}
+
+const DEFAULT_CORE_MODS = ['server_stats', 'gateway'];
+const DEFAULT_FEATURE_MODS: string[] = [];
+const modularBuilderDrafts = new Map<string, ModularBuilderDraft>();
+
 export const ArchitectPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1022,17 +1034,31 @@ export const ArchitectPage: React.FC = () => {
   const [applyIncludeRoles, setApplyIncludeRoles] = useState(true);
   const [applyIncludeMusic, setApplyIncludeMusic] = useState(true);
 
-  // Modular Builder state
+  const draftKey = guildId || '_default';
+  const initialDraft = modularBuilderDrafts.get(draftKey);
+
+  // Modular Builder state (persisted across SPA route switches, cleared on page refresh)
   const [customDeployModalOpen, setCustomDeployModalOpen] = useState(false);
   const [customReplaceChannels, setCustomReplaceChannels] = useState(false);
-  const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(['server_stats', 'gateway']);
-  const [selectedMods, setSelectedMods] = useState<string[]>(['news', 'chat', 'voice_casual']);
+  const [selectedCoreMods, setSelectedCoreMods] = useState<string[]>(
+    () => initialDraft?.selectedCoreMods ?? DEFAULT_CORE_MODS
+  );
+  const [selectedMods, setSelectedMods] = useState<string[]>(
+    () => initialDraft?.selectedMods ?? DEFAULT_FEATURE_MODS
+  );
   const [pendingCoreConfirm, setPendingCoreConfirm] = useState<
     { type: 'single'; mod: BuilderModuleItem } | { type: 'all' } | null
   >(null);
-  const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>([]);
-  const [isOrderCustomized, setIsOrderCustomized] = useState(false);
-  const [deletedPreviewIds, setDeletedPreviewIds] = useState<Set<string>>(() => new Set());
+  const [customPreviewGroups, setCustomPreviewGroups] = useState<ParsedCategoryGroup[]>(
+    () => initialDraft?.customPreviewGroups ?? []
+  );
+  const [isOrderCustomized, setIsOrderCustomized] = useState<boolean>(
+    () => initialDraft?.isOrderCustomized ?? false
+  );
+  const [deletedPreviewIds, setDeletedPreviewIds] = useState<Set<string>>(
+    () => new Set(initialDraft?.deletedPreviewIds ?? [])
+  );
+  const hydratedDraftKeyRef = useRef<string>(draftKey);
 
   // Preview Create/Edit Category & Channel Modal state
   const [catEditor, setCatEditor] = useState<{ mode: 'create' } | { mode: 'edit'; groupId: string } | null>(null);
@@ -1083,6 +1109,34 @@ export const ArchitectPage: React.FC = () => {
     else if (idx === 2) setSearchParams({ tab: 'danger' });
     else setSearchParams({});
   };
+
+  useEffect(() => {
+    if (hydratedDraftKeyRef.current !== draftKey) {
+      hydratedDraftKeyRef.current = draftKey;
+      const saved = modularBuilderDrafts.get(draftKey);
+      setSelectedCoreMods(saved?.selectedCoreMods ?? DEFAULT_CORE_MODS);
+      setSelectedMods(saved?.selectedMods ?? DEFAULT_FEATURE_MODS);
+      setCustomPreviewGroups(saved?.customPreviewGroups ?? []);
+      setIsOrderCustomized(saved?.isOrderCustomized ?? false);
+      setDeletedPreviewIds(new Set(saved?.deletedPreviewIds ?? []));
+      return;
+    }
+
+    modularBuilderDrafts.set(draftKey, {
+      selectedCoreMods,
+      selectedMods,
+      customPreviewGroups,
+      isOrderCustomized,
+      deletedPreviewIds: Array.from(deletedPreviewIds),
+    });
+  }, [
+    draftKey,
+    selectedCoreMods,
+    selectedMods,
+    customPreviewGroups,
+    isOrderCustomized,
+    deletedPreviewIds,
+  ]);
 
   useEffect(() => {
     setLoading(true);
@@ -1299,12 +1353,13 @@ export const ArchitectPage: React.FC = () => {
   }, [selectedCoreMods, selectedMods, legoModules]);
 
   useEffect(() => {
+    if (legoModules.length === 0) return;
     setCustomPreviewGroups((prev) =>
       isOrderCustomized
         ? mergeOrderedPreviewGroups(prev, customLayoutPreview.freshGroups, deletedPreviewIds)
         : customLayoutPreview.freshGroups
     );
-  }, [customLayoutPreview.freshGroups, isOrderCustomized, deletedPreviewIds]);
+  }, [legoModules.length, customLayoutPreview.freshGroups, isOrderCustomized, deletedPreviewIds]);
 
   const totalPreviewChannelsCount = useMemo(
     () => customPreviewGroups.reduce((acc, g) => acc + g.channels.length, 0),
