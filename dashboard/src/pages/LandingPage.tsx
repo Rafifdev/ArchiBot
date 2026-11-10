@@ -2793,7 +2793,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         alignItems: 'center',
                         overflow: 'hidden',
                         position: 'relative',
-                        aspectRatio: '1120 / 920',
+                        aspectRatio: '16 / 9',
                         width: '100%',
                         border: '1px solid rgba(255, 255, 255, 0.08)',
                         boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.65)',
