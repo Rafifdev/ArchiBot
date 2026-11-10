@@ -347,8 +347,12 @@ function serializeGroupsToSpec(
   groups: ParsedCategoryGroup[],
   excludeCategoryNames?: Set<string>
 ): string {
+  const ordered = [
+    ...groups.filter((g) => !g.category),
+    ...groups.filter((g) => Boolean(g.category)),
+  ];
   const blocks: string[] = [];
-  for (const g of groups) {
+  for (const g of ordered) {
     if (g.category && excludeCategoryNames?.has(g.category.trim().toUpperCase())) continue;
     const lines: string[] = [];
     if (g.category) lines.push(`[${g.category}]`);
@@ -1409,8 +1413,7 @@ export const ArchitectPage: React.FC = () => {
   const openCreateChannelModal = () => {
     setChEditorName('');
     setChEditorKind('text');
-    const firstCat = customPreviewGroups.find((g) => g.category);
-    setChEditorParentId(firstCat?.id || '');
+    setChEditorParentId('');
     setChEditor({ mode: 'create' });
   };
 
@@ -1427,7 +1430,7 @@ export const ArchitectPage: React.FC = () => {
         ? 'readonly'
         : 'text'
     );
-    setChEditorParentId(parentGroup.id);
+    setChEditorParentId(parentGroup.category ? parentGroup.id : '');
     setChEditor({ mode: 'edit', chId: ch.id, fromGroupId: parentGroup.id });
   };
 
@@ -1438,13 +1441,42 @@ export const ArchitectPage: React.FC = () => {
     const mappedType: ParsedChannelItem['type'] =
       chEditorKind === 'readonly' ? 'text' : chEditorKind;
     const mappedReadOnly = chEditorKind === 'readonly';
-    const targetParentId = chEditorParentId || customPreviewGroups[0]?.id;
-    if (!targetParentId) {
-      toast.error('Please create a category first.');
-      return;
-    }
+    const ROOT_ID = 'cat:user:root';
+    const targetParentId = chEditorParentId || ROOT_ID;
 
     setIsOrderCustomized(true);
+
+    const upsertChannelIntoGroups = (
+      prev: ParsedCategoryGroup[],
+      item: ParsedChannelItem,
+      removeFromId?: string
+    ): ParsedCategoryGroup[] => {
+      let next = prev.map((g) => {
+        if (removeFromId && g.id === removeFromId && g.id !== targetParentId) {
+          return { ...g, channels: g.channels.filter((c) => c.id !== item.id) };
+        }
+        return g;
+      });
+
+      const targetExists = next.some((g) => g.id === targetParentId);
+      if (!targetExists && targetParentId === ROOT_ID) {
+        next = [{ id: ROOT_ID, category: null, channels: [item], edited: true }, ...next];
+      } else {
+        next = next.map((g) => {
+          if (g.id !== targetParentId) return g;
+          const existsInTarget = g.channels.some((c) => c.id === item.id);
+          return {
+            ...g,
+            channels: existsInTarget
+              ? g.channels.map((c) => (c.id === item.id ? item : c))
+              : [...g.channels, item],
+          };
+        });
+      }
+
+      return next.filter((g) => g.category !== null || g.channels.length > 0);
+    };
+
     if (chEditor.mode === 'create') {
       const newChannel: ParsedChannelItem = {
         id: `ch:user:${Date.now()}:${Math.random().toString(36).slice(2, 6)}`,
@@ -1453,11 +1485,7 @@ export const ArchitectPage: React.FC = () => {
         readOnly: mappedReadOnly,
         edited: true,
       };
-      setCustomPreviewGroups((prev) =>
-        prev.map((g) =>
-          g.id === targetParentId ? { ...g, channels: [...g.channels, newChannel] } : g
-        )
-      );
+      setCustomPreviewGroups((prev) => upsertChannelIntoGroups(prev, newChannel));
     } else {
       const updatedItem: ParsedChannelItem = {
         id: chEditor.chId,
@@ -1466,27 +1494,7 @@ export const ArchitectPage: React.FC = () => {
         readOnly: mappedReadOnly,
         edited: true,
       };
-      if (chEditor.fromGroupId === targetParentId) {
-        setCustomPreviewGroups((prev) =>
-          prev.map((g) =>
-            g.id === targetParentId
-              ? { ...g, channels: g.channels.map((c) => (c.id === chEditor.chId ? updatedItem : c)) }
-              : g
-          )
-        );
-      } else {
-        setCustomPreviewGroups((prev) =>
-          prev.map((g) => {
-            if (g.id === chEditor.fromGroupId) {
-              return { ...g, channels: g.channels.filter((c) => c.id !== chEditor.chId) };
-            }
-            if (g.id === targetParentId) {
-              return { ...g, channels: [...g.channels, updatedItem] };
-            }
-            return g;
-          })
-        );
-      }
+      setCustomPreviewGroups((prev) => upsertChannelIntoGroups(prev, updatedItem, chEditor.fromGroupId));
     }
     setChEditor(null);
   };
@@ -1497,7 +1505,9 @@ export const ArchitectPage: React.FC = () => {
     setIsOrderCustomized(true);
     setDeletedPreviewIds((prev) => new Set([...prev, targetChId]));
     setCustomPreviewGroups((prev) =>
-      prev.map((g) => ({ ...g, channels: g.channels.filter((c) => c.id !== targetChId) }))
+      prev
+        .map((g) => ({ ...g, channels: g.channels.filter((c) => c.id !== targetChId) }))
+        .filter((g) => g.category !== null || g.channels.length > 0)
     );
     setChEditor(null);
   };
@@ -1776,7 +1786,6 @@ export const ArchitectPage: React.FC = () => {
                 <MdButton
                   variant="filled"
                   size="xs"
-                  disabled={customPreviewGroups.length === 0}
                   onClick={openCreateChannelModal}
                 >
                   Create Channel
@@ -2038,7 +2047,6 @@ export const ArchitectPage: React.FC = () => {
           value={catEditorName}
           onChange={setCatEditorName}
           placeholder="e.g. VIP LOUNGE"
-          required
         />
       </MdDialog>
 
@@ -2067,6 +2075,12 @@ export const ArchitectPage: React.FC = () => {
           </div>
         }
       >
+        <MdTextField
+          label="Channel Name"
+          value={chEditorName}
+          onChange={setChEditorName}
+          placeholder="e.g. general-chat"
+        />
         <MdSelect
           label="Channel Type"
           value={chEditorKind}
@@ -2079,22 +2093,20 @@ export const ArchitectPage: React.FC = () => {
             { value: 'stage', label: 'Stage Channel', icon: 'podcasts' },
           ]}
         />
-        <MdTextField
-          label="Channel Name"
-          value={chEditorName}
-          onChange={setChEditorName}
-          placeholder="e.g. general-chat"
-          required
-        />
         <MdSelect
-          label="Category"
+          label="Parent Category"
           value={chEditorParentId}
           onChange={setChEditorParentId}
-          options={customPreviewGroups.map((g) => ({
-            value: g.id,
-            label: g.category || 'Uncategorized',
-            icon: 'folder',
-          }))}
+          options={[
+            { value: '', label: 'None (Root Level)' },
+            ...customPreviewGroups
+              .filter((g) => Boolean(g.category))
+              .map((g) => ({
+                value: g.id,
+                label: g.category!,
+                icon: 'folder',
+              })),
+          ]}
         />
       </MdDialog>
 
