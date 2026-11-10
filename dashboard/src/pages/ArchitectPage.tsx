@@ -712,15 +712,15 @@ export const ArchitectPage: React.FC = () => {
       >
         {applyModalTemplate && (
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-discord-surface border border-discord-border">
+            <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-discord-surface">
               <div className="w-10 h-10 rounded-lg bg-discord-blurple text-white flex items-center justify-center shrink-0">
                 <MdIcon name={applyModalTemplate.meta?.icon || 'forum'} className="text-xl" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-normal text-discord-white truncate">
+                <div className="text-sm font-normal text-discord-white truncate leading-tight">
                   {applyModalTemplate.displayName}
                 </div>
-                <div className="text-xs text-discord-muted font-normal mt-0.5">
+                <div className="text-xs text-discord-muted font-normal mt-1">
                   {applyModalTemplate.categoryCount} categories • {applyModalTemplate.channelCount} channels •{' '}
                   {applyModalTemplate.rolesCount} roles
                 </div>
@@ -730,61 +730,93 @@ export const ArchitectPage: React.FC = () => {
             <div className="flex flex-col gap-2">
               <div className="text-xs font-normal text-discord-white">Channel Deployment Mode</div>
 
-              <button
-                type="button"
-                onClick={() => setApplyReplace(false)}
-                className={`w-full text-left p-3.5 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${
-                  !applyReplace
-                    ? 'border-discord-blurple bg-discord-blurple/8'
-                    : 'border-discord-border bg-discord-surface hover:border-discord-border-hover'
-                }`}
+              <div
+                role="radiogroup"
+                aria-label="Channel Deployment Mode"
+                className="flex flex-col gap-2"
               >
-                <MdIcon
-                  name={!applyReplace ? 'radio_button_checked' : 'radio_button_unchecked'}
-                  className={`text-lg mt-0.5 shrink-0 ${
-                    !applyReplace ? 'text-discord-blurple' : 'text-discord-muted'
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={!applyReplace}
+                  onClick={() => setApplyReplace(false)}
+                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center justify-between gap-4 select-none ${
+                    !applyReplace
+                      ? 'bg-discord-active'
+                      : 'bg-discord-surface hover:bg-discord-card-hover'
                   }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-xs font-normal text-discord-white">
-                      Merge with Existing Channels
-                    </span>
-                    <Badge label="Recommended" tone="green" />
+                >
+                  <md-ripple />
+                  <div className="relative z-10 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-normal text-discord-white leading-tight">
+                        Merge with Existing Channels
+                      </span>
+                      <Badge label="Recommended" tone="green" />
+                    </div>
+                    <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+                      Adds the template&apos;s categories and channels while keeping your existing server channels intact.
+                    </p>
                   </div>
-                  <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
-                    Adds the template&apos;s categories and channels while keeping your existing server channels intact.
-                  </p>
-                </div>
-              </button>
 
-              <button
-                type="button"
-                onClick={() => setApplyReplace(true)}
-                className={`w-full text-left p-3.5 rounded-xl border transition-colors cursor-pointer flex items-start gap-3 ${
-                  applyReplace
-                    ? 'border-discord-red bg-discord-red/8'
-                    : 'border-discord-border bg-discord-surface hover:border-discord-border-hover'
-                }`}
-              >
-                <MdIcon
-                  name={applyReplace ? 'radio_button_checked' : 'radio_button_unchecked'}
-                  className={`text-lg mt-0.5 shrink-0 ${
-                    applyReplace ? 'text-discord-red' : 'text-discord-muted'
+                  <span
+                    className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
+                      !applyReplace ? 'bg-discord-blurple' : 'bg-discord-canvas/80'
+                    }`}
+                  >
+                    <span
+                      className={`rounded-full transition-all duration-150 ${
+                        !applyReplace
+                          ? 'w-2 h-2 bg-white scale-100'
+                          : 'w-2 h-2 bg-discord-muted/40 scale-75'
+                      }`}
+                    />
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={applyReplace}
+                  onClick={() => setApplyReplace(true)}
+                  className={`relative overflow-hidden w-full text-left p-3.5 rounded-xl border-0 outline-none transition-colors duration-150 cursor-pointer flex items-center justify-between gap-4 select-none ${
+                    applyReplace
+                      ? 'bg-discord-red/12'
+                      : 'bg-discord-surface hover:bg-discord-card-hover'
                   }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span className="text-xs font-normal text-discord-white">
-                      Replace Existing Channels
-                    </span>
-                    <Badge label="Destructive" tone="red" />
+                >
+                  <md-ripple />
+                  <div className="relative z-10 min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`text-xs font-normal leading-tight ${
+                          applyReplace ? 'text-discord-red' : 'text-discord-white'
+                        }`}
+                      >
+                        Replace Existing Channels
+                      </span>
+                      <Badge label="Destructive" tone="red" />
+                    </div>
+                    <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+                      Permanently deletes all current categories and channels first, then generates this layout from scratch.
+                    </p>
                   </div>
-                  <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
-                    Permanently deletes all current categories and channels first, then generates this layout from scratch.
-                  </p>
-                </div>
-              </button>
+
+                  <span
+                    className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors duration-150 ${
+                      applyReplace ? 'bg-discord-red' : 'bg-discord-canvas/80'
+                    }`}
+                  >
+                    <span
+                      className={`rounded-full transition-all duration-150 ${
+                        applyReplace
+                          ? 'w-2 h-2 bg-white scale-100'
+                          : 'w-2 h-2 bg-discord-muted/40 scale-75'
+                      }`}
+                    />
+                  </span>
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
