@@ -1475,23 +1475,19 @@ export const ArchitectPage: React.FC = () => {
 
       {tabIndex === 2 && (
         <SurfaceCard className="p-4 flex flex-col gap-4">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-start gap-3.5">
             <div className="w-12 h-12 rounded-lg bg-discord-red/15 text-discord-red flex items-center justify-center shrink-0">
               <MdIcon name="delete_sweep" className="text-2xl" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="text-sm font-normal text-discord-white leading-tight">
                 Reset All Server Channels
               </div>
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <Badge label="Destructive Action" tone="red" />
-              </div>
+              <p className="text-xs text-discord-muted font-normal mt-1 leading-relaxed">
+                Permanently deletes all categories, text channels, and voice rooms in this Discord server so you can start from a clean slate.
+              </p>
             </div>
           </div>
-
-          <p className="text-xs text-discord-muted font-normal leading-relaxed">
-            Permanently deletes all categories, text channels, and voice rooms in this Discord server so you can start from a clean slate.
-          </p>
 
           <SwitchRow
             boxed
