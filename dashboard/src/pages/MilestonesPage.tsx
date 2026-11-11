@@ -524,12 +524,12 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
       </SurfaceCard>
 
       {/* 3. Two-Column Section: Milestone Intervals & Goal Targets (Left) + Live Preview (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className="lg:col-span-7">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-7 flex flex-col">
           <SurfaceCard
             title="Milestone Intervals & Goal Targets"
             subtitle="Enter a recurring member interval, add specific milestone target numbers, or combine both."
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-5 h-full flex-1"
           >
             {/* Recurring Member Interval */}
             <div className="flex flex-col gap-3">
@@ -640,7 +640,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
         </div>
 
         {/* Right: Live Discord Preview (Reusing DiscordEmbedPreview Organism) */}
-        <div className="lg:col-span-5 lg:sticky lg:top-6">
+        <div className="lg:col-span-5 flex flex-col">
           <SurfaceCard
             title="Live Preview"
             subtitle={
@@ -660,7 +660,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                 }
               />
             }
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-4 h-full flex-1"
           >
             <DiscordEmbedPreview
               botName={serverInfo.botName}
@@ -689,7 +689,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
               }
             />
 
-            <div className="flex flex-col gap-2 pt-1">
+            <div className="flex flex-col gap-2 pt-1 mt-auto">
               <MdButton
                 variant="tonal"
                 icon="send"
