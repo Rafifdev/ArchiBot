@@ -1,5 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragOverEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   Badge,
   ColorPickerField,
   DiscordMark,
@@ -868,5 +886,536 @@ export const DiscordMessageComposer: React.FC<DiscordMessageComposerProps> = ({
         )}
       </div>
     </div>
+  );
+};
+
+// ============================================================================
+// REUSABLE TEMPLATE CHANNEL TREE PREVIEW (Shared by Template Builder & Backups)
+// ============================================================================
+
+export interface ParsedChannelItem {
+  id: string;
+  name: string;
+  type: 'text' | 'voice' | 'jtc' | 'stage' | 'adminvoice';
+  readOnly: boolean;
+  edited?: boolean;
+}
+
+export interface ParsedCategoryGroup {
+  id: string;
+  category: string | null;
+  channels: ParsedChannelItem[];
+  edited?: boolean;
+}
+
+export function parseTemplatePreview(spec?: string, prefix = 'tpl'): ParsedCategoryGroup[] {
+  const groups: ParsedCategoryGroup[] = [];
+  let current: ParsedCategoryGroup | null = null;
+  let catSeq = 0;
+  let chSeq = 0;
+
+  for (const raw of String(spec ?? '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    const catMatch = line.match(/^\[(.+)]$/);
+    if (catMatch) {
+      const catName = catMatch[1].trim();
+      current = {
+        id: `cat:${prefix}:${catSeq++}:${catName}`,
+        category: catName,
+        channels: [],
+      };
+      groups.push(current);
+      continue;
+    }
+
+    let ch: Omit<ParsedChannelItem, 'id'> | null = null;
+    if (/^(\+|autovoice:|auto:|jtc:)/i.test(line)) {
+      const name = line.replace(/^(\+|autovoice:|auto:|jtc:)\s*/i, '').trim();
+      if (name) ch = { name, type: 'jtc', readOnly: false };
+    } else if (/^stage:/i.test(line)) {
+      const name = line.replace(/^stage:\s*/i, '').trim();
+      if (name) ch = { name, type: 'stage', readOnly: false };
+    } else if (/^adminvoice:/i.test(line)) {
+      const name = line.replace(/^adminvoice:\s*/i, '').trim();
+      if (name) ch = { name, type: 'adminvoice', readOnly: false };
+    } else if (/^v(oice)?:/i.test(line)) {
+      const name = line.replace(/^v(oice)?:\s*/i, '').trim();
+      if (name) ch = { name, type: 'voice', readOnly: false };
+    } else if (/^(!|readonly:)/i.test(line)) {
+      const name = line.replace(/^(!|readonly:)\s*#?\s*/i, '').trim();
+      if (name) ch = { name, type: 'text', readOnly: true };
+    } else {
+      const name = line.replace(/^(text:\s*)?#*\s*/i, '').trim();
+      if (name) ch = { name, type: 'text', readOnly: false };
+    }
+
+    if (!ch) continue;
+    if (!current) {
+      current = { id: `cat:${prefix}:${catSeq++}:root`, category: null, channels: [] };
+      groups.push(current);
+    }
+    current.channels.push({
+      id: `ch:${prefix}:${chSeq++}:${ch.name}`,
+      ...ch,
+    });
+  }
+
+  return groups;
+}
+
+function getPreviewChannelIcon(ch: ParsedChannelItem): string {
+  if (ch.type === 'jtc') return 'add_circle_outline';
+  if (ch.type === 'stage') return 'podcasts';
+  if (ch.type === 'voice' || ch.type === 'adminvoice') return 'volume_up';
+  return ch.readOnly ? 'lock' : 'tag';
+}
+
+const PreviewChannelRowContent: React.FC<{
+  ch: ParsedChannelItem;
+  onEdit?: () => void;
+}> = ({ ch, onEdit }) => (
+  <>
+    <div className="flex items-center gap-2 min-w-0 flex-1">
+      <MdIcon name={getPreviewChannelIcon(ch)} className="text-sm text-discord-muted shrink-0" />
+      <span className="truncate">{ch.name}</span>
+    </div>
+    <div className="flex items-center gap-2 shrink-0">
+      {ch.readOnly && <span className="text-[10px] text-discord-muted shrink-0">Read-only</span>}
+      {onEdit && (
+        <button
+          type="button"
+          title={`Edit ${ch.name}`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="w-6 h-6 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0"
+        >
+          <MdIcon name="edit" className="!text-[16px] leading-none" />
+        </button>
+      )}
+    </div>
+  </>
+);
+
+const SortablePreviewChannelRow: React.FC<{
+  ch: ParsedChannelItem;
+  parentId: string;
+  dropPosition?: 'top' | 'bottom' | null;
+  onEdit?: () => void;
+}> = ({ ch, parentId, dropPosition, onEdit }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: ch.id,
+    data: { type: 'channel', channel: ch, parentId },
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition: transition || 'transform 180ms cubic-bezier(0.2, 0, 0, 1)',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`relative flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text hover:bg-discord-card-hover/60 transition-colors duration-150 cursor-move select-none ${
+        isDragging ? 'opacity-25' : ''
+      }`}
+    >
+      {dropPosition && (
+        <div
+          className={`absolute left-1.5 right-1.5 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10 ${
+            dropPosition === 'top' ? '-top-[1px]' : '-bottom-[1px]'
+          }`}
+        />
+      )}
+      <PreviewChannelRowContent ch={ch} onEdit={onEdit} />
+    </div>
+  );
+};
+
+const SortablePreviewCategoryBlock: React.FC<{
+  group: ParsedCategoryGroup;
+  isCollapsed: boolean;
+  onToggleCollapse: (id: string) => void;
+  onEditCategory?: () => void;
+  dropPosition?: 'top' | 'bottom' | 'header' | null;
+  children: React.ReactNode;
+}> = ({ group, isCollapsed, onToggleCollapse, onEditCategory, dropPosition, children }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: group.id,
+    data: { type: 'category', group },
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Translate.toString(transform),
+    transition: transition || 'transform 180ms cubic-bezier(0.2, 0, 0, 1)',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative flex flex-col gap-0.5 ${isDragging ? 'opacity-30' : ''}`}
+    >
+      {dropPosition === 'top' && (
+        <div className="absolute -top-1.5 left-1 right-1 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
+      )}
+      {group.category && (
+        <div
+          {...attributes}
+          {...listeners}
+          onClick={() => onToggleCollapse(group.id)}
+          className="relative flex items-center justify-between gap-2 px-1.5 py-1 rounded-md text-[11px] font-normal text-discord-muted hover:text-discord-text hover:bg-discord-card-hover/50 transition-colors duration-150 uppercase tracking-wider cursor-pointer select-none"
+        >
+          <div className="flex items-center gap-1 min-w-0">
+            <MdIcon
+              name="expand_more"
+              className={`text-sm leading-none transition-transform duration-150 ${
+                isCollapsed ? '-rotate-90' : ''
+              }`}
+            />
+            <span className="truncate">{group.category}</span>
+          </div>
+          {onEditCategory && (
+            <button
+              type="button"
+              title={`Edit ${group.category}`}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditCategory();
+              }}
+              className="w-6 h-6 rounded flex items-center justify-center text-discord-muted hover:text-discord-white hover:bg-discord-card-hover transition-colors cursor-pointer bg-transparent border-0 p-0 shrink-0"
+            >
+              <MdIcon name="edit" className="!text-[16px] leading-none" />
+            </button>
+          )}
+          {dropPosition === 'header' && (
+            <div className="absolute bottom-0 left-1.5 right-1.5 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
+          )}
+        </div>
+      )}
+      {!isCollapsed && (
+        <SortableContext items={group.channels.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-0.5 min-h-[4px]">{children}</div>
+        </SortableContext>
+      )}
+      {dropPosition === 'bottom' && (
+        <div className="absolute -bottom-1.5 left-1 right-1 h-[1.5px] bg-discord-blurple rounded-full pointer-events-none z-10" />
+      )}
+    </div>
+  );
+};
+
+export interface ChannelTreePreviewProps {
+  spec?: string;
+  groups?: ParsedCategoryGroup[];
+  onGroupsChange?: (nextGroups: ParsedCategoryGroup[]) => void;
+  onEditCategory?: (group: ParsedCategoryGroup) => void;
+  onEditChannel?: (ch: ParsedChannelItem, parentGroup: ParsedCategoryGroup) => void;
+  maxHeightClass?: string;
+}
+
+export const ChannelTreePreview: React.FC<ChannelTreePreviewProps> = ({
+  spec,
+  groups: controlledGroups,
+  onGroupsChange,
+  onEditCategory,
+  onEditChannel,
+  maxHeightClass = 'max-h-44',
+}) => {
+  const groups = useMemo(
+    () => controlledGroups ?? parseTemplatePreview(spec),
+    [controlledGroups, spec]
+  );
+
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(() => new Set());
+  const [activeItem, setActiveItem] = useState<
+    | { type: 'category'; group: ParsedCategoryGroup }
+    | { type: 'channel'; channel: ParsedChannelItem }
+    | null
+  >(null);
+  const [dropIndicator, setDropIndicator] = useState<{
+    id: string;
+    type: 'category' | 'channel';
+    position: 'top' | 'bottom' | 'header';
+  } | null>(null);
+
+  const toggleCollapse = (id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
+  if (groups.length === 0) return null;
+
+  if (!onGroupsChange) {
+    return (
+      <div
+        className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
+      >
+        {groups.map((group) => {
+          const isCollapsed = collapsedIds.has(group.id);
+          return (
+            <div key={group.id} className="flex flex-col gap-0.5">
+              {group.category && (
+                <button
+                  type="button"
+                  onClick={() => toggleCollapse(group.id)}
+                  className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider text-left cursor-pointer select-none bg-transparent border-0"
+                >
+                  <MdIcon
+                    name="expand_more"
+                    className={`text-sm leading-none transition-transform duration-150 ${
+                      isCollapsed ? '-rotate-90' : ''
+                    }`}
+                  />
+                  <span className="truncate">{group.category}</span>
+                </button>
+              )}
+              {!isCollapsed && (
+                <div className="flex flex-col gap-0.5">
+                  {group.channels.map((ch) => (
+                    <div
+                      key={ch.id}
+                      className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text"
+                    >
+                      <PreviewChannelRowContent ch={ch} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  const findContainerById = (id: string) => {
+    const directCat = groups.find((g) => g.id === id);
+    if (directCat) return directCat.id;
+    const ownerCat = groups.find((g) => g.channels.some((c) => c.id === id));
+    return ownerCat?.id ?? null;
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const data = event.active.data.current;
+    setDropIndicator(null);
+    if (data?.type === 'category') {
+      setActiveItem({ type: 'category', group: data.group });
+    } else if (data?.type === 'channel') {
+      setActiveItem({ type: 'channel', channel: data.channel });
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) {
+      setDropIndicator(null);
+      return;
+    }
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    if (activeId === overId) {
+      setDropIndicator(null);
+      return;
+    }
+
+    const activeType = active.data.current?.type;
+    if (activeType === 'category') {
+      const oldIdx = groups.findIndex((g) => g.id === activeId);
+      const targetCatId = findContainerById(overId);
+      const newIdx = targetCatId ? groups.findIndex((g) => g.id === targetCatId) : -1;
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx && targetCatId) {
+        setDropIndicator({
+          id: targetCatId,
+          type: 'category',
+          position: oldIdx < newIdx ? 'bottom' : 'top',
+        });
+      } else {
+        setDropIndicator(null);
+      }
+      return;
+    }
+
+    if (activeType !== 'channel') return;
+
+    const activeContainer = findContainerById(activeId);
+    const overContainer = findContainerById(overId);
+    if (!activeContainer || !overContainer) {
+      setDropIndicator(null);
+      return;
+    }
+
+    if (activeContainer === overContainer) {
+      const cat = groups.find((g) => g.id === activeContainer);
+      if (!cat) return;
+      if (overId === activeContainer) {
+        setDropIndicator({ id: overContainer, type: 'category', position: 'header' });
+        return;
+      }
+      const oldIdx = cat.channels.findIndex((c) => c.id === activeId);
+      const newIdx = cat.channels.findIndex((c) => c.id === overId);
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        setDropIndicator({
+          id: overId,
+          type: 'channel',
+          position: oldIdx < newIdx ? 'bottom' : 'top',
+        });
+      }
+      return;
+    }
+
+    const sourceCatIdx = groups.findIndex((g) => g.id === activeContainer);
+    const targetCatIdx = groups.findIndex((g) => g.id === overContainer);
+    if (sourceCatIdx === -1 || targetCatIdx === -1) return;
+
+    const sourceChannels = [...groups[sourceCatIdx].channels];
+    const targetChannels = [...groups[targetCatIdx].channels];
+    const movingIdx = sourceChannels.findIndex((c) => c.id === activeId);
+    if (movingIdx === -1) return;
+
+    const [movingItem] = sourceChannels.splice(movingIdx, 1);
+    const overChIdx = targetChannels.findIndex((c) => c.id === overId);
+    const insertIdx = overChIdx >= 0 ? overChIdx : targetChannels.length;
+    targetChannels.splice(insertIdx, 0, movingItem);
+
+    if (overChIdx >= 0) {
+      setDropIndicator({ id: overId, type: 'channel', position: 'top' });
+    } else {
+      setDropIndicator({ id: overContainer, type: 'category', position: 'header' });
+    }
+
+    const nextGroups = groups.map((g, idx) => {
+      if (idx === sourceCatIdx) return { ...g, channels: sourceChannels };
+      if (idx === targetCatIdx) return { ...g, channels: targetChannels };
+      return g;
+    });
+    onGroupsChange(nextGroups);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveItem(null);
+    setDropIndicator(null);
+    if (!over || active.id === over.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const activeType = active.data.current?.type;
+
+    if (activeType === 'category') {
+      const oldIdx = groups.findIndex((g) => g.id === activeId);
+      const targetCatId = findContainerById(overId);
+      const newIdx = targetCatId ? groups.findIndex((g) => g.id === targetCatId) : -1;
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        onGroupsChange(arrayMove(groups, oldIdx, newIdx));
+      }
+      return;
+    }
+
+    if (activeType === 'channel') {
+      const catId = findContainerById(activeId);
+      const overCatId = findContainerById(overId);
+      if (!catId || catId !== overCatId) return;
+
+      const catIdx = groups.findIndex((g) => g.id === catId);
+      if (catIdx === -1) return;
+
+      const oldIdx = groups[catIdx].channels.findIndex((c) => c.id === activeId);
+      const newIdx = groups[catIdx].channels.findIndex((c) => c.id === overId);
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        const nextGroups = groups.map((g, idx) =>
+          idx === catIdx ? { ...g, channels: arrayMove(g.channels, oldIdx, newIdx) } : g
+        );
+        onGroupsChange(nextGroups);
+      }
+    }
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragCancel={() => {
+        setActiveItem(null);
+        setDropIndicator(null);
+      }}
+      onDragEnd={handleDragEnd}
+    >
+      <div
+        className={`p-3 rounded-xl bg-discord-surface ${maxHeightClass} overflow-y-auto scrollbar-thin flex flex-col gap-3`}
+      >
+        <SortableContext items={groups.map((g) => g.id)} strategy={verticalListSortingStrategy}>
+          {groups.map((group) => (
+            <SortablePreviewCategoryBlock
+              key={group.id}
+              group={group}
+              isCollapsed={collapsedIds.has(group.id)}
+              onToggleCollapse={toggleCollapse}
+              onEditCategory={onEditCategory ? () => onEditCategory(group) : undefined}
+              dropPosition={
+                dropIndicator?.type === 'category' && dropIndicator.id === group.id
+                  ? dropIndicator.position
+                  : null
+              }
+            >
+              {group.channels.map((ch) => (
+                <SortablePreviewChannelRow
+                  key={ch.id}
+                  ch={ch}
+                  parentId={group.id}
+                  onEdit={onEditChannel ? () => onEditChannel(ch, group) : undefined}
+                  dropPosition={
+                    dropIndicator?.type === 'channel' &&
+                    dropIndicator.id === ch.id &&
+                    (dropIndicator.position === 'top' || dropIndicator.position === 'bottom')
+                      ? dropIndicator.position
+                      : null
+                  }
+                />
+              ))}
+            </SortablePreviewCategoryBlock>
+          ))}
+        </SortableContext>
+      </div>
+
+      <DragOverlay>
+        {activeItem?.type === 'category' && activeItem.group.category ? (
+          <div className="flex items-center gap-1 px-1.5 pb-1 text-[11px] font-normal text-discord-muted uppercase tracking-wider cursor-pointer select-none">
+            <MdIcon
+              name="expand_more"
+              className={`text-sm leading-none ${
+                collapsedIds.has(activeItem.group.id) ? '-rotate-90' : ''
+              }`}
+            />
+            <span className="truncate">{activeItem.group.category}</span>
+          </div>
+        ) : activeItem?.type === 'channel' ? (
+          <div className="flex items-center justify-between gap-2 px-2 py-1 rounded-md text-xs font-normal text-discord-text cursor-move select-none">
+            <PreviewChannelRowContent ch={activeItem.channel} />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };

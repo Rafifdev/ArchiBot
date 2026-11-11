@@ -1,21 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
+  Badge,
   MdButton,
-  MdTextField,
-  MdIconButton,
-  BackupsSkeleton,
   MdIcon,
-  MdDialog,
+  MdIconButton,
+  MdTextField,
+} from '../components/atoms';
+import {
+  BackupsSkeleton,
   ConfirmDialog,
+  EmptyState,
+  MdDialog,
   PageHeader,
   SurfaceCard,
   SwitchRow,
-  EmptyState,
   toast,
-} from '../components/ui';
+} from '../components/molecules';
+import {
+  ChannelTreePreview,
+  parseTemplatePreview,
+} from '../components/organisms';
+import { useServerSwitch } from '../components/templates';
 import { BackupItem } from '../types/api';
-import { useServerSwitch } from '../components/layout';
 
 export const BackupsPage: React.FC = () => {
   const { guildId } = useParams<{ guildId: string }>();
@@ -28,6 +35,9 @@ export const BackupsPage: React.FC = () => {
   const [snapshotName, setSnapshotName] = useState('');
   const [snapshotLoading, setSnapshotLoading] = useState(false);
 
+  // Preview Structure Modal (Matches Template Builder Structure Preview Modal)
+  const [previewBackup, setPreviewBackup] = useState<BackupItem | null>(null);
+
   // Restore Modal
   const [restoreBackup, setRestoreBackup] = useState<BackupItem | null>(null);
   const [replaceMode, setReplaceMode] = useState(false);
@@ -36,9 +46,11 @@ export const BackupsPage: React.FC = () => {
   // Import Modal
   const [importOpen, setImportOpen] = useState(false);
   const [importJson, setImportJson] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
 
   // Delete Confirm
   const [deleteBackup, setDeleteBackup] = useState<BackupItem | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchBackups = () => {
     setLoading(true);
@@ -56,6 +68,13 @@ export const BackupsPage: React.FC = () => {
   useEffect(() => {
     fetchBackups();
   }, [guildId]);
+
+  const previewCategoryCount = useMemo(() => {
+    if (!previewBackup) return 0;
+    return parseTemplatePreview(previewBackup.spec || previewBackup.specPreview).filter((g) =>
+      Boolean(g.category)
+    ).length;
+  }, [previewBackup]);
 
   const handleTakeSnapshot = async () => {
     setSnapshotLoading(true);
@@ -107,6 +126,7 @@ export const BackupsPage: React.FC = () => {
   };
 
   const handleImport = async () => {
+    setImportLoading(true);
     try {
       const parsed = JSON.parse(importJson);
       const res = await fetch(`/api/guilds/${guildId}/backups/import`, {
@@ -125,7 +145,9 @@ export const BackupsPage: React.FC = () => {
         toast.error(data.error || 'Import failed');
       }
     } catch (err: any) {
-      alert(`Invalid JSON format: ${err.message}`);
+      toast.error(`Invalid JSON format: ${err.message}`);
+    } finally {
+      setImportLoading(false);
     }
   };
 
@@ -151,6 +173,7 @@ export const BackupsPage: React.FC = () => {
 
   const handleDelete = async () => {
     if (!deleteBackup) return;
+    setDeleteLoading(true);
     try {
       const res = await fetch(`/api/guilds/${guildId}/backups/${deleteBackup.slug}`, {
         method: 'DELETE',
@@ -159,19 +182,22 @@ export const BackupsPage: React.FC = () => {
       const data = await res.json();
       if (data.success) {
         setDeleteBackup(null);
+        toast.success('Snapshot deleted successfully.');
         fetchBackups();
       } else {
-        alert(data.error || 'Delete failed');
+        toast.error(data.error || 'Delete failed');
       }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
   if (loading && backups.length === 0) return <BackupsSkeleton />;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full pb-16">
       <PageHeader
         category="CHANNELS & TEMPLATES"
         title="Saved Templates & Layout Backups"
@@ -188,63 +214,160 @@ export const BackupsPage: React.FC = () => {
         }
       />
 
-      <SurfaceCard>
-        <h3 className="text-xs font-normal text-discord-white mb-4">Saved Snapshots ({backups.length})</h3>
-
-        {backups.length === 0 ? (
+      {backups.length === 0 ? (
+        <SurfaceCard
+          title="Saved Snapshots (0)"
+          subtitle="Create a snapshot or import an exported JSON layout to reuse server structures anytime."
+        >
           <EmptyState
             icon="inventory_2"
+            title="No saved templates or backups yet"
             description={
               <>
-                No saved layouts yet. Click &ldquo;Take Snapshot Now&rdquo; or run{' '}
-                <code className="text-discord-text bg-discord-surface px-1.5 py-0.5 rounded text-xs">/backup save</code> on
-                Discord.
+                Click &ldquo;Take Snapshot Now&rdquo; above or run{' '}
+                <code className="text-discord-text bg-discord-surface px-1.5 py-0.5 rounded text-xs">
+                  /backup save
+                </code>{' '}
+                on Discord.
               </>
             }
+            action={
+              <MdButton variant="filled" icon="add_a_photo" onClick={() => setSnapshotOpen(true)}>
+                Take Snapshot Now
+              </MdButton>
+            }
           />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {backups.map((b) => (
-              <div
+        </SurfaceCard>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+          {backups.map((b) => {
+            const specText = b.spec || b.specPreview;
+            const categoryCount = parseTemplatePreview(specText).filter((g) =>
+              Boolean(g.category)
+            ).length;
+
+            return (
+              <SurfaceCard
                 key={b.slug}
-                className="flex flex-col justify-between p-4 rounded-lg bg-discord-surface border border-discord-border gap-3"
+                className="flex flex-col justify-between gap-4 h-full transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[var(--md-elevation-card-hover)]"
               >
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div className="text-xs font-normal text-discord-white">{b.label}</div>
-                    <MdIconButton icon="delete" onClick={() => setDeleteBackup(b)} title="Delete snapshot" />
-                  </div>
-                  <div className="text-xs text-discord-muted font-normal mt-0.5">
-                    Saved: {b.updatedAt ? new Date(b.updatedAt).toLocaleString() : 'N/A'}
+                <div className="flex flex-col gap-3.5 min-w-0">
+                  {/* Card Header (Matches Template Builder card style) */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-discord-blurple text-white flex items-center justify-center shrink-0 shadow-xs">
+                        <MdIcon name="inventory_2" className="text-xl" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-normal text-discord-white truncate leading-tight">
+                          {b.label}
+                        </div>
+                        <div className="text-xs font-normal text-discord-muted mt-0.5 truncate">
+                          {b.updatedAt ? new Date(b.updatedAt).toLocaleString() : 'Saved layout'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-0.5 shrink-0 -mr-1.5 -mt-1">
+                      <MdIconButton
+                        icon="download"
+                        onClick={() => handleDownload(b)}
+                        title="Download JSON File"
+                      />
+                      <MdIconButton
+                        icon="delete"
+                        onClick={() => setDeleteBackup(b)}
+                        title="Delete snapshot"
+                        className="text-discord-muted hover:text-discord-red"
+                      />
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3.5 mt-2.5 text-xs font-normal text-discord-text">
-                    <span className="flex items-center gap-1.5">
-                      <MdIcon name="tag" className="text-base text-discord-muted" />
-                      {b.channelCount} Channels
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MdIcon name="shield_person" className="text-base text-discord-muted" />
-                      {b.rolesCount} Roles
-                    </span>
+                  {/* Metadata Badges */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge label={`${categoryCount} Categories`} tone="blurple" />
+                    <Badge label={`${b.channelCount} Channels`} tone="green" />
+                    <Badge label={`${b.rolesCount} Roles`} tone="neutral" />
                   </div>
 
-                  <div className="mt-2.5 p-2.5 rounded-md bg-discord-canvas border border-discord-border text-xs font-mono max-h-24 overflow-y-auto whitespace-pre-wrap text-discord-muted">
-                    {b.specPreview}
-                  </div>
+                  {/* Embedded Template Builder Channel Tree Preview */}
+                  {specText ? (
+                    <ChannelTreePreview spec={specText} maxHeightClass="h-44 max-h-44" />
+                  ) : (
+                    <div className="p-3 rounded-xl bg-discord-surface h-44 flex items-center justify-center text-xs font-normal text-discord-muted">
+                      No channels in this snapshot
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2 pt-2.5 border-t border-discord-border">
-                  <MdButton variant="filled" icon="restore" onClick={() => setRestoreBackup(b)} className="flex-1">
+                {/* Card Footer Actions */}
+                <div className="pt-3.5 border-t border-discord-border flex items-center gap-2">
+                  <MdButton
+                    variant="filled"
+                    icon="restore"
+                    onClick={() => setRestoreBackup(b)}
+                    className="flex-1"
+                  >
                     Restore Layout
                   </MdButton>
-                  <MdIconButton icon="download" onClick={() => handleDownload(b)} title="Download JSON File" />
+                  {specText && (
+                    <MdButton
+                      variant="tonal"
+                      icon="visibility"
+                      onClick={() => setPreviewBackup(b)}
+                    >
+                      Preview
+                    </MdButton>
+                  )}
                 </div>
-              </div>
-            ))}
+              </SurfaceCard>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Template Structure Preview Modal (Matches ArchitectPage Structure Preview Modal) */}
+      <MdDialog
+        open={Boolean(previewBackup)}
+        onClose={() => setPreviewBackup(null)}
+        headline={previewBackup ? `${previewBackup.label} Structure` : 'Template Structure'}
+        actions={
+          <>
+            <MdButton variant="text" onClick={() => setPreviewBackup(null)}>
+              Close
+            </MdButton>
+            {previewBackup && (
+              <MdButton
+                variant="filled"
+                icon="restore"
+                onClick={() => {
+                  const target = previewBackup;
+                  setPreviewBackup(null);
+                  setRestoreBackup(target);
+                }}
+              >
+                Restore Layout
+              </MdButton>
+            )}
+          </>
+        }
+      >
+        {previewBackup && (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 text-xs text-discord-muted font-normal">
+              <span>{previewCategoryCount} categories</span>
+              <span>•</span>
+              <span>{previewBackup.channelCount} channels</span>
+              <span>•</span>
+              <span>{previewBackup.rolesCount} roles</span>
+            </div>
+            <ChannelTreePreview
+              spec={previewBackup.spec || previewBackup.specPreview}
+              maxHeightClass="min-h-[360px] max-h-[58vh]"
+            />
           </div>
         )}
-      </SurfaceCard>
+      </MdDialog>
 
       {/* Snapshot Modal */}
       <MdDialog
@@ -262,9 +385,9 @@ export const BackupsPage: React.FC = () => {
           </>
         }
       >
-        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
+        <p className="text-xs text-discord-muted font-normal leading-relaxed">
           This will serialize all current categories, channels, permissions, and roles into a reusable layout backup.
-        </div>
+        </p>
         <MdTextField
           label="Snapshot Name"
           value={snapshotName}
@@ -289,13 +412,17 @@ export const BackupsPage: React.FC = () => {
           </>
         }
       >
-        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
+        <p className="text-xs text-discord-muted font-normal leading-relaxed">
           Choose how ArchiBot should apply the saved channels to this server:
-        </div>
+        </p>
         <SwitchRow
           boxed
           label={replaceMode ? 'Replace Mode (Delete Old Channels)' : 'Merge Mode (Keep Existing)'}
-          description={replaceMode ? 'Wipes existing channels first' : 'Creates missing channels and preserves current ones'}
+          description={
+            replaceMode
+              ? 'Wipes existing channels first'
+              : 'Creates missing channels and preserves current ones'
+          }
           checked={replaceMode}
           onChange={setReplaceMode}
           danger={replaceMode}
@@ -312,15 +439,19 @@ export const BackupsPage: React.FC = () => {
             <MdButton variant="text" onClick={() => setImportOpen(false)}>
               Cancel
             </MdButton>
-            <MdButton variant="filled" onClick={handleImport} disabled={!importJson.trim()}>
-              Import Backup
+            <MdButton
+              variant="filled"
+              onClick={handleImport}
+              disabled={importLoading || !importJson.trim()}
+            >
+              {importLoading ? 'Importing...' : 'Import Backup'}
             </MdButton>
           </>
         }
       >
-        <div className="p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border text-xs text-discord-muted font-normal leading-relaxed">
+        <p className="text-xs text-discord-muted font-normal leading-relaxed">
           Paste the contents of an exported ArchiBot backup JSON file below:
-        </div>
+        </p>
         <MdTextField
           label="JSON Content"
           value={importJson}
@@ -338,6 +469,7 @@ export const BackupsPage: React.FC = () => {
         message={`Are you sure you want to delete "${deleteBackup?.label}"?`}
         confirmLabel="Delete"
         danger
+        loading={deleteLoading}
         onConfirm={handleDelete}
         onClose={() => setDeleteBackup(null)}
       />
