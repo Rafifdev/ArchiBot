@@ -45,6 +45,89 @@ const ArrowUpRightSvg: React.FC = () => (
   </svg>
 );
 
+interface FeatureSlide {
+  label: string;
+  darkSrc: string;
+  lightSrc: string;
+  alt: string;
+}
+
+const FeatureScreenshotViewer: React.FC<{
+  slides: FeatureSlide[];
+  resolvedTheme: 'dark' | 'light';
+}> = ({ slides, resolvedTheme }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const current = slides[activeIndex] || slides[0];
+  const src = resolvedTheme === 'dark' ? current.darkSrc : current.lightSrc;
+
+  return (
+    <div className="feature-media-stack">
+      {slides.length > 1 && (
+        <div className="feature-slide-bar">
+          <div className="feature-slide-tabs" role="tablist">
+            {slides.map((slide, idx) => (
+              <button
+                key={slide.label}
+                type="button"
+                role="tab"
+                aria-selected={idx === activeIndex}
+                className={`feature-slide-tab ${idx === activeIndex ? 'active' : ''}`}
+                onClick={() => setActiveIndex(idx)}
+              >
+                {slide.label}
+              </button>
+            ))}
+          </div>
+          <div className="feature-slide-nav">
+            <button
+              type="button"
+              className="feature-slide-arrow"
+              aria-label="Previous screenshot"
+              onClick={() => setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                chevron_left
+              </span>
+            </button>
+            <button
+              type="button"
+              className="feature-slide-arrow"
+              aria-label="Next screenshot"
+              onClick={() => setActiveIndex((prev) => (prev + 1) % slides.length)}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                chevron_right
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="feature-media"
+        style={{
+          background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
+          border:
+            resolvedTheme === 'dark'
+              ? '1px solid rgba(255, 255, 255, 0.08)'
+              : '1px solid rgba(15, 23, 42, 0.1)',
+          boxShadow:
+            resolvedTheme === 'dark'
+              ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
+              : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
+        }}
+      >
+        <img
+          src={src}
+          alt={current.alt}
+          loading="lazy"
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
+      </div>
+    </div>
+  );
+};
+
 /* ==========================================================================
    Theme Mode Options (Dark / Light / Auto)
    ========================================================================== */
@@ -2664,43 +2747,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   </div>
 
                   <div className="grid-col col-xs-4 col-sm-8 col-md-7 col-md-offset-1">
-                    <div
-                      className="feature-media"
-                      style={{
-                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
-                        padding: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        width: '100%',
-                        border:
-                          resolvedTheme === 'dark'
-                            ? '1px solid rgba(255, 255, 255, 0.08)'
-                            : '1px solid rgba(15, 23, 42, 0.1)',
-                        boxShadow:
-                          resolvedTheme === 'dark'
-                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
-                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
-                      }}
-                    >
-                      <img
-                        src={
-                          resolvedTheme === 'dark'
-                            ? '/screenshots/feature-architect-dark.png'
-                            : '/screenshots/feature-architect-light.png'
-                        }
-                        alt={isID ? 'Pratinjau Template & Modular Channel Builder' : 'Template & Modular Channel Builder Preview'}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                        }}
-                      />
-                    </div>
+                    <FeatureScreenshotViewer
+                      resolvedTheme={resolvedTheme}
+                      slides={[
+                        {
+                          label: isID ? '1. Modul & Template' : '1. Modules & Templates',
+                          darkSrc: '/screenshots/feature-architect-dark.png',
+                          lightSrc: '/screenshots/feature-architect-light.png',
+                          alt: isID
+                            ? 'Pratinjau Pilihan Modul & Template Builder'
+                            : 'Template & Modular Channel Builder Preview',
+                        },
+                        {
+                          label: isID ? '2. Pratinjau Layout' : '2. Layout Preview',
+                          darkSrc: '/screenshots/feature-architect-2-dark.png',
+                          lightSrc: '/screenshots/feature-architect-2-light.png',
+                          alt: isID
+                            ? 'Pratinjau Struktur Channel & Kategori Terpilih'
+                            : 'Selected Layout Preview',
+                        },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
@@ -2727,43 +2794,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   </div>
 
                   <div className="grid-col col-xs-4 col-sm-8 col-md-7 col-md-offset-1">
-                    <div
-                      className="feature-media"
-                      style={{
-                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
-                        padding: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        width: '100%',
-                        border:
-                          resolvedTheme === 'dark'
-                            ? '1px solid rgba(255, 255, 255, 0.08)'
-                            : '1px solid rgba(15, 23, 42, 0.1)',
-                        boxShadow:
-                          resolvedTheme === 'dark'
-                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
-                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
-                      }}
-                    >
-                      <img
-                        src={
-                          resolvedTheme === 'dark'
-                            ? '/screenshots/feature-channels-dark.png'
-                            : '/screenshots/feature-channels-light.png'
-                        }
-                        alt={isID ? 'Pratinjau Manajemen Channels & Categories' : 'Precision Channels & Categories Studio Preview'}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                        }}
-                      />
-                    </div>
+                    <FeatureScreenshotViewer
+                      resolvedTheme={resolvedTheme}
+                      slides={[
+                        {
+                          label: 'Channels & Categories',
+                          darkSrc: '/screenshots/feature-channels-dark.png',
+                          lightSrc: '/screenshots/feature-channels-light.png',
+                          alt: isID
+                            ? 'Pratinjau Manajemen Channels & Categories'
+                            : 'Precision Channels & Categories Studio Preview',
+                        },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
@@ -2790,43 +2833,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   </div>
 
                   <div className="grid-col col-xs-4 col-sm-8 col-md-7 col-md-offset-1">
-                    <div
-                      className="feature-media"
-                      style={{
-                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
-                        padding: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        width: '100%',
-                        border:
-                          resolvedTheme === 'dark'
-                            ? '1px solid rgba(255, 255, 255, 0.08)'
-                            : '1px solid rgba(15, 23, 42, 0.1)',
-                        boxShadow:
-                          resolvedTheme === 'dark'
-                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
-                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
-                      }}
-                    >
-                      <img
-                        src={
-                          resolvedTheme === 'dark'
-                            ? '/screenshots/feature-welcome-dark.png'
-                            : '/screenshots/feature-welcome-light.png'
-                        }
-                        alt={isID ? 'Pratinjau Welcome Message Studio' : 'Welcome Message & Card Studio Preview'}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                        }}
-                      />
-                    </div>
+                    <FeatureScreenshotViewer
+                      resolvedTheme={resolvedTheme}
+                      slides={[
+                        {
+                          label: '1. Welcome Card',
+                          darkSrc: '/screenshots/feature-welcome-dark.png',
+                          lightSrc: '/screenshots/feature-welcome-light.png',
+                          alt: isID
+                            ? 'Pratinjau Welcomer System & Welcome Card'
+                            : 'Welcome Card & Auto-Roles Preview',
+                        },
+                        {
+                          label: '2. Welcome Message',
+                          darkSrc: '/screenshots/feature-welcome-2-dark.png',
+                          lightSrc: '/screenshots/feature-welcome-2-light.png',
+                          alt: isID
+                            ? 'Pratinjau Pengaturan Welcome Message & Onboarding'
+                            : 'Welcome Message Composer Preview',
+                        },
+                        {
+                          label: '3. Welcome DM',
+                          darkSrc: '/screenshots/feature-welcome-3-dark.png',
+                          lightSrc: '/screenshots/feature-welcome-3-light.png',
+                          alt: isID
+                            ? 'Pratinjau Pengaturan Welcome DM'
+                            : 'Welcome DM Composer Preview',
+                        },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
@@ -2859,43 +2894,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   </div>
 
                   <div className="grid-col col-xs-4 col-sm-8 col-md-7 col-md-offset-1">
-                    <div
-                      className="feature-media"
-                      style={{
-                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
-                        padding: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        overflow: 'hidden',
-                        position: 'relative',
-                        width: '100%',
-                        border:
-                          resolvedTheme === 'dark'
-                            ? '1px solid rgba(255, 255, 255, 0.08)'
-                            : '1px solid rgba(15, 23, 42, 0.1)',
-                        boxShadow:
-                          resolvedTheme === 'dark'
-                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
-                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
-                      }}
-                    >
-                      <img
-                        src={
-                          resolvedTheme === 'dark'
-                            ? '/screenshots/feature-milestones-dark.png'
-                            : '/screenshots/feature-milestones-light.png'
-                        }
-                        alt={isID ? 'Pratinjau Member Milestones' : 'Member Milestones Preview'}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                        }}
-                      />
-                    </div>
+                    <FeatureScreenshotViewer
+                      resolvedTheme={resolvedTheme}
+                      slides={[
+                        {
+                          label: 'Member Milestones',
+                          darkSrc: '/screenshots/feature-milestones-dark.png',
+                          lightSrc: '/screenshots/feature-milestones-light.png',
+                          alt: isID
+                            ? 'Pratinjau Member Milestones'
+                            : 'Member Milestones Preview',
+                        },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>
