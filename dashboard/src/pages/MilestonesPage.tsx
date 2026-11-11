@@ -4,6 +4,7 @@ import {
   MdButton,
   MdChip,
   MdDivider,
+  MdIcon,
   MdSelect,
   MdSwitch,
   MdTextField,
@@ -268,6 +269,52 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     return `Next recurring checkpoints from ${serverInfo.memberCount.toLocaleString()} members: ${nextSteps}…`;
   }, [milestoneEvery, serverInfo.memberCount]);
 
+  const kpiCards = useMemo(
+    () => [
+      {
+        label: 'Current Members',
+        icon: 'groups',
+        value: progressStats.count.toLocaleString(),
+        subtext: serverInfo.serverName,
+      },
+      {
+        label: 'Next Milestone',
+        icon: 'flag',
+        value:
+          progressStats.next !== null
+            ? `${progressStats.next.toLocaleString()} Members`
+            : 'No Goal Set',
+        subtext: `${parsedGoals.length} custom ${parsedGoals.length === 1 ? 'target' : 'targets'}`,
+      },
+      {
+        label: 'Remaining to Goal',
+        icon: 'trending_up',
+        value:
+          progressStats.remaining !== null
+            ? `${progressStats.remaining.toLocaleString()} to go`
+            : '—',
+        subtext:
+          milestoneEvery > 0
+            ? `Every ${milestoneEvery.toLocaleString()} members`
+            : 'Custom goals only',
+      },
+      {
+        label: 'Reward Role',
+        icon: 'workspace_premium',
+        value: selectedRole ? `@${selectedRole.name}` : 'None',
+        subtext: selectedChannel ? `Channel: #${selectedChannel.name}` : 'No channel selected',
+      },
+    ],
+    [
+      progressStats,
+      serverInfo.serverName,
+      parsedGoals.length,
+      milestoneEvery,
+      selectedRole,
+      selectedChannel,
+    ]
+  );
+
   if (loading && channels.length === 0 && roles.length === 0) {
     return <SettingsSkeleton />;
   }
@@ -421,7 +468,31 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
         description="Celebrate server growth automatically with milestone announcements, custom goal targets, and member reward roles."
       />
 
-      {/* 1. Milestone System (Matches WelcomePage & SettingsPage SurfaceCard pattern) */}
+      {/* 1. Top 4 KPI Summary Cards (Matches GiveawaysPage SurfaceCard pattern) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpiCards.map((kpi) => (
+          <SurfaceCard key={kpi.label} className="flex flex-col justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-discord-surface border border-discord-border flex items-center justify-center text-discord-muted shrink-0">
+                <MdIcon name={kpi.icon} className="text-lg text-discord-muted" />
+              </div>
+              <span className="text-xs font-normal text-discord-muted truncate">
+                {kpi.label}
+              </span>
+            </div>
+
+            <div className="text-xl font-normal text-discord-white mt-3.5 tracking-tight truncate">
+              {kpi.value}
+            </div>
+
+            <div className="text-xs font-normal text-discord-muted mt-1 truncate">
+              {kpi.subtext}
+            </div>
+          </SurfaceCard>
+        ))}
+      </div>
+
+      {/* 2. Milestone System (Matches WelcomePage & SettingsPage SurfaceCard pattern) */}
       <SurfaceCard
         title="Milestone System"
         subtitle="Enable automatic milestone celebrations, select an announcement channel, and assign a reward role to the milestone member."
@@ -452,184 +523,191 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
         </p>
       </SurfaceCard>
 
-      {/* 2. Milestone Intervals & Goal Targets (Manual Inputs + Reusable MdChip List) */}
-      <SurfaceCard
-        title="Milestone Intervals & Goal Targets"
-        subtitle="Enter a recurring member interval, add specific milestone target numbers, or combine both."
-        className="flex flex-col gap-5"
-      >
-        {/* Recurring Member Interval */}
-        <div className="flex flex-col gap-3">
-          <SwitchRow
-            label="Recurring Member Interval"
-            description="Celebrate automatically every time your server grows by a custom number of members."
-            checked={milestoneEvery > 0}
-            onChange={handleToggleRecurringInterval}
-          />
-
-          {milestoneEvery > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-              <MdTextField
-                label="Celebrate Every (Members)"
-                value={milestoneEvery}
-                debounceMs={250}
-                onChange={handleIntervalInputChange}
-                placeholder="50"
-                type="number"
-                supportingText={intervalSupportingText}
-              />
-            </div>
-          )}
-        </div>
-
-        <MdDivider />
-
-        {/* Specific Milestone Goals */}
-        <div className="flex flex-col gap-3.5">
-          <div className="flex items-center justify-between text-xs font-normal">
-            <div>
-              <div className="text-xs font-normal text-discord-white">Specific Milestone Goals</div>
-              <div className="text-xs font-normal text-discord-muted mt-0.5">
-                Enter a target member count (or multiple numbers separated by commas) to add custom milestone goals.
-              </div>
-            </div>
-            <span className="text-discord-muted shrink-0">
-              {parsedGoals.length} {parsedGoals.length === 1 ? 'target' : 'targets'}
-            </span>
-          </div>
-
-          <form
-            onSubmit={handleAddGoal}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !(e.nativeEvent as KeyboardEvent).isComposing) {
-                e.preventDefault();
-                handleAddGoal();
-              }
-            }}
-            className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3"
+      {/* 3. Two-Column Section: Milestone Intervals & Goal Targets (Left) + Live Preview (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-7">
+          <SurfaceCard
+            title="Milestone Intervals & Goal Targets"
+            subtitle="Enter a recurring member interval, add specific milestone target numbers, or combine both."
+            className="flex flex-col gap-5"
           >
-            <div className="flex-1">
-              <MdTextField
-                label="Add Target Member Count"
-                value={newGoalInput}
-                onChange={(val) => {
-                  setNewGoalInput(val);
-                  if (goalInputError) setGoalInputError('');
-                }}
-                placeholder="e.g. 100 or 100, 250, 500, 1000"
-                supportingText={goalInputError || undefined}
+            {/* Recurring Member Interval */}
+            <div className="flex flex-col gap-3">
+              <SwitchRow
+                label="Recurring Member Interval"
+                description="Celebrate automatically every time your server grows by a custom number of members."
+                checked={milestoneEvery > 0}
+                onChange={handleToggleRecurringInterval}
               />
-            </div>
-            <div className="flex items-center gap-2 sm:pt-2">
-              <MdButton
-                type="submit"
-                variant="tonal"
-                icon="add"
-                disabled={!newGoalInput.trim()}
-              >
-                Add Target
-              </MdButton>
-              {parsedGoals.length > 0 && (
-                <MdButton
-                  variant="text"
-                  onClick={() => updateGoalsFromArray([])}
-                >
-                  Clear All
-                </MdButton>
+
+              {milestoneEvery > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  <MdTextField
+                    label="Celebrate Every (Members)"
+                    value={milestoneEvery}
+                    debounceMs={250}
+                    onChange={handleIntervalInputChange}
+                    placeholder="50"
+                    type="number"
+                    supportingText={intervalSupportingText}
+                  />
+                </div>
               )}
             </div>
-          </form>
 
-          {parsedGoals.length === 0 ? (
-            <EmptyState
-              icon="flag"
-              title="No milestone targets yet"
-              description="Enter a member count above and click Add Target to create your custom milestone goals."
-            />
-          ) : (
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              {parsedGoals.map((goal) => {
-                const reached = serverInfo.memberCount >= goal;
-                return (
-                  <MdChip
-                    key={goal}
-                    variant="assist"
-                    icon={reached ? 'check_circle' : 'close'}
-                    label={`${goal.toLocaleString()} members`}
-                    onClick={() => handleRemoveGoal(goal)}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </SurfaceCard>
+            <MdDivider />
 
-      {/* 3. Live Discord Preview (Reusing DiscordEmbedPreview Organism) */}
-      <SurfaceCard
-        title="Live Preview"
-        subtitle={
-          selectedChannel
-            ? `Previewing milestone announcement in #${selectedChannel.name} (${serverInfo.memberCount.toLocaleString()} current members).`
-            : 'Preview how ArchiBot announces milestones in Discord.'
-        }
-        headerAction={
-          <StatusBadge
-            size="xs"
-            variant="soft"
-            tone={progressStats.next !== null ? 'blurple' : 'neutral'}
-            label={
-              progressStats.next !== null
-                ? `Next: ${progressStats.next.toLocaleString()} (${progressStats.remaining?.toLocaleString()} left)`
-                : 'No upcoming goal'
-            }
-          />
-        }
-        className="flex flex-col gap-4"
-      >
-        <DiscordEmbedPreview
-          botName={serverInfo.botName}
-          botAvatar={serverInfo.botAvatar}
-          content={`🎉 @${previewUsername}`}
-          embed={{
-            color: '#F1C40F',
-            title: '🏆 Community Milestone Reached!',
-            description: previewEmbedDescription,
-            thumbnailUrl: previewAvatarUrl,
-          }}
-          embedBannerSlot={
-            <div className="relative w-full h-28 rounded-md bg-[#181920] border-2 border-[#F1C40F] overflow-hidden flex flex-col items-center justify-center select-none">
-              <div className="absolute inset-1.5 border border-[#786214] pointer-events-none" />
-              <div className="text-[10px] font-mono tracking-[0.22em] text-[#F1C40F] uppercase">
-                COMMUNITY MILESTONE
+            {/* Specific Milestone Goals */}
+            <div className="flex flex-col gap-3.5">
+              <div className="flex items-center justify-between text-xs font-normal">
+                <div>
+                  <div className="text-xs font-normal text-discord-white">Specific Milestone Goals</div>
+                  <div className="text-xs font-normal text-discord-muted mt-0.5">
+                    Enter a target member count (or multiple numbers separated by commas) to add custom milestone goals.
+                  </div>
+                </div>
+                <span className="text-discord-muted shrink-0">
+                  {parsedGoals.length} {parsedGoals.length === 1 ? 'target' : 'targets'}
+                </span>
               </div>
-              <div
-                className="text-lg font-mono tracking-wider text-white mt-1"
-                style={{ textShadow: '2px 2px 0px #825F0A' }}
+
+              <form
+                onSubmit={handleAddGoal}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                    e.preventDefault();
+                    handleAddGoal();
+                  }
+                }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3"
               >
-                {progressStats.sampleCount.toLocaleString()} MEMBERS
-              </div>
-              <div className="w-24 h-0.5 bg-[#F1C40F] mt-2" />
-            </div>
-          }
-        />
+                <div className="flex-1">
+                  <MdTextField
+                    label="Add Target Member Count"
+                    value={newGoalInput}
+                    onChange={(val) => {
+                      setNewGoalInput(val);
+                      if (goalInputError) setGoalInputError('');
+                    }}
+                    placeholder="e.g. 100 or 100, 250, 500, 1000"
+                    supportingText={goalInputError || undefined}
+                  />
+                </div>
+                <div className="flex items-center gap-2 sm:pt-2">
+                  <MdButton
+                    type="submit"
+                    variant="tonal"
+                    icon="add"
+                    disabled={!newGoalInput.trim()}
+                  >
+                    Add Target
+                  </MdButton>
+                  {parsedGoals.length > 0 && (
+                    <MdButton
+                      variant="text"
+                      onClick={() => updateGoalsFromArray([])}
+                    >
+                      Clear All
+                    </MdButton>
+                  )}
+                </div>
+              </form>
 
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <span className="text-xs font-normal text-discord-muted">
-            {milestoneChannelId
-              ? `Sends a sample milestone card to #${selectedChannel?.name || 'selected channel'}.`
-              : 'Select an announcement channel above to send a test card.'}
-          </span>
-          <MdButton
-            variant="tonal"
-            icon="send"
-            onClick={handleTestMilestone}
-            disabled={testingMilestone || !milestoneChannelId}
-          >
-            {testingMilestone ? 'Sending Test...' : 'Send Test'}
-          </MdButton>
+              {parsedGoals.length === 0 ? (
+                <EmptyState
+                  icon="flag"
+                  title="No milestone targets yet"
+                  description="Enter a member count above and click Add Target to create your custom milestone goals."
+                />
+              ) : (
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {parsedGoals.map((goal) => {
+                    const reached = serverInfo.memberCount >= goal;
+                    return (
+                      <MdChip
+                        key={goal}
+                        variant="assist"
+                        icon={reached ? 'check_circle' : 'close'}
+                        label={`${goal.toLocaleString()} members`}
+                        onClick={() => handleRemoveGoal(goal)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </SurfaceCard>
         </div>
-      </SurfaceCard>
+
+        {/* Right: Live Discord Preview (Reusing DiscordEmbedPreview Organism) */}
+        <div className="lg:col-span-5 lg:sticky lg:top-6">
+          <SurfaceCard
+            title="Live Preview"
+            subtitle={
+              selectedChannel
+                ? `Previewing milestone announcement in #${selectedChannel.name}`
+                : 'Preview how ArchiBot announces milestones in Discord.'
+            }
+            headerAction={
+              <StatusBadge
+                size="xs"
+                variant="soft"
+                tone={progressStats.next !== null ? 'blurple' : 'neutral'}
+                label={
+                  progressStats.next !== null
+                    ? `Next: ${progressStats.next.toLocaleString()}`
+                    : 'No upcoming goal'
+                }
+              />
+            }
+            className="flex flex-col gap-4"
+          >
+            <DiscordEmbedPreview
+              botName={serverInfo.botName}
+              botAvatar={serverInfo.botAvatar}
+              content={`🎉 @${previewUsername}`}
+              embed={{
+                color: '#F1C40F',
+                title: '🏆 Community Milestone Reached!',
+                description: previewEmbedDescription,
+                thumbnailUrl: previewAvatarUrl,
+              }}
+              embedBannerSlot={
+                <div className="relative w-full h-28 rounded-md bg-[#181920] border-2 border-[#F1C40F] overflow-hidden flex flex-col items-center justify-center select-none">
+                  <div className="absolute inset-1.5 border border-[#786214] pointer-events-none" />
+                  <div className="text-[10px] font-mono tracking-[0.22em] text-[#F1C40F] uppercase">
+                    COMMUNITY MILESTONE
+                  </div>
+                  <div
+                    className="text-lg font-mono tracking-wider text-white mt-1"
+                    style={{ textShadow: '2px 2px 0px #825F0A' }}
+                  >
+                    {progressStats.sampleCount.toLocaleString()} MEMBERS
+                  </div>
+                  <div className="w-24 h-0.5 bg-[#F1C40F] mt-2" />
+                </div>
+              }
+            />
+
+            <div className="flex flex-col gap-2 pt-1">
+              <MdButton
+                variant="tonal"
+                icon="send"
+                onClick={handleTestMilestone}
+                disabled={testingMilestone || !milestoneChannelId}
+                className="w-full"
+              >
+                {testingMilestone ? 'Sending Test...' : 'Send Test'}
+              </MdButton>
+              <span className="text-xs font-normal text-discord-muted text-center">
+                {milestoneChannelId
+                  ? `Sends a sample milestone card to #${selectedChannel?.name || 'selected channel'}.`
+                  : 'Select an announcement channel above to send a test card.'}
+              </span>
+            </div>
+          </SurfaceCard>
+        </div>
+      </div>
 
       {/* Floating Unsaved Changes Modal Bar at Bottom Center */}
       <UnsavedChangesBar
