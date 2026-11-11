@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   MdButton,
@@ -58,8 +58,8 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
   // Milestone Configuration
   const [milestoneEnabled, setMilestoneEnabled] = useState(false);
-  const [milestoneEvery, setMilestoneEvery] = useState(50);
-  const lastIntervalRef = useRef<number>(50);
+  const [recurringEnabled, setRecurringEnabled] = useState(true);
+  const [intervalInput, setIntervalInput] = useState('50');
   const [milestoneGoals, setMilestoneGoals] = useState('10, 25, 50, 100');
   const [milestoneChannelId, setMilestoneChannelId] = useState('');
   const [milestoneRoleId, setMilestoneRoleId] = useState('');
@@ -95,10 +95,8 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
         });
 
         setMilestoneEnabled(loadedEnabled);
-        setMilestoneEvery(loadedEvery);
-        if (loadedEvery > 0) {
-          lastIntervalRef.current = loadedEvery;
-        }
+        setRecurringEnabled(loadedEvery > 0);
+        setIntervalInput(loadedEvery > 0 ? String(loadedEvery) : '50');
         setMilestoneGoals(loadedGoals);
         setMilestoneChannelId(loadedChannelId);
         setMilestoneRoleId(loadedRoleId);
@@ -127,6 +125,13 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
     registerServerFetch(p);
   }, [guildId, registerServerFetch]);
+
+  const parsedIntervalValue = useMemo(() => {
+    const n = Number.parseInt(intervalInput.trim(), 10);
+    return Number.isInteger(n) && n > 0 ? n : 0;
+  }, [intervalInput]);
+
+  const milestoneEvery = recurringEnabled ? parsedIntervalValue : 0;
 
   const parsedGoals = useMemo(() => {
     const nums = milestoneGoals
@@ -213,6 +218,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   const isDirty = useMemo(() => {
     if (!savedSnapshot) return false;
     if (milestoneEnabled !== savedSnapshot.enabled) return true;
+    if (recurringEnabled !== (savedSnapshot.every > 0)) return true;
     if (milestoneEvery !== savedSnapshot.every) return true;
     if (milestoneGoals !== savedSnapshot.goals) return true;
     if (milestoneChannelId !== savedSnapshot.channelId) return true;
@@ -221,6 +227,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   }, [
     savedSnapshot,
     milestoneEnabled,
+    recurringEnabled,
     milestoneEvery,
     milestoneGoals,
     milestoneChannelId,
@@ -255,7 +262,10 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   }, [previewUsername, progressStats, selectedRole]);
 
   const intervalSupportingText = useMemo(() => {
-    if (milestoneEvery <= 0) return undefined;
+    if (!recurringEnabled) return undefined;
+    if (milestoneEvery <= 0) {
+      return 'Enter a member interval greater than 0 (e.g. 50).';
+    }
     const nextSteps = [1, 2, 3, 4]
       .map(
         (step) =>
@@ -266,7 +276,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
       )
       .join(', ');
     return `Next recurring checkpoints from ${serverInfo.memberCount.toLocaleString()} members: ${nextSteps}…`;
-  }, [milestoneEvery, serverInfo.memberCount]);
+  }, [recurringEnabled, milestoneEvery, serverInfo.memberCount]);
 
   const kpiCards = useMemo(
     () => [
@@ -324,24 +334,14 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   };
 
   const handleToggleRecurringInterval = (enabled: boolean) => {
-    if (enabled) {
-      const restored = lastIntervalRef.current > 0 ? lastIntervalRef.current : 50;
-      setMilestoneEvery(restored);
-    } else {
-      if (milestoneEvery > 0) {
-        lastIntervalRef.current = milestoneEvery;
-      }
-      setMilestoneEvery(0);
+    setRecurringEnabled(enabled);
+    if (enabled && parsedIntervalValue <= 0) {
+      setIntervalInput('50');
     }
   };
 
   const handleIntervalInputChange = (val: string) => {
-    const parsed = Number.parseInt(val.trim(), 10);
-    const nextVal = Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
-    if (nextVal > 0) {
-      lastIntervalRef.current = nextVal;
-    }
-    setMilestoneEvery(nextVal);
+    setIntervalInput(val);
   };
 
   const handleAddGoal = (e?: React.FormEvent) => {
@@ -381,10 +381,8 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   const handleReset = () => {
     if (!savedSnapshot) return;
     setMilestoneEnabled(savedSnapshot.enabled);
-    setMilestoneEvery(savedSnapshot.every);
-    if (savedSnapshot.every > 0) {
-      lastIntervalRef.current = savedSnapshot.every;
-    }
+    setRecurringEnabled(savedSnapshot.every > 0);
+    setIntervalInput(savedSnapshot.every > 0 ? String(savedSnapshot.every) : '50');
     setMilestoneGoals(savedSnapshot.goals);
     setMilestoneChannelId(savedSnapshot.channelId);
     setMilestoneRoleId(savedSnapshot.roleId);
@@ -394,6 +392,12 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
   const handleSave = async () => {
     if (!guildId) return;
+    if (recurringEnabled && parsedIntervalValue <= 0) {
+      toast.warning(
+        'Please enter a recurring member interval greater than 0, or turn off Recurring Member Interval.'
+      );
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/guilds/${guildId}/settings`, {
@@ -535,16 +539,15 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
               <SwitchRow
                 label="Recurring Member Interval"
                 description="Celebrate automatically every time your server grows by a custom number of members."
-                checked={milestoneEvery > 0}
+                checked={recurringEnabled}
                 onChange={handleToggleRecurringInterval}
               />
 
-              {milestoneEvery > 0 && (
+              {recurringEnabled && (
                 <div className="w-full pt-1">
                   <MdTextField
                     label="Celebrate Every (Members)"
-                    value={milestoneEvery}
-                    debounceMs={250}
+                    value={intervalInput}
                     onChange={handleIntervalInputChange}
                     placeholder="50"
                     type="number"
