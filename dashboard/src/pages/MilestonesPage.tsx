@@ -541,7 +541,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
               />
 
               {milestoneEvery > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                <div className="w-full pt-1">
                   <MdTextField
                     label="Celebrate Every (Members)"
                     value={milestoneEvery}
