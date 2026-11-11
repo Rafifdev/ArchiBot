@@ -1,23 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   DiscordMark,
-  EmptyState,
   MdButton,
-  MdChip,
   MdDivider,
   MdIcon,
+  MdIconButton,
   MdSelect,
   MdSwitch,
   MdTextField,
+  StatusBadge,
+} from '../components/atoms';
+import {
+  EmptyState,
   PageHeader,
   SettingsSkeleton,
-  StatusBadge,
   SurfaceCard,
+  SwitchRow,
   toast,
   UnsavedChangesBar,
-} from '../components/ui';
-import { useServerSwitch } from '../components/layout';
+} from '../components/molecules';
+import { useServerSwitch } from '../components/templates';
 import { ChannelItem, RoleItem, UserProfile } from '../types/api';
 
 interface SavedMilestoneSnapshot {
@@ -31,18 +34,6 @@ interface SavedMilestoneSnapshot {
 export interface MilestonesPageProps {
   user?: UserProfile | null;
 }
-
-const INTERVAL_PRESETS = [
-  { label: 'Custom Only', value: 0 },
-  { label: 'Every 10', value: 10 },
-  { label: 'Every 25', value: 25 },
-  { label: 'Every 50', value: 50 },
-  { label: 'Every 100', value: 100 },
-  { label: 'Every 250', value: 250 },
-  { label: 'Every 500', value: 500 },
-];
-
-const QUICK_GOAL_PRESETS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
 
 export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   const { guildId } = useParams<{ guildId: string }>();
@@ -69,10 +60,14 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   // Milestone Configuration
   const [milestoneEnabled, setMilestoneEnabled] = useState(false);
   const [milestoneEvery, setMilestoneEvery] = useState(50);
+  const lastIntervalRef = useRef<number>(50);
   const [milestoneGoals, setMilestoneGoals] = useState('10, 25, 50, 100');
   const [milestoneChannelId, setMilestoneChannelId] = useState('');
   const [milestoneRoleId, setMilestoneRoleId] = useState('');
   const [newGoalInput, setNewGoalInput] = useState('');
+  const [goalInputError, setGoalInputError] = useState('');
+  const [editingGoal, setEditingGoal] = useState<number | null>(null);
+  const [editingGoalValue, setEditingGoalValue] = useState('');
 
   // Snapshot for dirty checking & reset
   const [savedSnapshot, setSavedSnapshot] = useState<SavedMilestoneSnapshot | null>(null);
@@ -104,6 +99,9 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
         setMilestoneEnabled(loadedEnabled);
         setMilestoneEvery(loadedEvery);
+        if (loadedEvery > 0) {
+          lastIntervalRef.current = loadedEvery;
+        }
         setMilestoneGoals(loadedGoals);
         setMilestoneChannelId(loadedChannelId);
         setMilestoneRoleId(loadedRoleId);
@@ -254,24 +252,93 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     setMilestoneGoals(uniqueSorted.join(', '));
   };
 
-  const handleAddGoal = (val?: number) => {
-    const target = val ?? Number.parseInt(newGoalInput.trim(), 10);
-    if (!Number.isInteger(target) || target <= 0) return;
-    updateGoalsFromArray([...parsedGoals, target]);
-    if (val === undefined) setNewGoalInput('');
+  const handleToggleRecurringInterval = (enabled: boolean) => {
+    if (enabled) {
+      const restored = lastIntervalRef.current > 0 ? lastIntervalRef.current : 50;
+      setMilestoneEvery(restored);
+    } else {
+      if (milestoneEvery > 0) {
+        lastIntervalRef.current = milestoneEvery;
+      }
+      setMilestoneEvery(0);
+    }
+  };
+
+  const handleIntervalInputChange = (val: string) => {
+    const parsed = Number.parseInt(val.trim(), 10);
+    const nextVal = Number.isInteger(parsed) && parsed > 0 ? parsed : 0;
+    if (nextVal > 0) {
+      lastIntervalRef.current = nextVal;
+    }
+    setMilestoneEvery(nextVal);
+  };
+
+  const handleAddGoal = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const raw = newGoalInput.trim();
+    if (!raw) {
+      setGoalInputError('Please enter at least one target member number.');
+      return;
+    }
+
+    const tokens = raw
+      .split(/[\s,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const parsedNumbers = tokens.map((t) => Number.parseInt(t, 10));
+
+    if (parsedNumbers.some((n) => !Number.isInteger(n) || n <= 0)) {
+      setGoalInputError('Enter valid positive whole numbers (e.g. 100 or 100, 250, 500).');
+      return;
+    }
+
+    const newUnique = parsedNumbers.filter((n) => !parsedGoals.includes(n));
+    if (newUnique.length === 0) {
+      setGoalInputError('That milestone target is already in your list.');
+      return;
+    }
+
+    updateGoalsFromArray([...parsedGoals, ...newUnique]);
+    setNewGoalInput('');
+    setGoalInputError('');
+  };
+
+  const handleStartEditGoal = (goal: number) => {
+    setEditingGoal(goal);
+    setEditingGoalValue(String(goal));
+  };
+
+  const handleCommitEditGoal = (originalGoal: number) => {
+    const parsed = Number.parseInt(editingGoalValue.trim(), 10);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      setEditingGoal(null);
+      return;
+    }
+    const updated = parsedGoals.map((g) => (g === originalGoal ? parsed : g));
+    updateGoalsFromArray(updated);
+    setEditingGoal(null);
   };
 
   const handleRemoveGoal = (goalToRemove: number) => {
     updateGoalsFromArray(parsedGoals.filter((g) => g !== goalToRemove));
+    if (editingGoal === goalToRemove) {
+      setEditingGoal(null);
+    }
   };
 
   const handleReset = () => {
     if (!savedSnapshot) return;
     setMilestoneEnabled(savedSnapshot.enabled);
     setMilestoneEvery(savedSnapshot.every);
+    if (savedSnapshot.every > 0) {
+      lastIntervalRef.current = savedSnapshot.every;
+    }
     setMilestoneGoals(savedSnapshot.goals);
     setMilestoneChannelId(savedSnapshot.channelId);
     setMilestoneRoleId(savedSnapshot.roleId);
+    setNewGoalInput('');
+    setGoalInputError('');
+    setEditingGoal(null);
   };
 
   const handleSave = async () => {
@@ -504,131 +571,242 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
           {/* Interval & Custom Goals Card */}
           <SurfaceCard
             title="Milestone Intervals & Goal Targets"
-            subtitle="Celebrate automatically every N members, at specific milestone numbers, or both."
+            subtitle="Enter your own recurring member interval, specific milestone target numbers, or combine both."
             className="flex flex-col gap-5"
           >
-            {/* Recurring Interval */}
-            <div className="flex flex-col gap-3">
-              <div>
-                <div className="text-xs font-normal text-discord-white">
-                  Recurring Member Interval
-                </div>
-                <div className="text-xs font-normal text-discord-muted mt-0.5">
-                  Celebrate every time your server grows by a fixed number of members (set to 0 to
-                  use custom goals only).
-                </div>
-              </div>
+            {/* 1. Recurring Member Interval (Manual Input) */}
+            <div className="flex flex-col gap-3.5">
+              <SwitchRow
+                boxed
+                label="Recurring Member Interval"
+                description="Automatically celebrate every time your server grows by a custom number of members."
+                checked={milestoneEvery > 0}
+                onChange={handleToggleRecurringInterval}
+              />
 
-              <div className="flex flex-wrap items-center gap-2">
-                {INTERVAL_PRESETS.map((preset) => (
-                  <MdChip
-                    key={preset.value}
-                    variant="filter"
-                    selected={milestoneEvery === preset.value}
-                    label={preset.label}
-                    onClick={() => setMilestoneEvery(preset.value)}
-                  />
-                ))}
-              </div>
+              {milestoneEvery > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-stretch">
+                  <div className="sm:col-span-5">
+                    <MdTextField
+                      label="Celebrate Every (Members)"
+                      value={milestoneEvery}
+                      debounceMs={250}
+                      onChange={handleIntervalInputChange}
+                      placeholder="Enter interval (e.g. 50)"
+                      type="number"
+                    />
+                  </div>
 
-              <div className="max-w-xs pt-1">
-                <MdTextField
-                  label="Custom Interval (Every N Members)"
-                  value={milestoneEvery}
-                  onChange={(val) => setMilestoneEvery(Math.max(0, Number.parseInt(val, 10) || 0))}
-                  type="number"
-                />
-              </div>
+                  <div className="sm:col-span-7 p-3 rounded-xl bg-discord-surface/60 border border-discord-border flex items-center gap-2.5">
+                    <MdIcon
+                      name="autorenew"
+                      className="!text-base text-discord-blurple shrink-0"
+                    />
+                    <div className="min-w-0 text-xs font-normal text-discord-muted leading-relaxed">
+                      <div>Next recurring checkpoints from current count:</div>
+                      <div className="text-discord-white truncate mt-0.5">
+                        {[1, 2, 3, 4]
+                          .map(
+                            (step) =>
+                              (
+                                (Math.floor(serverInfo.memberCount / milestoneEvery) + step) *
+                                milestoneEvery
+                              ).toLocaleString()
+                          )
+                          .join(' → ')}{' '}
+                        members
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <MdDivider />
 
-            {/* Custom Goal Targets */}
+            {/* 2. Specific Milestone Goals (Manual Number Entry + Inline Edit) */}
             <div className="flex flex-col gap-3.5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <div className="text-xs font-normal text-discord-white">
                     Specific Milestone Goals ({parsedGoals.length})
                   </div>
                   <div className="text-xs font-normal text-discord-muted mt-0.5">
-                    Add special member count milestones that always trigger a celebration card.
+                    Type a specific member count (or multiple numbers separated by commas) to add custom milestone goals.
                   </div>
                 </div>
+
+                {parsedGoals.length > 0 && (
+                  <MdButton
+                    variant="text"
+                    size="xs"
+                    icon="delete_sweep"
+                    onClick={() => updateGoalsFromArray([])}
+                  >
+                    Clear All
+                  </MdButton>
+                )}
               </div>
 
-              {/* Active Goal Chips */}
+              {/* Manual Goal Entry Form */}
+              <form
+                onSubmit={handleAddGoal}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                    e.preventDefault();
+                    handleAddGoal();
+                  }
+                }}
+                className="flex flex-col gap-2"
+              >
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <div className="flex-1">
+                    <MdTextField
+                      label="Enter Milestone Target(s)"
+                      value={newGoalInput}
+                      onChange={(val) => {
+                        setNewGoalInput(val);
+                        if (goalInputError) setGoalInputError('');
+                      }}
+                      placeholder="e.g. 100 or 100, 250, 500, 1000"
+                    />
+                  </div>
+                  <MdButton
+                    type="submit"
+                    variant="filled"
+                    icon="add"
+                    disabled={!newGoalInput.trim()}
+                  >
+                    Add Goal
+                  </MdButton>
+                </div>
+
+                {goalInputError && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="flex items-center gap-1.5 text-xs font-normal text-discord-red px-1"
+                  >
+                    <MdIcon name="error" className="!text-sm shrink-0" />
+                    <span>{goalInputError}</span>
+                  </div>
+                )}
+              </form>
+
+              {/* Active User-Defined Goals List */}
               {parsedGoals.length === 0 ? (
                 <EmptyState
                   icon="flag"
-                  title="No custom goals added"
-                  description="Add a custom member goal below or pick from the quick presets."
+                  title="No specific milestone goals configured"
+                  description="Enter your desired member counts above and click Add Goal."
+                  className="py-6"
                 />
               ) : (
-                <div className="flex flex-wrap items-center gap-2 p-3.5 rounded-xl bg-discord-surface/60 border border-discord-border">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {parsedGoals.map((goal) => {
                     const reached = serverInfo.memberCount >= goal;
+                    const isNext = progressStats.next === goal;
+                    const isEditing = editingGoal === goal;
+
                     return (
-                      <MdChip
+                      <div
                         key={goal}
-                        variant="assist"
-                        icon={reached ? 'check_circle' : 'close'}
-                        label={`${goal.toLocaleString()} members`}
-                        onClick={() => handleRemoveGoal(goal)}
-                      />
+                        className={`px-3.5 py-2.5 rounded-xl border transition-colors flex items-center justify-between gap-2.5 ${
+                          isNext
+                            ? 'bg-discord-active/60 border-discord-blurple/60'
+                            : 'bg-discord-surface/60 border-discord-border hover:border-discord-border-hover'
+                        }`}
+                      >
+                        {isEditing ? (
+                          <div
+                            className="flex items-center gap-2 w-full"
+                            onKeyDown={(e) => {
+                              if (
+                                e.key === 'Enter' &&
+                                !(e.nativeEvent as KeyboardEvent).isComposing
+                              ) {
+                                e.preventDefault();
+                                handleCommitEditGoal(goal);
+                              } else if (e.key === 'Escape') {
+                                setEditingGoal(null);
+                              }
+                            }}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <MdTextField
+                                label="Target Members"
+                                value={editingGoalValue}
+                                onChange={setEditingGoalValue}
+                                type="number"
+                              />
+                            </div>
+                            <MdIconButton
+                              icon="check"
+                              title="Save target"
+                              onClick={() => handleCommitEditGoal(goal)}
+                              className="text-discord-green"
+                            />
+                            <MdIconButton
+                              icon="close"
+                              title="Cancel"
+                              onClick={() => setEditingGoal(null)}
+                              className="text-discord-muted hover:text-discord-white"
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <MdIcon
+                                name={reached ? 'check_circle' : isNext ? 'flag' : 'schedule'}
+                                className={`!text-base shrink-0 ${
+                                  reached
+                                    ? 'text-discord-green'
+                                    : isNext
+                                    ? 'text-discord-yellow'
+                                    : 'text-discord-muted'
+                                }`}
+                              />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-normal text-discord-white truncate">
+                                    {goal.toLocaleString()} Members
+                                  </span>
+                                  <StatusBadge
+                                    size="xs"
+                                    variant="soft"
+                                    tone={reached ? 'green' : isNext ? 'blurple' : 'neutral'}
+                                    label={reached ? 'Reached' : isNext ? 'Next Goal' : 'Upcoming'}
+                                  />
+                                </div>
+                                <div className="text-[11px] font-normal text-discord-muted mt-0.5 truncate">
+                                  {reached
+                                    ? 'Milestone unlocked'
+                                    : `${(goal - serverInfo.memberCount).toLocaleString()} members to go`}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              <MdIconButton
+                                icon="edit"
+                                title={`Edit ${goal.toLocaleString()} target`}
+                                onClick={() => handleStartEditGoal(goal)}
+                                className="text-discord-muted hover:text-discord-white"
+                              />
+                              <MdIconButton
+                                icon="delete"
+                                title={`Remove ${goal.toLocaleString()} target`}
+                                onClick={() => handleRemoveGoal(goal)}
+                                className="text-discord-muted hover:text-discord-red"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
               )}
-
-              {/* Add Custom Goal Input + Button */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="flex-1">
-                  <MdTextField
-                    label="Add Custom Member Goal"
-                    value={newGoalInput}
-                    onChange={setNewGoalInput}
-                    placeholder="e.g. 750"
-                    type="number"
-                  />
-                </div>
-                <MdButton
-                  variant="tonal"
-                  icon="add"
-                  onClick={() => handleAddGoal()}
-                  disabled={!newGoalInput.trim() || Number.parseInt(newGoalInput, 10) <= 0}
-                >
-                  Add Target
-                </MdButton>
-              </div>
-
-              {/* Quick Goal Preset Pills */}
-              <div className="flex flex-col gap-2 pt-1">
-                <span className="text-xs font-normal text-discord-muted">
-                  Quick Goal Presets:
-                </span>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {QUICK_GOAL_PRESETS.map((preset) => {
-                    const exists = parsedGoals.includes(preset);
-                    return (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() =>
-                          exists ? handleRemoveGoal(preset) : handleAddGoal(preset)
-                        }
-                        className={`px-2.5 py-1 rounded-lg text-xs font-normal border transition-colors cursor-pointer ${
-                          exists
-                            ? 'bg-discord-active border-discord-blurple text-discord-white'
-                            : 'bg-discord-surface border-discord-border text-discord-text/80 hover:text-discord-white hover:border-discord-border-hover'
-                        }`}
-                      >
-                        {exists ? '✓ ' : '+ '}
-                        {preset.toLocaleString()}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           </SurfaceCard>
         </div>
