@@ -592,7 +592,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                     supportingText={goalInputError || undefined}
                   />
                 </div>
-                <div className="flex items-center gap-2 sm:pt-2">
+                <div className="sm:pt-2">
                   <MdButton
                     type="submit"
                     variant="tonal"
@@ -601,14 +601,6 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
                   >
                     Add Target
                   </MdButton>
-                  {parsedGoals.length > 0 && (
-                    <MdButton
-                      variant="text"
-                      onClick={() => updateGoalsFromArray([])}
-                    >
-                      Clear All
-                    </MdButton>
-                  )}
                 </div>
               </form>
 
