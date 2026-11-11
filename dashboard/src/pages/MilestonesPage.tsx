@@ -8,7 +8,6 @@ import {
   MdSelect,
   MdSwitch,
   MdTextField,
-  StatusBadge,
 } from '../components/atoms';
 import {
   EmptyState,
@@ -647,18 +646,6 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
               selectedChannel
                 ? `Previewing milestone announcement in #${selectedChannel.name}`
                 : 'Preview how ArchiBot announces milestones in Discord.'
-            }
-            headerAction={
-              <StatusBadge
-                size="xs"
-                variant="soft"
-                tone={progressStats.next !== null ? 'blurple' : 'neutral'}
-                label={
-                  progressStats.next !== null
-                    ? `Next: ${progressStats.next.toLocaleString()}`
-                    : 'No upcoming goal'
-                }
-              />
             }
             className="flex flex-col gap-4 h-full flex-1"
           >
