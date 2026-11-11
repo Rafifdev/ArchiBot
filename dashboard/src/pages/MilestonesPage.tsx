@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  DiscordMark,
   MdButton,
+  MdChip,
   MdDivider,
-  MdIcon,
-  MdIconButton,
   MdSelect,
   MdSwitch,
   MdTextField,
@@ -20,6 +18,7 @@ import {
   toast,
   UnsavedChangesBar,
 } from '../components/molecules';
+import { DiscordEmbedPreview } from '../components/organisms';
 import { useServerSwitch } from '../components/templates';
 import { ChannelItem, RoleItem, UserProfile } from '../types/api';
 
@@ -66,8 +65,6 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
   const [milestoneRoleId, setMilestoneRoleId] = useState('');
   const [newGoalInput, setNewGoalInput] = useState('');
   const [goalInputError, setGoalInputError] = useState('');
-  const [editingGoal, setEditingGoal] = useState<number | null>(null);
-  const [editingGoalValue, setEditingGoalValue] = useState('');
 
   // Snapshot for dirty checking & reset
   const [savedSnapshot, setSavedSnapshot] = useState<SavedMilestoneSnapshot | null>(null);
@@ -148,17 +145,6 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     const next = candidates.length > 0 ? Math.min(...candidates) : null;
     const remaining = next !== null ? Math.max(0, next - count) : null;
 
-    // Determine previous milestone for progress bar
-    const prevCandidates = parsedGoals.filter((g) => g <= count);
-    if (milestoneEvery > 0 && count >= milestoneEvery) {
-      prevCandidates.push(Math.floor(count / milestoneEvery) * milestoneEvery);
-    }
-    const prev = prevCandidates.length > 0 ? Math.max(...prevCandidates) : 0;
-
-    const span = next !== null ? Math.max(1, next - prev) : 1;
-    const percent =
-      next !== null ? Math.min(100, Math.max(4, Math.round(((count - prev) / span) * 100))) : 100;
-
     // Following milestone after 'next' (for preview)
     const sampleCount = next ?? Math.max(50, count || 50);
     const afterCandidates = parsedGoals.filter((g) => g > sampleCount);
@@ -170,10 +156,8 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
     return {
       count,
-      prev,
       next,
       remaining,
-      percent,
       sampleCount,
       afterNext,
       afterRemaining,
@@ -190,7 +174,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
   const channelOptions = useMemo(
     () => [
-      { value: '', label: 'Select announcement channel...' },
+      { value: '', label: 'Select a channel...' },
       ...sortedChannels.map((c) => ({ value: c.id, label: `#${c.name}` })),
     ],
     [sortedChannels]
@@ -206,7 +190,7 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
 
   const roleOptions = useMemo(
     () => [
-      { value: '', label: 'None (No reward role)' },
+      { value: '', label: 'None (Disabled)' },
       ...sortedAssignableRoles.map((r) => ({
         value: r.id,
         label: r.name,
@@ -303,27 +287,8 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     setGoalInputError('');
   };
 
-  const handleStartEditGoal = (goal: number) => {
-    setEditingGoal(goal);
-    setEditingGoalValue(String(goal));
-  };
-
-  const handleCommitEditGoal = (originalGoal: number) => {
-    const parsed = Number.parseInt(editingGoalValue.trim(), 10);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      setEditingGoal(null);
-      return;
-    }
-    const updated = parsedGoals.map((g) => (g === originalGoal ? parsed : g));
-    updateGoalsFromArray(updated);
-    setEditingGoal(null);
-  };
-
   const handleRemoveGoal = (goalToRemove: number) => {
     updateGoalsFromArray(parsedGoals.filter((g) => g !== goalToRemove));
-    if (editingGoal === goalToRemove) {
-      setEditingGoal(null);
-    }
   };
 
   const handleReset = () => {
@@ -338,7 +303,6 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     setMilestoneRoleId(savedSnapshot.roleId);
     setNewGoalInput('');
     setGoalInputError('');
-    setEditingGoal(null);
   };
 
   const handleSave = async () => {
@@ -409,578 +373,263 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     }
   };
 
-  const previewUsername = user?.global_name || user?.username || 'ArchiMember';
+  const previewUsername =
+    (user?.global_name || user?.username || 'ArchiMember').replace(' (Local Admin)', '').trim() ||
+    'ArchiMember';
+
+  const previewAvatarUrl = useMemo(() => {
+    if (!user?.avatar) return undefined;
+    if (user.avatar.startsWith('http://') || user.avatar.startsWith('https://')) {
+      return user.avatar;
+    }
+    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+  }, [user?.id, user?.avatar]);
+
+  const previewEmbedDescription = useMemo(() => {
+    const lines = [
+      `Congratulations @${previewUsername}! You brought our community to ${progressStats.sampleCount.toLocaleString()} members!`,
+    ];
+    if (selectedRole) {
+      lines.push(`🎁 Special reward unlocked: @${selectedRole.name}`);
+    }
+    if (progressStats.afterNext !== null) {
+      lines.push(
+        `🎯 Next milestone: ${progressStats.afterNext.toLocaleString()} members - ${progressStats.afterRemaining?.toLocaleString()} to go.`
+      );
+    }
+    return lines.join('\n');
+  }, [previewUsername, progressStats, selectedRole]);
+
+  const intervalSupportingText = useMemo(() => {
+    if (milestoneEvery <= 0) return undefined;
+    const nextSteps = [1, 2, 3, 4]
+      .map(
+        (step) =>
+          (
+            (Math.floor(serverInfo.memberCount / milestoneEvery) + step) *
+            milestoneEvery
+          ).toLocaleString()
+      )
+      .join(', ');
+    return `Next recurring checkpoints from ${serverInfo.memberCount.toLocaleString()} members: ${nextSteps}…`;
+  }, [milestoneEvery, serverInfo.memberCount]);
 
   return (
     <div className="flex flex-col gap-6 w-full pb-16">
       <PageHeader
-        category="COMMUNITY & ENGAGEMENT"
         title="Member Milestones"
-        description="Celebrate server growth automatically with custom milestone banner cards, goal tracking, and member reward roles."
-        actions={
-          <div className="flex items-center gap-2.5">
-            <MdButton
-              variant="tonal"
-              icon="celebration"
-              onClick={handleTestMilestone}
-              disabled={testingMilestone || !milestoneChannelId}
-            >
-              {testingMilestone ? 'Sending Test...' : 'Send Test Card'}
-            </MdButton>
-            <MdButton variant="filled" icon="save" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </MdButton>
-          </div>
-        }
+        description="Celebrate server growth automatically with milestone announcements, custom goal targets, and member reward roles."
       />
 
-      {/* 1. Live Server Milestone Progress Overview */}
-      <SurfaceCard className="flex flex-col gap-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-discord-surface border border-discord-border flex items-center justify-center text-discord-blurple shrink-0">
-              <MdIcon name="emoji_events" className="text-xl" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h2 className="text-xs font-normal text-discord-white">
-                  Milestone Growth Tracker
-                </h2>
-                <StatusBadge
-                  size="xs"
-                  variant="soft"
-                  tone={milestoneEnabled ? 'green' : 'neutral'}
-                  label={milestoneEnabled ? 'Active' : 'Disabled'}
-                />
-              </div>
-              <p className="text-xs font-normal text-discord-muted mt-0.5">
-                Real-time progress toward the next community milestone in {serverInfo.serverName}.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-normal text-discord-muted">Enable Celebrations</span>
-            <MdSwitch checked={milestoneEnabled} onChange={setMilestoneEnabled} />
-          </div>
+      {/* 1. Milestone System (Matches WelcomePage & SettingsPage SurfaceCard pattern) */}
+      <SurfaceCard
+        title="Milestone System"
+        subtitle="Enable automatic milestone celebrations, select an announcement channel, and assign a reward role to the milestone member."
+        headerAction={
+          <MdSwitch
+            checked={milestoneEnabled}
+            onChange={setMilestoneEnabled}
+          />
+        }
+        className="flex flex-col gap-4"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          <MdSelect
+            label="Announcement Channel"
+            value={milestoneChannelId}
+            onChange={setMilestoneChannelId}
+            options={channelOptions}
+          />
+          <MdSelect
+            label="Milestone Winner Reward Role"
+            value={milestoneRoleId}
+            onChange={setMilestoneRoleId}
+            options={roleOptions}
+          />
         </div>
-
-        {/* 4 Metric Pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border flex flex-col gap-1">
-            <span className="text-xs font-normal text-discord-muted flex items-center gap-1.5">
-              <MdIcon name="groups" className="!text-base text-discord-blurple" />
-              Current Members
-            </span>
-            <span className="text-base font-normal text-discord-white">
-              {progressStats.count.toLocaleString()}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border flex flex-col gap-1">
-            <span className="text-xs font-normal text-discord-muted flex items-center gap-1.5">
-              <MdIcon name="flag" className="!text-base text-discord-yellow" />
-              Next Milestone
-            </span>
-            <span className="text-base font-normal text-discord-white">
-              {progressStats.next !== null
-                ? `${progressStats.next.toLocaleString()} Members`
-                : 'No Upcoming Goal'}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border flex flex-col gap-1">
-            <span className="text-xs font-normal text-discord-muted flex items-center gap-1.5">
-              <MdIcon name="trending_up" className="!text-base text-discord-green" />
-              Remaining to Goal
-            </span>
-            <span className="text-base font-normal text-discord-white">
-              {progressStats.remaining !== null
-                ? `${progressStats.remaining.toLocaleString()} to go`
-                : '—'}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-discord-surface border border-discord-border flex flex-col gap-1">
-            <span className="text-xs font-normal text-discord-muted flex items-center gap-1.5">
-              <MdIcon name="workspace_premium" className="!text-base text-discord-fuchsia" />
-              Reward Role
-            </span>
-            <span className="text-xs font-normal text-discord-white truncate pt-0.5">
-              {selectedRole ? `@${selectedRole.name}` : 'None configured'}
-            </span>
-          </div>
-        </div>
-
-        {/* Visual Progress Bar */}
-        {progressStats.next !== null && (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between text-xs font-normal">
-              <span className="text-discord-muted">
-                Progress from {progressStats.prev.toLocaleString()} to{' '}
-                <span className="text-discord-white">
-                  {progressStats.next.toLocaleString()} members
-                </span>
-              </span>
-              <span className="text-discord-blurple">{progressStats.percent}%</span>
-            </div>
-            <div className="w-full h-2.5 rounded-full bg-discord-surface border border-discord-border overflow-hidden">
-              <div
-                className="h-full rounded-full bg-discord-blurple transition-all duration-500"
-                style={{ width: `${progressStats.percent}%` }}
-              />
-            </div>
-          </div>
-        )}
+        <p className="text-xs font-normal text-discord-muted">
+          The member whose join reaches a milestone count is mentioned in the announcement channel and automatically receives the selected reward role.
+        </p>
       </SurfaceCard>
 
-      {/* 2. Main 2-Column Configuration & Live Preview Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Settings & Goal Targets */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          {/* Delivery & Reward Role Card */}
-          <SurfaceCard
-            title="Announcement & Reward Role"
-            subtitle="Choose where ArchiBot posts milestone celebration banners and which role the milestone member unlocks."
-            className="flex flex-col gap-4"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <MdSelect
-                label="Announcement Channel"
-                value={milestoneChannelId}
-                onChange={setMilestoneChannelId}
-                options={channelOptions}
-              />
-              <MdSelect
-                label="Milestone Winner Reward Role"
-                value={milestoneRoleId}
-                onChange={setMilestoneRoleId}
-                options={roleOptions}
+      {/* 2. Milestone Intervals & Goal Targets (Manual Inputs + Reusable MdChip List) */}
+      <SurfaceCard
+        title="Milestone Intervals & Goal Targets"
+        subtitle="Enter a recurring member interval, add specific milestone target numbers, or combine both."
+        className="flex flex-col gap-5"
+      >
+        {/* Recurring Member Interval */}
+        <div className="flex flex-col gap-3">
+          <SwitchRow
+            label="Recurring Member Interval"
+            description="Celebrate automatically every time your server grows by a custom number of members."
+            checked={milestoneEvery > 0}
+            onChange={handleToggleRecurringInterval}
+          />
+
+          {milestoneEvery > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              <MdTextField
+                label="Celebrate Every (Members)"
+                value={milestoneEvery}
+                debounceMs={250}
+                onChange={handleIntervalInputChange}
+                placeholder="50"
+                type="number"
+                supportingText={intervalSupportingText}
               />
             </div>
+          )}
+        </div>
 
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-discord-surface/60 border border-discord-border text-xs font-normal text-discord-muted">
-              <MdIcon name="info" className="!text-base text-discord-blurple shrink-0 mt-0.5" />
-              <span>
-                The member whose join triggers a milestone count is mentioned in the announcement
-                and automatically receives the optional reward role.
-              </span>
-            </div>
-          </SurfaceCard>
+        <MdDivider />
 
-          {/* Interval & Custom Goals Card */}
-          <SurfaceCard
-            title="Milestone Intervals & Goal Targets"
-            subtitle="Enter your own recurring member interval, specific milestone target numbers, or combine both."
-            className="flex flex-col gap-5"
-          >
-            {/* 1. Recurring Member Interval (Manual Input) */}
-            <div className="flex flex-col gap-3.5">
-              <SwitchRow
-                boxed
-                label="Recurring Member Interval"
-                description="Automatically celebrate every time your server grows by a custom number of members."
-                checked={milestoneEvery > 0}
-                onChange={handleToggleRecurringInterval}
-              />
-
-              {milestoneEvery > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-stretch">
-                  <div className="sm:col-span-5">
-                    <MdTextField
-                      label="Celebrate Every (Members)"
-                      value={milestoneEvery}
-                      debounceMs={250}
-                      onChange={handleIntervalInputChange}
-                      placeholder="Enter interval (e.g. 50)"
-                      type="number"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-7 p-3 rounded-xl bg-discord-surface/60 border border-discord-border flex items-center gap-2.5">
-                    <MdIcon
-                      name="autorenew"
-                      className="!text-base text-discord-blurple shrink-0"
-                    />
-                    <div className="min-w-0 text-xs font-normal text-discord-muted leading-relaxed">
-                      <div>Next recurring checkpoints from current count:</div>
-                      <div className="text-discord-white truncate mt-0.5">
-                        {[1, 2, 3, 4]
-                          .map(
-                            (step) =>
-                              (
-                                (Math.floor(serverInfo.memberCount / milestoneEvery) + step) *
-                                milestoneEvery
-                              ).toLocaleString()
-                          )
-                          .join(' → ')}{' '}
-                        members
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <MdDivider />
-
-            {/* 2. Specific Milestone Goals (Manual Number Entry + Inline Edit) */}
-            <div className="flex flex-col gap-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <div className="text-xs font-normal text-discord-white">
-                    Specific Milestone Goals ({parsedGoals.length})
-                  </div>
-                  <div className="text-xs font-normal text-discord-muted mt-0.5">
-                    Type a specific member count (or multiple numbers separated by commas) to add custom milestone goals.
-                  </div>
-                </div>
-
-                {parsedGoals.length > 0 && (
-                  <MdButton
-                    variant="text"
-                    size="xs"
-                    icon="delete_sweep"
-                    onClick={() => updateGoalsFromArray([])}
-                  >
-                    Clear All
-                  </MdButton>
-                )}
+        {/* Specific Milestone Goals */}
+        <div className="flex flex-col gap-3.5">
+          <div className="flex items-center justify-between text-xs font-normal">
+            <div>
+              <div className="text-xs font-normal text-discord-white">Specific Milestone Goals</div>
+              <div className="text-xs font-normal text-discord-muted mt-0.5">
+                Enter a target member count (or multiple numbers separated by commas) to add custom milestone goals.
               </div>
+            </div>
+            <span className="text-discord-muted shrink-0">
+              {parsedGoals.length} {parsedGoals.length === 1 ? 'target' : 'targets'}
+            </span>
+          </div>
 
-              {/* Manual Goal Entry Form */}
-              <form
-                onSubmit={handleAddGoal}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !(e.nativeEvent as KeyboardEvent).isComposing) {
-                    e.preventDefault();
-                    handleAddGoal();
-                  }
+          <form
+            onSubmit={handleAddGoal}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                e.preventDefault();
+                handleAddGoal();
+              }
+            }}
+            className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3"
+          >
+            <div className="flex-1">
+              <MdTextField
+                label="Add Target Member Count"
+                value={newGoalInput}
+                onChange={(val) => {
+                  setNewGoalInput(val);
+                  if (goalInputError) setGoalInputError('');
                 }}
-                className="flex flex-col gap-2"
+                placeholder="e.g. 100 or 100, 250, 500, 1000"
+                supportingText={goalInputError || undefined}
+              />
+            </div>
+            <div className="flex items-center gap-2 sm:pt-2">
+              <MdButton
+                type="submit"
+                variant="tonal"
+                icon="add"
+                disabled={!newGoalInput.trim()}
               >
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="flex-1">
-                    <MdTextField
-                      label="Enter Milestone Target(s)"
-                      value={newGoalInput}
-                      onChange={(val) => {
-                        setNewGoalInput(val);
-                        if (goalInputError) setGoalInputError('');
-                      }}
-                      placeholder="e.g. 100 or 100, 250, 500, 1000"
-                    />
-                  </div>
-                  <MdButton
-                    type="submit"
-                    variant="filled"
-                    icon="add"
-                    disabled={!newGoalInput.trim()}
-                  >
-                    Add Goal
-                  </MdButton>
-                </div>
-
-                {goalInputError && (
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="flex items-center gap-1.5 text-xs font-normal text-discord-red px-1"
-                  >
-                    <MdIcon name="error" className="!text-sm shrink-0" />
-                    <span>{goalInputError}</span>
-                  </div>
-                )}
-              </form>
-
-              {/* Active User-Defined Goals List */}
-              {parsedGoals.length === 0 ? (
-                <EmptyState
-                  icon="flag"
-                  title="No specific milestone goals configured"
-                  description="Enter your desired member counts above and click Add Goal."
-                  className="py-6"
-                />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {parsedGoals.map((goal) => {
-                    const reached = serverInfo.memberCount >= goal;
-                    const isNext = progressStats.next === goal;
-                    const isEditing = editingGoal === goal;
-
-                    return (
-                      <div
-                        key={goal}
-                        className={`px-3.5 py-2.5 rounded-xl border transition-colors flex items-center justify-between gap-2.5 ${
-                          isNext
-                            ? 'bg-discord-active/60 border-discord-blurple/60'
-                            : 'bg-discord-surface/60 border-discord-border hover:border-discord-border-hover'
-                        }`}
-                      >
-                        {isEditing ? (
-                          <div
-                            className="flex items-center gap-2 w-full"
-                            onKeyDown={(e) => {
-                              if (
-                                e.key === 'Enter' &&
-                                !(e.nativeEvent as KeyboardEvent).isComposing
-                              ) {
-                                e.preventDefault();
-                                handleCommitEditGoal(goal);
-                              } else if (e.key === 'Escape') {
-                                setEditingGoal(null);
-                              }
-                            }}
-                          >
-                            <div className="flex-1 min-w-0">
-                              <MdTextField
-                                label="Target Members"
-                                value={editingGoalValue}
-                                onChange={setEditingGoalValue}
-                                type="number"
-                              />
-                            </div>
-                            <MdIconButton
-                              icon="check"
-                              title="Save target"
-                              onClick={() => handleCommitEditGoal(goal)}
-                              className="text-discord-green"
-                            />
-                            <MdIconButton
-                              icon="close"
-                              title="Cancel"
-                              onClick={() => setEditingGoal(null)}
-                              className="text-discord-muted hover:text-discord-white"
-                            />
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <MdIcon
-                                name={reached ? 'check_circle' : isNext ? 'flag' : 'schedule'}
-                                className={`!text-base shrink-0 ${
-                                  reached
-                                    ? 'text-discord-green'
-                                    : isNext
-                                    ? 'text-discord-yellow'
-                                    : 'text-discord-muted'
-                                }`}
-                              />
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-normal text-discord-white truncate">
-                                    {goal.toLocaleString()} Members
-                                  </span>
-                                  <StatusBadge
-                                    size="xs"
-                                    variant="soft"
-                                    tone={reached ? 'green' : isNext ? 'blurple' : 'neutral'}
-                                    label={reached ? 'Reached' : isNext ? 'Next Goal' : 'Upcoming'}
-                                  />
-                                </div>
-                                <div className="text-[11px] font-normal text-discord-muted mt-0.5 truncate">
-                                  {reached
-                                    ? 'Milestone unlocked'
-                                    : `${(goal - serverInfo.memberCount).toLocaleString()} members to go`}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-0.5 shrink-0">
-                              <MdIconButton
-                                icon="edit"
-                                title={`Edit ${goal.toLocaleString()} target`}
-                                onClick={() => handleStartEditGoal(goal)}
-                                className="text-discord-muted hover:text-discord-white"
-                              />
-                              <MdIconButton
-                                icon="delete"
-                                title={`Remove ${goal.toLocaleString()} target`}
-                                onClick={() => handleRemoveGoal(goal)}
-                                className="text-discord-muted hover:text-discord-red"
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                Add Target
+              </MdButton>
+              {parsedGoals.length > 0 && (
+                <MdButton
+                  variant="text"
+                  onClick={() => updateGoalsFromArray([])}
+                >
+                  Clear All
+                </MdButton>
               )}
             </div>
-          </SurfaceCard>
-        </div>
+          </form>
 
-        {/* Right Column: Live Discord Celebration Card Preview */}
-        <div className="lg:col-span-5 flex flex-col gap-6 lg:sticky lg:top-6">
-          <SurfaceCard
-            title="Live Discord Preview"
-            subtitle={
-              selectedChannel
-                ? `Previewing announcement in #${selectedChannel.name}`
-                : 'Preview how ArchiBot announces milestones in Discord.'
-            }
-            className="flex flex-col gap-4"
-          >
-            {/* Simulated Discord Message Container */}
-            <div className="rounded-xl bg-discord-sidebar border border-discord-border p-4 text-discord-text font-sans">
-              <div className="flex items-start gap-3">
-                {/* Bot Avatar */}
-                {serverInfo.botAvatar ? (
-                  <img
-                    src={serverInfo.botAvatar}
-                    alt={serverInfo.botName}
-                    className="w-9 h-9 rounded-full object-cover shrink-0 mt-0.5"
+          {parsedGoals.length === 0 ? (
+            <EmptyState
+              icon="flag"
+              title="No milestone targets yet"
+              description="Enter a member count above and click Add Target to create your custom milestone goals."
+            />
+          ) : (
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {parsedGoals.map((goal) => {
+                const reached = serverInfo.memberCount >= goal;
+                return (
+                  <MdChip
+                    key={goal}
+                    variant="assist"
+                    icon={reached ? 'check_circle' : 'close'}
+                    label={`${goal.toLocaleString()} members`}
+                    onClick={() => handleRemoveGoal(goal)}
                   />
-                ) : (
-                  <div className="w-9 h-9 rounded-full bg-discord-blurple flex items-center justify-center text-white shrink-0 mt-0.5">
-                    <DiscordMark className="w-5 h-5" />
-                  </div>
-                )}
-
-                <div className="flex-1 min-w-0">
-                  {/* Bot Username + APP Badge + Timestamp */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-normal text-discord-white">
-                      {serverInfo.botName}
-                    </span>
-                    <span className="px-1 py-0.2 rounded bg-discord-blurple text-[10px] font-normal text-white leading-tight">
-                      APP
-                    </span>
-                    <span className="text-[11px] font-normal text-discord-muted">
-                      Today at 12:00 PM
-                    </span>
-                  </div>
-
-                  {/* Message Content */}
-                  <div className="text-xs font-normal text-discord-text mt-1">
-                    🎉{' '}
-                    <span className="px-1 py-0.5 rounded bg-discord-blurple/15 text-discord-blurple">
-                      @{previewUsername}
-                    </span>
-                  </div>
-
-                  {/* Discord Rich Embed (Gold Milestone Theme #F1C40F) */}
-                  <div className="mt-2 rounded bg-discord-surface/45 border-l-4 border-l-[#F1C40F] p-3.5 flex flex-col gap-2.5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex flex-col gap-1.5 min-w-0">
-                        <div className="text-xs font-normal text-discord-white">
-                          🏆 Community Milestone Reached!
-                        </div>
-                        <div className="text-xs font-normal text-discord-text/90 leading-relaxed flex flex-col gap-1">
-                          <div>
-                            Congratulations{' '}
-                            <span className="px-1 py-0.5 rounded bg-discord-blurple/15 text-discord-blurple">
-                              @{previewUsername}
-                            </span>
-                            ! You brought our community to{' '}
-                            <span className="text-discord-white">
-                              {progressStats.sampleCount.toLocaleString()}
-                            </span>{' '}
-                            members!
-                          </div>
-
-                          {selectedRole && (
-                            <div>
-                              🎁 Special reward unlocked:{' '}
-                              <span
-                                className="px-1 py-0.5 rounded"
-                                style={{
-                                  backgroundColor:
-                                    selectedRole.color && selectedRole.color !== '#000000'
-                                      ? `${selectedRole.color}26`
-                                      : 'rgba(88,101,242,0.18)',
-                                  color:
-                                    selectedRole.color && selectedRole.color !== '#000000'
-                                      ? selectedRole.color
-                                      : 'var(--color-discord-blurple)',
-                                }}
-                              >
-                                @{selectedRole.name}
-                              </span>
-                            </div>
-                          )}
-
-                          {progressStats.afterNext !== null && (
-                            <div>
-                              🎯 Next milestone:{' '}
-                              <span className="text-discord-white">
-                                {progressStats.afterNext.toLocaleString()}
-                              </span>{' '}
-                              members -{' '}
-                              <span className="text-discord-white">
-                                {progressStats.afterRemaining?.toLocaleString()}
-                              </span>{' '}
-                              to go.
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Member Avatar Thumbnail */}
-                      {user?.avatar ? (
-                        <img
-                          src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`}
-                          alt={previewUsername}
-                          className="w-11 h-11 rounded-lg object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-11 h-11 rounded-lg bg-discord-surface flex items-center justify-center text-[#F1C40F] shrink-0">
-                          <MdIcon name="emoji_events" className="text-xl" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Simulated Milestone Banner Image (Matches generateMilestoneBanner in captcha.js) */}
-                    <div className="relative w-full h-28 rounded-md bg-[#181920] border-2 border-[#F1C40F] overflow-hidden flex flex-col items-center justify-center select-none">
-                      {/* Inner Gold Frame */}
-                      <div className="absolute inset-1.5 border border-[#786214] pointer-events-none" />
-
-                      {/* Subtle Confetti Dots */}
-                      <span className="absolute top-3 left-6 w-1.5 h-1.5 bg-[#5865F2] opacity-80" />
-                      <span className="absolute top-5 left-20 w-1.5 h-1.5 bg-[#57F287] opacity-80" />
-                      <span className="absolute top-4 right-10 w-1.5 h-1.5 bg-[#EB459E] opacity-80" />
-                      <span className="absolute top-7 right-24 w-1.5 h-1.5 bg-[#FEE75C] opacity-80" />
-                      <span className="absolute bottom-4 left-12 w-1.5 h-1.5 bg-[#ED4245] opacity-80" />
-                      <span className="absolute bottom-5 right-14 w-1.5 h-1.5 bg-[#5865F2] opacity-80" />
-
-                      <div className="text-[10px] font-mono tracking-[0.22em] text-[#F1C40F] uppercase">
-                        COMMUNITY MILESTONE
-                      </div>
-                      <div
-                        className="text-lg font-mono tracking-wider text-white mt-1"
-                        style={{ textShadow: '2px 2px 0px #825F0A' }}
-                      >
-                        {progressStats.sampleCount.toLocaleString()} MEMBERS
-                      </div>
-                      <div className="w-24 h-0.5 bg-[#F1C40F] mt-2" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                );
+              })}
             </div>
-
-            <div className="flex flex-col gap-2 pt-1">
-              <MdButton
-                variant="tonal"
-                icon="celebration"
-                onClick={handleTestMilestone}
-                disabled={testingMilestone || !milestoneChannelId}
-                className="w-full"
-              >
-                {testingMilestone
-                  ? 'Sending Test Banner...'
-                  : 'Send Test Milestone Card to Discord'}
-              </MdButton>
-              <span className="text-xs font-normal text-discord-muted text-center">
-                {milestoneChannelId
-                  ? 'Renders and posts a live sample milestone card to the selected channel.'
-                  : 'Select an announcement channel on the left to test on Discord.'}
-              </span>
-            </div>
-          </SurfaceCard>
+          )}
         </div>
-      </div>
+      </SurfaceCard>
+
+      {/* 3. Live Discord Preview (Reusing DiscordEmbedPreview Organism) */}
+      <SurfaceCard
+        title="Live Preview"
+        subtitle={
+          selectedChannel
+            ? `Previewing milestone announcement in #${selectedChannel.name} (${serverInfo.memberCount.toLocaleString()} current members).`
+            : 'Preview how ArchiBot announces milestones in Discord.'
+        }
+        headerAction={
+          <StatusBadge
+            size="xs"
+            variant="soft"
+            tone={progressStats.next !== null ? 'blurple' : 'neutral'}
+            label={
+              progressStats.next !== null
+                ? `Next: ${progressStats.next.toLocaleString()} (${progressStats.remaining?.toLocaleString()} left)`
+                : 'No upcoming goal'
+            }
+          />
+        }
+        className="flex flex-col gap-4"
+      >
+        <DiscordEmbedPreview
+          botName={serverInfo.botName}
+          botAvatar={serverInfo.botAvatar}
+          content={`🎉 @${previewUsername}`}
+          embed={{
+            color: '#F1C40F',
+            title: '🏆 Community Milestone Reached!',
+            description: previewEmbedDescription,
+            thumbnailUrl: previewAvatarUrl,
+          }}
+          embedBannerSlot={
+            <div className="relative w-full h-28 rounded-md bg-[#181920] border-2 border-[#F1C40F] overflow-hidden flex flex-col items-center justify-center select-none">
+              <div className="absolute inset-1.5 border border-[#786214] pointer-events-none" />
+              <div className="text-[10px] font-mono tracking-[0.22em] text-[#F1C40F] uppercase">
+                COMMUNITY MILESTONE
+              </div>
+              <div
+                className="text-lg font-mono tracking-wider text-white mt-1"
+                style={{ textShadow: '2px 2px 0px #825F0A' }}
+              >
+                {progressStats.sampleCount.toLocaleString()} MEMBERS
+              </div>
+              <div className="w-24 h-0.5 bg-[#F1C40F] mt-2" />
+            </div>
+          }
+        />
+
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <span className="text-xs font-normal text-discord-muted">
+            {milestoneChannelId
+              ? `Sends a sample milestone card to #${selectedChannel?.name || 'selected channel'}.`
+              : 'Select an announcement channel above to send a test card.'}
+          </span>
+          <MdButton
+            variant="tonal"
+            icon="send"
+            onClick={handleTestMilestone}
+            disabled={testingMilestone || !milestoneChannelId}
+          >
+            {testingMilestone ? 'Sending Test...' : 'Send Test'}
+          </MdButton>
+        </div>
+      </SurfaceCard>
 
       {/* Floating Unsaved Changes Modal Bar at Bottom Center */}
       <UnsavedChangesBar
