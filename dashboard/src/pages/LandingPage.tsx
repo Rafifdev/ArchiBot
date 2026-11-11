@@ -739,7 +739,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
     }
   };
 
-  const dashboardHref = user ? '/servers' : '/auth/discord';
+  const dashboardHref = user ? '/servers' : '/api/auth/login';
   const isID = selectedLang === 'id';
   const activeLanguageObj = LANGUAGE_OPTIONS.find((l) => l.value === selectedLang) || LANGUAGE_OPTIONS[0];
 
@@ -1263,7 +1263,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                   className="call-to-action--nav button button-primary button-compact download-button"
                 >
                   <DiscordMark className="w-4 h-4" />
-                  <span>Dashboard</span>
+                  <span>{user ? 'Dashboard' : 'Sign in'}</span>
                 </a>
               </div>
             </div>
