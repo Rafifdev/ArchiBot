@@ -700,10 +700,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
   const [showcaseTab, setShowcaseTab] = useState<'architect' | 'giveaways' | 'voice' | 'security'>('architect');
   const [showcaseAutoPlay, setShowcaseAutoPlay] = useState(true);
 
-  // Interactive Voice Room lock toggle in Section 4
-  const [voiceLocked, setVoiceLocked] = useState(false);
-  const [voiceLimit, setVoiceLimit] = useState(5);
-
   // Use-Case Carousel state in Section 5 + slide transition key
   const [activeUseCase, setActiveUseCase] = useState(0);
 
@@ -2641,27 +2637,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
 
         {/* ==================================================================
             SECTION 4: FEATURE EXPLORER (.feature-explorer-section)
-            Self-Playing Motion Previews Sourced Directly from Dashboard UI
+            Static Dashboard Screenshots (Dark & Light Mode)
             ================================================================== */}
         <section className="feature-explorer-section" id="feature-explorer">
           <div className="grid-container">
             <div className="feature-list">
-              {/* FEATURE 1: AI Server Architect (ArchitectPage.tsx Motion Preview) */}
+              {/* FEATURE 1: Template & Modular Channel Builder (ArchitectPage.tsx) */}
               <div className="feature-item">
                 <div className="grid-row">
                   <div className="grid-col col-xs-4 col-sm-8 col-md-4">
                     <div className="feature-copy">
                       <a href={dashboardHref} className="feature-title-link">
                         <h3 className="heading-5 feature-title">
-                          {isID ? 'AI Server Architect dalam hitungan detik' : 'An AI Server Architect at your core'}
+                          {isID ? 'Buat Channel dengan Template & Modul Instan' : 'Template & Modular Channel Builder'}
                         </h3>
                       </a>
                       <ScrollRevealText
                         className="body feature-description"
                         text={
                           isID
-                            ? 'ArchiBot AI Architect membangun struktur channel, kategori, dan hierarki role Discord lengkap hanya dari satu deskripsi teks, dilengkapi pratinjau blueprint interaktif sebelum diterapkan ke server.'
-                            : 'ArchiBot’s AI Server Architect generates complete Discord channel trees, category structures, and role permission hierarchies from a single natural-language prompt—with an interactive blueprint preview before deployment.'
+                            ? 'Terapkan template server siap pakai atau kombinasikan modul channel sesuai kebutuhan komunitas—dilengkapi pratinjau struktur langsung, channel gateway bawaan, dan sinkronisasi izin role dalam satu klik.'
+                            : 'Deploy ready-made server templates or mix and match modular channel packs—complete with live layout previews, built-in gateway channels, and automatic role permissions in one click.'
                         }
                       />
                     </div>
@@ -2671,96 +2667,45 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     <div
                       className="feature-media"
                       style={{
-                        background: '#0b0d12',
-                        padding: '24px',
+                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
+                        padding: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        color: '#e6eaf0',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        width: '100%',
+                        border:
+                          resolvedTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.08)'
+                            : '1px solid rgba(15, 23, 42, 0.1)',
+                        boxShadow:
+                          resolvedTheme === 'dark'
+                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
+                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
                       }}
                     >
-                      {/* Authentic ArchitectPage.tsx Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: 34, height: 34, borderRadius: '10px', background: 'rgba(88,101,242,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>architecture</span>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: 500, color: '#fff' }}>AI Server Architect</div>
-                            <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>dashboard/src/pages/ArchitectPage.tsx</div>
-                          </div>
-                        </div>
-                        <span style={{ padding: '4px 10px', borderRadius: '999px', background: 'rgba(52,168,83,0.15)', color: '#4ade80', fontSize: '11px', fontWeight: 500 }}>
-                          ● AUTO-SIMULATION
-                        </span>
-                      </div>
-
-                      {/* Animated Prompt + Blueprint Tree */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '16px 0' }}>
-                        <div style={{ background: '#13161f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px 14px' }}>
-                          <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px' }}>Blueprint Prompt</div>
-                          <div style={{ fontSize: '13px', color: '#f8fafc', fontFamily: "'Google Sans Code', monospace" }}>
-                            &quot;Build a 50k Gaming &amp; Tournament community with VIP lounges&quot;
-                          </div>
-                        </div>
-
-                        <div style={{ background: '#13161f', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {[
-                            { name: '📌 IMPORTANT & VERIFY', channels: ['#welcome-rules', '#announcements', '#verify-gate'], step: 0 },
-                            { name: '💬 COMMUNITY LOUNGE', channels: ['#general-chat', '#media-highlights', '#bot-commands'], step: 1 },
-                            { name: '🏆 TOURNAMENT HUB', channels: ['#brackets', '🎁・giveaways', '➕ Join to Create'], step: 2 },
-                          ].map((cat, idx) => {
-                            const active = motionStep >= cat.step;
-                            return (
-                              <div
-                                key={cat.name}
-                                style={{
-                                  padding: '10px 12px',
-                                  borderRadius: '10px',
-                                  background: active ? 'rgba(50,121,249,0.08)' : 'rgba(255,255,255,0.02)',
-                                  border: `1px solid ${active ? 'rgba(50,121,249,0.3)' : 'rgba(255,255,255,0.05)'}`,
-                                  opacity: active ? 1 : 0.4,
-                                  transform: active ? 'translateX(0)' : 'translateX(-6px)',
-                                  transition: 'all 0.4s ease',
-                                }}
-                              >
-                                <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', marginBottom: '6px' }}>
-                                  {cat.name}
-                                </div>
-                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                  {cat.channels.map((ch) => (
-                                    <span
-                                      key={ch}
-                                      style={{
-                                        padding: '3px 9px',
-                                        borderRadius: '6px',
-                                        background: '#1e2230',
-                                        color: idx === 2 && ch.includes('Join') ? '#4ade80' : '#e2e8f0',
-                                        fontSize: '12px',
-                                      }}
-                                    >
-                                      {ch}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#94a3b8' }}>
-                        <span>Roles Generated: Admin, Moderator, Tournament Host, Verified</span>
-                        <span style={{ color: '#60a5fa', fontWeight: 500 }}>
-                          {motionStep === 3 ? '✓ Deployed to Guild' : 'Generating Blueprint...'}
-                        </span>
-                      </div>
+                      <img
+                        src={
+                          resolvedTheme === 'dark'
+                            ? '/screenshots/feature-architect-dark.png'
+                            : '/screenshots/feature-architect-light.png'
+                        }
+                        alt={isID ? 'Pratinjau Template & Modular Channel Builder' : 'Template & Modular Channel Builder Preview'}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          display: 'block',
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* FEATURE 2: Channels & Categories Management (ChannelsPage.tsx Automated Browser Motion) */}
+              {/* FEATURE 2: Channels & Categories Management (ChannelsPage.tsx) */}
               <div className="feature-item">
                 <div className="grid-row">
                   <div className="grid-col col-xs-4 col-sm-8 col-md-4">
@@ -2785,7 +2730,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     <div
                       className="feature-media"
                       style={{
-                        background: '#0b0d12',
+                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
                         padding: 0,
                         display: 'flex',
                         flexDirection: 'column',
@@ -2793,22 +2738,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                         alignItems: 'center',
                         overflow: 'hidden',
                         position: 'relative',
-                        aspectRatio: '16 / 9',
                         width: '100%',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.65)',
+                        border:
+                          resolvedTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.08)'
+                            : '1px solid rgba(15, 23, 42, 0.1)',
+                        boxShadow:
+                          resolvedTheme === 'dark'
+                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
+                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
                       }}
                     >
-                      <video
-                        src="/videos/channels-categories-motion.webm"
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
+                      <img
+                        src={
+                          resolvedTheme === 'dark'
+                            ? '/screenshots/feature-channels-dark.png'
+                            : '/screenshots/feature-channels-light.png'
+                        }
+                        alt={isID ? 'Pratinjau Manajemen Channels & Categories' : 'Precision Channels & Categories Studio Preview'}
+                        loading="lazy"
                         style={{
                           width: '100%',
-                          height: '100%',
-                          objectFit: 'contain',
+                          height: 'auto',
                           display: 'block',
                         }}
                       />
@@ -2817,22 +2768,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 </div>
               </div>
 
-              {/* FEATURE 3: Dynamic Join-to-Create Voice Rooms (VoicePage.tsx Motion Preview) */}
+              {/* FEATURE 3: Welcome Message Management (WelcomePage.tsx) */}
               <div className="feature-item">
                 <div className="grid-row">
                   <div className="grid-col col-xs-4 col-sm-8 col-md-4">
                     <div className="feature-copy">
                       <a href={dashboardHref} className="feature-title-link">
                         <h3 className="heading-5 feature-title">
-                          {isID ? 'Otonomi penuh dengan Dynamic Voice Rooms' : 'Cross-channel Dynamic Voice autonomy'}
+                          {isID ? 'Kelola Welcome Message & Kartu Sambutan Visual' : 'Customizable Welcome Message & Card Studio'}
                         </h3>
                       </a>
                       <ScrollRevealText
                         className="body feature-description"
                         text={
                           isID
-                            ? 'Hadirkan channel suara sementara otomatis saat member masuk ke channel Master Hub. Member mendapatkan kendali penuh atas kapasitas, kunci ruangan, dan izin—lalu channel dihapus otomatis saat kosong.'
-                            : 'Synchronize dynamic Join-to-Create voice hubs across your server. Members automatically spawn personal squad rooms with granular lock and user-limit controls, cleaned up the instant everyone leaves.'
+                            ? 'Sambut setiap member baru dengan kartu sambutan visual yang dapat dikustomisasi, pesan embed kaya fitur, sambutan DM otomatis, pemberian role instan, serta panduan channel onboarding.'
+                            : 'Greet every new member with personalized welcome cards, custom embeds, private DM greetings, automatic starter roles, and interactive onboarding channel guides.'
                         }
                       />
                     </div>
@@ -2842,104 +2793,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     <div
                       className="feature-media"
                       style={{
-                        background: '#0b0d12',
-                        padding: '24px',
+                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
+                        padding: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        color: '#e6eaf0',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        width: '100%',
+                        border:
+                          resolvedTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.08)'
+                            : '1px solid rgba(15, 23, 42, 0.1)',
+                        boxShadow:
+                          resolvedTheme === 'dark'
+                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
+                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: 34, height: 34, borderRadius: '10px', background: 'rgba(52,168,83,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>graphic_eq</span>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: 500, color: '#fff' }}>Dynamic Voice Engine</div>
-                            <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>dashboard/src/pages/VoicePage.tsx</div>
-                          </div>
-                        </div>
-                        <span style={{ padding: '4px 10px', borderRadius: '999px', background: 'rgba(52,168,83,0.16)', color: '#4ade80', fontSize: '11px', fontWeight: 500 }}>
-                          ● {motionStep === 3 ? 'Auto-Cleaned Empty Room' : '3 Active Squad Rooms'}
-                        </span>
-                      </div>
-
-                      <div style={{ background: '#13161f', borderRadius: '14px', padding: '16px', border: '1px solid rgba(255,255,255,0.08)', margin: '14px 0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: '10px', background: 'rgba(50,121,249,0.1)', border: '1px solid rgba(50,121,249,0.25)' }}>
-                          <span style={{ fontSize: '13px', fontWeight: 500, color: '#93c5fd' }}>➕ Join to Create Master Hub</span>
-                          <span style={{ fontSize: '11px', color: '#60a5fa' }}>Trigger Channel</span>
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderRadius: '10px', background: '#1a1e2b', border: '1px solid rgba(255,255,255,0.06)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '18px', color: voiceLocked ? '#f87171' : '#4ade80' }}>
-                              {voiceLocked ? 'lock' : 'volume_up'}
-                            </span>
-                            <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#fff' }}>
-                              🎮 Alex&apos;s Squad ({Math.min(voiceLimit, 2 + (motionStep % 3))}/{voiceLimit})
-                            </span>
-                          </div>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              type="button"
-                              onClick={() => setVoiceLocked(!voiceLocked)}
-                              style={{
-                                padding: '5px 10px',
-                                borderRadius: '6px',
-                                border: '1px solid rgba(255,255,255,0.12)',
-                                background: voiceLocked ? '#ea4335' : '#262b3d',
-                                color: '#fff',
-                                fontSize: '11.5px',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              {voiceLocked ? 'Unlock' : 'Lock'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setVoiceLimit((l) => (l >= 10 ? 3 : l + 1))}
-                              style={{
-                                padding: '5px 10px',
-                                borderRadius: '6px',
-                                border: '1px solid rgba(255,255,255,0.12)',
-                                background: '#262b3d',
-                                color: '#e2e8f0',
-                                fontSize: '11.5px',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              Limit: {voiceLimit}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
-                        <span>Owner: @alex_dev • Bitrate: 96kbps</span>
-                        <span style={{ color: '#4ade80' }}>Zero Orphaned Channels</span>
-                      </div>
+                      <img
+                        src={
+                          resolvedTheme === 'dark'
+                            ? '/screenshots/feature-welcome-dark.png'
+                            : '/screenshots/feature-welcome-light.png'
+                        }
+                        alt={isID ? 'Pratinjau Welcome Message Studio' : 'Welcome Message & Card Studio Preview'}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          display: 'block',
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* FEATURE 4: Welcome Studio, Anti-Raid & Backups (WelcomePage.tsx & BackupsPage.tsx) */}
+              {/* FEATURE 4: Member Milestones (MilestonesPage.tsx) */}
               <div className="feature-item">
                 <div className="grid-row">
                   <div className="grid-col col-xs-4 col-sm-8 col-md-4">
                     <div className="feature-copy">
                       <a href={dashboardHref} className="feature-title-link">
                         <h3 className="heading-5 feature-title">
-                          {isID ? 'Proteksi Anti-Raid, CAPTCHA & Snapshot 1-Klik' : 'Zero-Trust Anti-Raid, Welcome Canvas & Snapshots'}
+                          {isID ? 'Perayaan Member Milestones & Target Komunitas Otomatis' : 'Automated Member Milestones & Goal Celebrations'}
                         </h3>
                       </a>
                       <ScrollRevealText
                         className="body feature-description"
                         text={
                           isID
-                            ? 'Sambut member baru dengan kartu visual yang dirender secara dinamis, cegah serangan bot dengan verifikasi CAPTCHA interaktif, dan cadangkan seluruh konfigurasi server ke snapshot JSON kapan saja.'
-                            : 'Greet verified newcomers with rendered welcome banners, automatically intercept suspicious join spikes with interactive CAPTCHA challenges, and safeguard your guild with 1-click JSON structure backups.'
+                            ? 'Rayakan pertumbuhan server secara otomatis menggunakan interval kelipatan member, target milestone kustom, pratinjau pengumuman langsung, serta hadiah role spesial bagi member yang mencapai milestone.'
+                            : 'Celebrate your community’s growth automatically with recurring member intervals, custom milestone goal targets, live Discord announcement previews, and special reward roles.'
                         }
                       />
 
@@ -2955,77 +2862,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     <div
                       className="feature-media"
                       style={{
-                        background: '#0b0d12',
-                        padding: '24px',
+                        background: resolvedTheme === 'dark' ? '#0b0d12' : '#f1f5f9',
+                        padding: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        color: '#e6eaf0',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        width: '100%',
+                        border:
+                          resolvedTheme === 'dark'
+                            ? '1px solid rgba(255, 255, 255, 0.08)'
+                            : '1px solid rgba(15, 23, 42, 0.1)',
+                        boxShadow:
+                          resolvedTheme === 'dark'
+                            ? '0 24px 64px -12px rgba(0, 0, 0, 0.65)'
+                            : '0 24px 64px -12px rgba(15, 23, 42, 0.14)',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '14px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: 34, height: 34, borderRadius: '10px', background: 'rgba(234,67,53,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f87171' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>shield_lock</span>
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '14px', fontWeight: 500, color: '#fff' }}>Security, Welcome &amp; Snapshots</div>
-                            <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>WelcomePage.tsx • BackupsPage.tsx</div>
-                          </div>
-                        </div>
-                        <span style={{ padding: '4px 10px', borderRadius: '999px', background: 'rgba(52,168,83,0.16)', color: '#4ade80', fontSize: '11px', fontWeight: 500 }}>
-                          ● PROTECTED
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', margin: '14px 0' }}>
-                        {[
-                          {
-                            icon: 'verified_user',
-                            color: '#4ade80',
-                            title: 'Interactive CAPTCHA Verification Gate',
-                            status: motionStep % 2 === 0 ? 'Active • Verified 1,420 Members' : 'Active • Blocked 14 Raid Bots',
-                          },
-                          {
-                            icon: 'waving_hand',
-                            color: '#60a5fa',
-                            title: 'Dynamic Welcome Banner & Auto-Role Engine',
-                            status: 'Assigns @Community Member on verification',
-                          },
-                          {
-                            icon: 'backup',
-                            color: '#fbbc04',
-                            title: 'Full Guild JSON Snapshot & 1-Click Restore',
-                            status: 'Auto-saved 24 channels, 12 roles & overwrites',
-                          },
-                        ].map((row) => (
-                          <div
-                            key={row.title}
-                            style={{
-                              background: '#13161f',
-                              borderRadius: '12px',
-                              padding: '12px 14px',
-                              border: '1px solid rgba(255,255,255,0.07)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '12px',
-                            }}
-                          >
-                            <span className="material-symbols-outlined" style={{ color: row.color, fontSize: '22px' }}>
-                              {row.icon}
-                            </span>
-                            <div>
-                              <div style={{ fontSize: '13.5px', fontWeight: 500, color: '#fff' }}>{row.title}</div>
-                              <div style={{ fontSize: '12px', color: '#94a3b8' }}>{row.status}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8' }}>
-                        <span>Snapshot Integrity: SHA-256 Verified</span>
-                        <span style={{ color: '#4ade80' }}>Ready for Instant Restore</span>
-                      </div>
+                      <img
+                        src={
+                          resolvedTheme === 'dark'
+                            ? '/screenshots/feature-milestones-dark.png'
+                            : '/screenshots/feature-milestones-light.png'
+                        }
+                        alt={isID ? 'Pratinjau Member Milestones' : 'Member Milestones Preview'}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          display: 'block',
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
