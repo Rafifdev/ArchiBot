@@ -227,6 +227,47 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
     milestoneRoleId,
   ]);
 
+  const previewUsername =
+    (user?.global_name || user?.username || 'ArchiMember').replace(' (Local Admin)', '').trim() ||
+    'ArchiMember';
+
+  const previewAvatarUrl = useMemo(() => {
+    if (!user?.avatar) return undefined;
+    if (user.avatar.startsWith('http://') || user.avatar.startsWith('https://')) {
+      return user.avatar;
+    }
+    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
+  }, [user?.id, user?.avatar]);
+
+  const previewEmbedDescription = useMemo(() => {
+    const lines = [
+      `Congratulations @${previewUsername}! You brought our community to ${progressStats.sampleCount.toLocaleString()} members!`,
+    ];
+    if (selectedRole) {
+      lines.push(`🎁 Special reward unlocked: @${selectedRole.name}`);
+    }
+    if (progressStats.afterNext !== null) {
+      lines.push(
+        `🎯 Next milestone: ${progressStats.afterNext.toLocaleString()} members - ${progressStats.afterRemaining?.toLocaleString()} to go.`
+      );
+    }
+    return lines.join('\n');
+  }, [previewUsername, progressStats, selectedRole]);
+
+  const intervalSupportingText = useMemo(() => {
+    if (milestoneEvery <= 0) return undefined;
+    const nextSteps = [1, 2, 3, 4]
+      .map(
+        (step) =>
+          (
+            (Math.floor(serverInfo.memberCount / milestoneEvery) + step) *
+            milestoneEvery
+          ).toLocaleString()
+      )
+      .join(', ');
+    return `Next recurring checkpoints from ${serverInfo.memberCount.toLocaleString()} members: ${nextSteps}…`;
+  }, [milestoneEvery, serverInfo.memberCount]);
+
   if (loading && channels.length === 0 && roles.length === 0) {
     return <SettingsSkeleton />;
   }
@@ -372,47 +413,6 @@ export const MilestonesPage: React.FC<MilestonesPageProps> = ({ user }) => {
       setTestingMilestone(false);
     }
   };
-
-  const previewUsername =
-    (user?.global_name || user?.username || 'ArchiMember').replace(' (Local Admin)', '').trim() ||
-    'ArchiMember';
-
-  const previewAvatarUrl = useMemo(() => {
-    if (!user?.avatar) return undefined;
-    if (user.avatar.startsWith('http://') || user.avatar.startsWith('https://')) {
-      return user.avatar;
-    }
-    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
-  }, [user?.id, user?.avatar]);
-
-  const previewEmbedDescription = useMemo(() => {
-    const lines = [
-      `Congratulations @${previewUsername}! You brought our community to ${progressStats.sampleCount.toLocaleString()} members!`,
-    ];
-    if (selectedRole) {
-      lines.push(`🎁 Special reward unlocked: @${selectedRole.name}`);
-    }
-    if (progressStats.afterNext !== null) {
-      lines.push(
-        `🎯 Next milestone: ${progressStats.afterNext.toLocaleString()} members - ${progressStats.afterRemaining?.toLocaleString()} to go.`
-      );
-    }
-    return lines.join('\n');
-  }, [previewUsername, progressStats, selectedRole]);
-
-  const intervalSupportingText = useMemo(() => {
-    if (milestoneEvery <= 0) return undefined;
-    const nextSteps = [1, 2, 3, 4]
-      .map(
-        (step) =>
-          (
-            (Math.floor(serverInfo.memberCount / milestoneEvery) + step) *
-            milestoneEvery
-          ).toLocaleString()
-      )
-      .join(', ');
-    return `Next recurring checkpoints from ${serverInfo.memberCount.toLocaleString()} members: ${nextSteps}…`;
-  }, [milestoneEvery, serverInfo.memberCount]);
 
   return (
     <div className="flex flex-col gap-6 w-full pb-16">
