@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import './landing/landing.css';
-import { DiscordMark } from '../components/ui';
+import { ArchiBrandMark, ArchiWordmark, DiscordMark } from '../components/atoms';
 import { UserProfile } from '../types/api';
 import { AntigravityParticles } from './landing/AntigravityParticles';
 
@@ -11,27 +11,6 @@ interface LandingPageProps {
   user?: UserProfile | null;
   initialView?: 'landing' | 'blog' | 'article';
 }
-
-/* ==========================================================================
-   ArchiBot Pure Brand Mark SVG (No Antigravity Logo)
-   ========================================================================== */
-const ArchiBrandMark: React.FC<{ size?: number }> = ({ size = 26 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 36 36"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    style={{ flexShrink: 0, display: 'block' }}
-  >
-    <rect width="36" height="36" rx="10" fill="#121317" />
-    <path
-      d="M18 7.5L27.5 26.5H23.1L20.9 21.8H15.1L12.9 26.5H8.5L18 7.5ZM18 13.6L16.3 17.8H19.7L18 13.6Z"
-      fill="#ffffff"
-    />
-    <circle cx="18" cy="25.5" r="2" fill="#3279f9" />
-  </svg>
-);
 
 const ChevronDownSvg: React.FC<{ style?: React.CSSProperties }> = ({ style }) => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={style}>
@@ -1261,20 +1240,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
             {/* Pure ArchiBot Brand Logo */}
             <div className="logo-container">
               <Link to="/" className="logo-link" aria-label="ArchiBot" onClick={openLandingView}>
-                <ArchiBrandMark size={26} />
-                <span
+                <ArchiBrandMark size={22} theme={resolvedTheme} />
+                <ArchiWordmark
+                  theme={resolvedTheme}
                   style={{
                     fontSize: '20.5px',
-                    fontWeight: 500,
+                    fontWeight: 600,
                     letterSpacing: '-0.02em',
-                    color: resolvedTheme === 'dark' ? '#F2F3F5' : '#121317',
-                    display: 'inline-flex',
-                    alignItems: 'center',
                     transition: 'color 0.2s ease',
                   }}
-                >
-                  ArchiBot
-                </span>
+                />
               </Link>
             </div>
 
@@ -2560,8 +2535,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)', paddingBottom: '14px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <ArchiBrandMark size={22} />
-                          <strong style={{ fontSize: '15px', color: '#f2f3f5' }}>ArchiBot Live Discord Preview</strong>
+                          <ArchiBrandMark size={18} theme="dark" />
+                          <strong style={{ fontSize: '15px', color: '#f2f3f5' }}>
+                            <ArchiWordmark theme="dark" /> Live Discord Preview
+                          </strong>
                         </div>
                         <span
                           style={{
@@ -3365,7 +3342,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                 <text
                   x="0"
                   y="198"
-                  fill={resolvedTheme === 'dark' ? '#F2F3F5' : '#121317'}
                   style={{
                     fontFamily: "'Google Sans Flex', 'Google Sans', sans-serif",
                     fontSize: '252px',
@@ -3373,11 +3349,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
                     letterSpacing: '-0.015em',
                     fontVariationSettings: '"wdth" 100, "wght" 650, "opsz" 144',
                     userSelect: 'none',
-                    fill: resolvedTheme === 'dark' ? '#F2F3F5' : '#121317',
-                    transition: 'fill 0.3s ease',
                   }}
                 >
-                  ArchiBot
+                  <tspan fill={resolvedTheme === 'dark' ? '#F2F3F5' : '#140D30'} style={{ transition: 'fill 0.3s ease' }}>
+                    Archi
+                  </tspan>
+                  <tspan fill={resolvedTheme === 'dark' ? '#8B5CF6' : '#8147FB'} style={{ transition: 'fill 0.3s ease' }}>
+                    Bot
+                  </tspan>
                 </text>
               </svg>
             </div>
@@ -3399,8 +3378,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ user, initialView }) =
               }}
             >
               <Link to="/" className="footer-google-logo" aria-label="ArchiBot" onClick={openLandingView}>
-                <ArchiBrandMark size={20} />
-                <span>ArchiBot</span>
+                <ArchiBrandMark size={18} theme={resolvedTheme} />
+                <ArchiWordmark theme={resolvedTheme} style={{ fontWeight: 600 }} />
               </Link>
               <div
                 className="footer-google-nav"

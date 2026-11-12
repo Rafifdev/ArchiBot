@@ -1,4 +1,6 @@
 export {
+  ArchiBrandMark,
+  ArchiWordmark,
   Badge,
   Button,
   DiscordMark,
@@ -17,4 +19,4 @@ export {
   Skeleton,
   StatusBadge,
 } from '../ui';
-export type { MdButtonProps, SkeletonProps } from '../ui';
+export type { ArchiBrandProps, MdButtonProps, SkeletonProps } from '../ui';

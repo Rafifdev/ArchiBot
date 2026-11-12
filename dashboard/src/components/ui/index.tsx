@@ -43,6 +43,67 @@ export const DiscordMark: React.FC<{ className?: string }> = ({ className = 'w-5
   </svg>
 );
 
+export interface ArchiBrandProps {
+  size?: number;
+  theme?: 'dark' | 'light';
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export const ArchiBrandMark: React.FC<ArchiBrandProps> = ({
+  size = 24,
+  theme = 'light',
+  className = '',
+  style,
+}) => {
+  const height = size;
+  const width = Math.round(height * 1.6);
+  const primaryColor = theme === 'dark' ? '#F2F3F5' : '#140D30';
+  const accentColor = theme === 'dark' ? '#8B5CF6' : '#8147FB';
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 160 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 block ${className}`.trim()}
+      style={{ flexShrink: 0, display: 'block', ...style }}
+      aria-hidden="true"
+    >
+      <path
+        d="M65.8 4.4C67.1 2.2 69.5 0.8 72.1 0.8H98.4C101.0 0.8 103.4 2.2 104.7 4.4L127.6 39.2C128.4 40.4 127.5 42.0 126.0 42.0H97.8C96.5 42.0 95.3 41.3 94.7 40.2L85.8 25.4C84.7 23.6 82.0 23.6 80.9 25.4L34.6 93.1C33.4 94.9 31.3 96.0 29.1 96.0H3.4C1.2 96.0 -0.1 93.6 1.1 91.7L65.8 4.4Z"
+        fill={primaryColor}
+      />
+      <path
+        d="M126.2 71.5H149.0C150.2 82.5 147.6 96.0 138.8 96.0H111.5C109.1 96.0 107.7 93.2 109.2 91.3L126.2 71.5Z"
+        fill={primaryColor}
+      />
+      <path
+        d="M75.5 48.2C76.7 46.5 78.7 45.5 80.8 45.5H131.5C148.8 45.5 159.4 56.6 158.8 73.5C158.2 87.2 150.4 95.4 140.2 96.0H138.2C145.6 92.8 149.4 86.2 148.6 79.4C147.8 73.6 142.8 71.5 135.4 71.5H60.8C58.6 71.5 57.3 69.0 58.6 67.2L75.5 48.2Z"
+        fill={accentColor}
+      />
+    </svg>
+  );
+};
+
+export const ArchiWordmark: React.FC<Omit<ArchiBrandProps, 'size'>> = ({
+  theme = 'light',
+  className = '',
+  style,
+}) => {
+  const primaryColor = theme === 'dark' ? '#F2F3F5' : '#140D30';
+  const accentColor = theme === 'dark' ? '#8B5CF6' : '#8147FB';
+
+  return (
+    <span className={`inline-flex items-baseline ${className}`.trim()} style={style}>
+      <span style={{ color: primaryColor }}>Archi</span>
+      <span style={{ color: accentColor }}>Bot</span>
+    </span>
+  );
+};
+
 export const MdIcon: React.FC<{ name: string; slot?: string; className?: string }> = ({
   name,
   slot,

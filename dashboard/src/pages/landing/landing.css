@@ -694,11 +694,7 @@ html.lenis, html.lenis body {
 html[data-theme='dark'] .agy-landing .logo-link,
 html.dark .agy-landing .logo-link,
 .agy-landing[data-theme='dark'] .logo-link,
-.agy-landing.dark .logo-link,
-html[data-theme='dark'] .agy-landing .logo-link span,
-html.dark .agy-landing .logo-link span,
-.agy-landing[data-theme='dark'] .logo-link span,
-.agy-landing.dark .logo-link span {
+.agy-landing.dark .logo-link {
   color: #F2F3F5 !important;
 }
 
@@ -3174,10 +3170,10 @@ html.dark .agy-landing .footer a:hover,
   color: #F2F3F5;
 }
 
-html[data-theme='dark'] .agy-landing .footer-google-logo span,
-html.dark .agy-landing .footer-google-logo span,
-.agy-landing[data-theme='dark'] .footer-google-logo span,
-.agy-landing.dark .footer-google-logo span {
+html[data-theme='dark'] .agy-landing .footer-google-logo,
+html.dark .agy-landing .footer-google-logo,
+.agy-landing[data-theme='dark'] .footer-google-logo,
+.agy-landing.dark .footer-google-logo {
   color: #F2F3F5;
 }
 
